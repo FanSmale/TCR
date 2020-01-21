@@ -6,7 +6,7 @@ import java.util.Random;
 import datamodel.Triple;
 
 /*
- * @(#)MatrixFactorization2DBooleanIndication.java
+ * @(#)MF2DBoolean.java
  
  * Project: Matrix factorization for recommender systems.
  * The data is organized in 2D to enable incremental learning. 
@@ -17,7 +17,7 @@ import datamodel.Triple;
  * Last modified: Jan 19, 2020.
  */
 
-public class MatrixFactorization2DBooleanIndication {
+public class MF2DBoolean {
 	/**
 	 * A sign to help reading the data file.
 	 */
@@ -122,8 +122,8 @@ public class MatrixFactorization2DBooleanIndication {
 	 *            The number of ratings.
 	 ************************ 
 	 */
-	public MatrixFactorization2DBooleanIndication(String paraFilename, int paraNumUsers, int paraNumItems,
-			int paraNumRatings, double paraRatingLowerBound, double paraRatingUpperBound) {
+	public MF2DBoolean(String paraFilename, int paraNumUsers, int paraNumItems, int paraNumRatings,
+			double paraRatingLowerBound, double paraRatingUpperBound) {
 		numUsers = paraNumUsers;
 		numItems = paraNumItems;
 		numRatings = paraNumRatings;
@@ -268,51 +268,7 @@ public class MatrixFactorization2DBooleanIndication {
 		} // Of for i
 	}// Of setAllTraining
 
-	/**
-	 ************************ 
-	 * Set all data of the given user for training.
-	 * 
-	 * @param paraUser
-	 *            The given user.
-	 ************************ 
-	 */
-	public void setUserAllTraining(int paraUser) {
-		for (int i = 0; i < trainingIndicationMatrix[paraUser].length; i++) {
-			trainingIndicationMatrix[paraUser][i] = true;
-		} // Of for j
-	}// Of setUserAllTraining
 
-	/**
-	 ************************ 
-	 * Set some data of the given user for training.
-	 * 
-	 * @param paraUser
-	 *            The given user.
-	 * @param paraTrainingIndices
-	 *            The item indices for the given user as training.
-	 ************************ 
-	 */
-	public void setUserTraining(int paraUser, int[] paraTrainingItems) {
-		int tempItemIndex = 0;
-		int i;
-		for (i = 0; i < trainingIndicationMatrix[paraUser].length; i++) {
-			//System.out.println("paraUser = " + paraUser + ", i = " + i + ", tempItemIndex = " + tempItemIndex);
-			if (data[paraUser][i].item == paraTrainingItems[tempItemIndex]) {
-				trainingIndicationMatrix[paraUser][i] = true;
-				tempItemIndex++;
-				if (tempItemIndex == paraTrainingItems.length) {
-					break;
-				}//Of if
-			} else {
-				trainingIndicationMatrix[paraUser][i] = false;
-			} // Of if
-		} // Of for j
-		
-		//The remaining parts are all testing.
-		for (i = 0; i < trainingIndicationMatrix[paraUser].length; i++) {
-			trainingIndicationMatrix[paraUser][i] = false;
-		}//Of for i
-	}// Of setUserTraining
 
 	/**
 	 ************************ 
@@ -421,6 +377,8 @@ public class MatrixFactorization2DBooleanIndication {
 		} // Of for i
 	}// Of train
 
+
+
 	/**
 	 ************************ 
 	 * Update sub-spaces using the training data.
@@ -439,6 +397,7 @@ public class MatrixFactorization2DBooleanIndication {
 			System.exit(0);
 		}// Of switch
 	}// Of update
+
 
 	/**
 	 ************************ 
@@ -477,6 +436,7 @@ public class MatrixFactorization2DBooleanIndication {
 		} // Of for i
 	}// Of updateNoRegular
 
+
 	/**
 	 ************************ 
 	 * Update sub-spaces using the training data.
@@ -513,6 +473,8 @@ public class MatrixFactorization2DBooleanIndication {
 			} // Of for j
 		} // Of for i
 	}// Of updatePQRegular
+
+
 
 	/**
 	 ************************ 
@@ -605,8 +567,8 @@ public class MatrixFactorization2DBooleanIndication {
 			double paraRatingLowerBound, double paraRatingUpperBound, int paraRounds) {
 		try {
 			// Step 1. read the training and testing data
-			MatrixFactorization2DBooleanIndication tempMF = new MatrixFactorization2DBooleanIndication(paraFilename,
-					paraNumUsers, paraNumItems, paraNumRatings, paraRatingLowerBound, paraRatingUpperBound);
+			MF2DBoolean tempMF = new MF2DBoolean(paraFilename, paraNumUsers, paraNumItems, paraNumRatings,
+					paraRatingLowerBound, paraRatingUpperBound);
 
 			tempMF.setParameters(10, 0.0001, 0.005, PQ_REGULAR);
 			tempMF.initializeTraining(0.9);
@@ -631,81 +593,13 @@ public class MatrixFactorization2DBooleanIndication {
 
 	/**
 	 ************************ 
-	 * The training testing scenario.
-	 ************************ 
-	 */
-	public static void testIncremental(String paraFilename, int paraNumUsers, int paraNumItems, int paraNumRatings,
-			double paraRatingLowerBound, double paraRatingUpperBound) {
-		// Step 1. Read data and set parameters.
-		MatrixFactorization2DBooleanIndication tempMF = null;
-		try {
-			tempMF = new MatrixFactorization2DBooleanIndication(paraFilename, paraNumUsers, paraNumItems,
-					paraNumRatings, paraRatingLowerBound, paraRatingUpperBound);
-		} catch (Exception e) {
-			e.printStackTrace();
-		} // Of try
-
-		tempMF.setParameters(10, 0.0001, 0.005, PQ_REGULAR);
-		tempMF.setAllTraining();
-		tempMF.adjustUsingMeanRating();
-
-		// Step 2. Pre-train
-		tempMF.initializeSubspaces(0.5);
-		System.out.println("Pre-training 200 rounds ...");
-		tempMF.train(100);
-
-		// Step 3. Train for each user
-		double tempMAE;
-		int tempNumItemsForTrain = 0;
-		int tempNumPredictions = 0;
-		double tempErrorSum = 0;
-		for (int i = 0; i < tempMF.numUsers; i++) {
-			System.out.println("User " + i);
-
-			//Step 3.1 One half items, e.g., {0, 2, 4, ...} for training.
-			tempNumItemsForTrain = tempMF.data[i].length / 2;
-			int[] tempIndices = new int[tempNumItemsForTrain];
-			for (int j = 0; j < tempNumItemsForTrain; j++) {
-				tempIndices[j] = tempMF.data[i][j * 2].item;
-			}//Of for j
-			
-			//System.out.println("tempIndices = " + Arrays.toString(tempIndices));
-			tempMF.setUserTraining(i, tempIndices);
-			
-			//Step 3.2 Incremental training.
-			tempMF.train(10);
-			
-			//Step 3.3 Prediction and compute error.
-			int tempItem;
-			double tempPrediction;
-			for (int j = tempNumItemsForTrain; j < tempMF.data[i].length; j++) {
-				tempItem = tempMF.data[i][j].item;
-				tempPrediction = tempMF.predict(i, tempItem);
-				tempErrorSum += Math.abs(tempPrediction - tempMF.data[i][j].rating);
-				tempNumPredictions ++;
-			}//Of for j
-			
-			//Step 3.4 Restore data of this user.
-			tempMF.setUserAllTraining(i);
-			
-			//Step 3.5 Show message.
-			tempMAE = tempErrorSum / tempNumPredictions;
-			System.out.println("MAE = " + tempErrorSum + " / " + tempNumPredictions + " = " + tempMAE);
-		} // Of for i
-
-		tempMAE = tempErrorSum / tempNumPredictions;
-		System.out.println("With incremental updating, MAE = " + tempMAE);
-	}// Of testIncremental
-
-	/**
-	 ************************ 
 	 * @param args
 	 ************************ 
 	 */
 	public static void main(String args[]) {
-		//testTrainingTesting("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10, 500);
+		testTrainingTesting("data/jester-data-1/jester-data-1.txt", 24983,
+		101, 1810455, -10, 10, 300);
 		// testSameTrainingTesting("data/jester-data-1/jester-data-1.txt",
 		// 24983, 101, 1810455, -10, 10, 500);
-		testIncremental("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10);
 	}// Of main
 }// Of class MatrixFactorization2DBooleanIndication
