@@ -99,6 +99,11 @@ public class MF2DBoolean {
 	int regularScheme;
 
 	/**
+	 * The range for the initial value of subspace values.
+	 */
+	double subspaceValueRange = 0.5;
+
+	/**
 	 * No regular scheme.
 	 */
 	public static final int NO_REGULAR = 0;
@@ -268,8 +273,6 @@ public class MF2DBoolean {
 		} // Of for i
 	}// Of setAllTraining
 
-
-
 	/**
 	 ************************ 
 	 * Adjust the training data with the mean rating. The ratings are subtracted
@@ -324,11 +327,12 @@ public class MF2DBoolean {
 	 ************************ 
 	 */
 	void initializeSubspaces(double paraRange) {
+		subspaceValueRange = paraRange;
 		userSubspace = new double[numUsers][rank];
 
 		for (int i = 0; i < numUsers; i++) {
 			for (int j = 0; j < rank; j++) {
-				userSubspace[i][j] = (rand.nextDouble() - 0.5) * 2 * paraRange;
+				userSubspace[i][j] = (rand.nextDouble() - 0.5) * 2 * subspaceValueRange;
 			} // of for j
 		} // Of for i
 
@@ -336,10 +340,10 @@ public class MF2DBoolean {
 		itemSubspace = new double[numItems][rank];
 		for (int i = 0; i < numItems; i++) {
 			for (int j = 0; j < rank; j++) {
-				itemSubspace[i][j] = 1 * (rand.nextDouble() - 0.5) * 2 * paraRange;
+				itemSubspace[i][j] = (rand.nextDouble() - 0.5) * 2 * subspaceValueRange;
 			} // Of for j
 		} // Of for i
-	}// of initializeSubspaces
+	}// Of initializeSubspaces
 
 	/**
 	 ************************ 
@@ -372,12 +376,10 @@ public class MF2DBoolean {
 			if (i % 50 == 0) {
 				// Show the process
 				System.out.println("Round " + i);
-				//System.out.println("MAE: " + mae());
+				// System.out.println("MAE: " + mae());
 			} // Of if
 		} // Of for i
 	}// Of train
-
-
 
 	/**
 	 ************************ 
@@ -397,7 +399,6 @@ public class MF2DBoolean {
 			System.exit(0);
 		}// Of switch
 	}// Of update
-
 
 	/**
 	 ************************ 
@@ -436,7 +437,6 @@ public class MF2DBoolean {
 		} // Of for i
 	}// Of updateNoRegular
 
-
 	/**
 	 ************************ 
 	 * Update sub-spaces using the training data.
@@ -473,8 +473,6 @@ public class MF2DBoolean {
 			} // Of for j
 		} // Of for i
 	}// Of updatePQRegular
-
-
 
 	/**
 	 ************************ 
@@ -570,8 +568,8 @@ public class MF2DBoolean {
 			MF2DBoolean tempMF = new MF2DBoolean(paraFilename, paraNumUsers, paraNumItems, paraNumRatings,
 					paraRatingLowerBound, paraRatingUpperBound);
 
-			tempMF.setParameters(10, 0.0001, 0.005, PQ_REGULAR);
-			tempMF.initializeTraining(0.9);
+			tempMF.setParameters(10, 0.0001, 0.005, NO_REGULAR);
+			tempMF.initializeTraining(0.5);
 			tempMF.adjustUsingMeanRating();
 
 			// tempMF.setTestingSetRemainder(2);
@@ -593,12 +591,45 @@ public class MF2DBoolean {
 
 	/**
 	 ************************ 
+	 * Training and testing using the same data.
+	 ************************ 
+	 */
+	public static void testAllTrainingTesting(String paraFilename, int paraNumUsers, int paraNumItems, int paraNumRatings,
+			double paraRatingLowerBound, double paraRatingUpperBound, int paraRounds) {
+		try {
+			// Step 1. read the training and testing data
+			MF2DBoolean tempMF = new MF2DBoolean(paraFilename, paraNumUsers, paraNumItems, paraNumRatings,
+					paraRatingLowerBound, paraRatingUpperBound);
+
+			tempMF.setParameters(10, 0.0001, 0.005, NO_REGULAR);
+			tempMF.initializeTraining(1.0);
+			tempMF.adjustUsingMeanRating();
+
+			// tempMF.setTestingSetRemainder(2);
+			// Step 2. Initialize the feature matrices U and V
+			tempMF.initializeSubspaces(0.5);
+
+			// Step 3. update and predict
+			System.out.println("Begin Training ! ! !");
+
+			tempMF.train(paraRounds);
+
+			tempMF.initializeTraining(0);
+			double tempMAE = tempMF.mae();
+			double tempRSME = tempMF.rsme();
+			System.out.println("Finally, MAE = " + tempMAE + ", RSME = " + tempRSME);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} // of try
+	}// Of testAllTrainingTesting
+	
+	/**
+	 ************************ 
 	 * @param args
 	 ************************ 
 	 */
 	public static void main(String args[]) {
-		testTrainingTesting("data/jester-data-1/jester-data-1.txt", 24983,
-		101, 1810455, -10, 10, 300);
+		testTrainingTesting("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10, 200);
 		// testSameTrainingTesting("data/jester-data-1/jester-data-1.txt",
 		// 24983, 101, 1810455, -10, 10, 500);
 	}// Of main
