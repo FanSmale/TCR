@@ -1,62 +1,21 @@
 package algorithm;
 
 import java.io.*;
-import java.util.Arrays;
-import java.util.Random;
-import datamodel.Triple;
 
-/*
- * @(#)MF2DBoolean.java
- 
- * Project: Matrix factorization for recommender systems.
- * The data is organized in 2D to enable incremental learning. 
- * Author: Fan Min, Yuan-Yuan Xu
- * www.fansmale.com
- * Email: minfan@swpu.edu.cn, minfanphd@163.com.
- * Created: December 3, 2019.
- * Last modified: Jan 19, 2020.
+import datamodel.RatingSystem2DBoolean;
+
+/**
+ * @(#)MF2DBoolean.java <br>
+ *                      Project: Matrix factorization for recommender systems.
+ *                      Two factorization algorithms are implemented.<br>
+ * @author Fan Min<br>
+ *         www.fansmale.com, github.com/fansmale.<br>
+ *         Email: minfan@swpu.edu.cn, minfanphd@163.com.<br>
+ * @date Created: December 3, 2019.<br>
+ *       Last modified: January 27, 2020.
  */
 
-public class MF2DBoolean {
-	/**
-	 * A sign to help reading the data file.
-	 */
-	public static final String SPLIT_SIGN = new String("	");
-
-	/**
-	 * Used to generate random numbers.
-	 */
-	Random rand = new Random();
-
-	/**
-	 * Number of users.
-	 */
-	int numUsers;
-
-	/**
-	 * Number of items.
-	 */
-	int numItems;
-
-	/**
-	 * Number of ratings.
-	 */
-	int numRatings;
-
-	/**
-	 * The whole data.
-	 */
-	Triple[][] data;
-
-	/**
-	 * Which elements belong to the training set.
-	 */
-	boolean[][] trainingIndicationMatrix;
-
-	/**
-	 * Mean rating calculated from the training sets.
-	 */
-	double meanRating;
+public class MF2DBoolean extends RatingSystem2DBoolean {
 
 	/**
 	 * A parameter for controlling learning regular.
@@ -82,16 +41,6 @@ public class MF2DBoolean {
 	 * The item matrix V.
 	 */
 	double[][] itemSubspace;
-
-	/**
-	 * The lower bound of the rating value.
-	 */
-	double ratingLowerBound;
-
-	/**
-	 * The upper bound of the rating value.
-	 */
-	double ratingUpperBound;
 
 	/**
 	 * Regular scheme.
@@ -129,19 +78,8 @@ public class MF2DBoolean {
 	 */
 	public MF2DBoolean(String paraFilename, int paraNumUsers, int paraNumItems, int paraNumRatings,
 			double paraRatingLowerBound, double paraRatingUpperBound) {
-		numUsers = paraNumUsers;
-		numItems = paraNumItems;
-		numRatings = paraNumRatings;
-		ratingLowerBound = paraRatingLowerBound;
-		ratingUpperBound = paraRatingUpperBound;
-
-		// data = new Triple[numRatings];
-		try {
-			readData(paraFilename, paraNumUsers, paraNumItems, paraNumRatings);
-		} catch (Exception ee) {
-			System.out.println("File " + paraFilename + " cannot be read! " + ee);
-			System.exit(0);
-		} // Of try
+		super(paraFilename, paraNumUsers, paraNumItems, paraNumRatings, paraRatingLowerBound,
+				paraRatingUpperBound);
 
 		initialize();
 	}// Of the first constructor
@@ -155,157 +93,13 @@ public class MF2DBoolean {
 	 * @throws IOException
 	 ************************ 
 	 */
-	public void setParameters(int paraRank, double paraAlpha, double paraLambda, int paraRegularScheme) {
+	public void setParameters(int paraRank, double paraAlpha, double paraLambda,
+			int paraRegularScheme) {
 		rank = paraRank;
 		alpha = paraAlpha;
 		lambda = paraLambda;
 		regularScheme = paraRegularScheme;
 	}// Of setParameters
-
-	/**
-	 ************************ 
-	 * Read the data from the file.
-	 * 
-	 * @param paraFilename
-	 *            The given file.
-	 * @throws IOException
-	 ************************ 
-	 */
-	public Triple[][] readData(String paraFilename, int paraNumUsers, int paraNumItems, int paraNumRatings)
-			throws IOException {
-		File file = new File(paraFilename);
-		BufferedReader buffRead = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
-
-		// Allocate space.
-		data = new Triple[paraNumUsers][];
-		trainingIndicationMatrix = new boolean[numUsers][];
-
-		Triple[] tempTripleArrayForUser = new Triple[paraNumItems];
-		int tempCurrentUserRatings = 0;
-
-		int tempUserIndex = 0;
-		while (buffRead.ready()) {
-			String str = buffRead.readLine();
-			String[] parts = str.split(SPLIT_SIGN);
-
-			// The first loop to read the current line for one user.
-			tempCurrentUserRatings = 0;
-			for (int i = 1; i < paraNumItems; i++) {
-				int tempItemIndex = i - 1;// item id
-				double tempRating = Double.parseDouble(parts[i]);// rating
-
-				if (tempRating != 99) {
-					tempTripleArrayForUser[tempCurrentUserRatings] = new Triple(tempUserIndex, tempItemIndex,
-							tempRating);
-					tempCurrentUserRatings++;
-				} // Of if
-			} // Of for i
-
-			// The second loop to copy.
-			data[tempUserIndex] = new Triple[tempCurrentUserRatings];
-			trainingIndicationMatrix[tempUserIndex] = new boolean[tempCurrentUserRatings];
-			for (int i = 0; i < tempCurrentUserRatings; i++) {
-				data[tempUserIndex][i] = tempTripleArrayForUser[i];
-			} // Of for i
-			tempUserIndex++;
-		} // Of while
-		buffRead.close();
-
-		return data;
-	}// Of readData
-
-	/**
-	 ************************ 
-	 * Set the training part.
-	 * 
-	 * @param paraTrainingFraction
-	 *            The fraction of the training set.
-	 * @throws IOException
-	 ************************ 
-	 */
-	public void initializeTraining(double paraTrainingFraction) {
-		// Step 1. Read all data.
-		int tempTotalTrainingSize = (int) (numRatings * paraTrainingFraction);
-		int tempTotalTestingSize = numRatings - tempTotalTrainingSize;
-
-		int tempTrainingSize = 0;
-		int tempTestingSize = 0;
-		double tempDouble;
-
-		// Step 2. Handle each user.
-		for (int i = 0; i < numUsers; i++) {
-			for (int j = 0; j < trainingIndicationMatrix[i].length; j++) {
-				tempDouble = rand.nextDouble();
-				if (tempDouble <= paraTrainingFraction) {
-					if (tempTrainingSize < tempTotalTrainingSize) {
-						trainingIndicationMatrix[i][j] = true;
-						tempTrainingSize++;
-					} else {
-						trainingIndicationMatrix[i][j] = false;
-						tempTestingSize++;
-					} // Of if
-				} else {
-					if (tempTestingSize < tempTotalTestingSize) {
-						trainingIndicationMatrix[i][j] = false;
-						tempTestingSize++;
-					} else {
-						trainingIndicationMatrix[i][j] = true;
-						tempTrainingSize++;
-					} // Of if
-				} // Of if
-			} // Of for j
-		} // Of for i
-
-		System.out.println("" + tempTrainingSize + " training instances.");
-		System.out.println("" + tempTestingSize + " testing instances.");
-	}// Of initializeTraining
-
-	/**
-	 ************************ 
-	 * Set all data for training.
-	 ************************ 
-	 */
-	public void setAllTraining() {
-		for (int i = 0; i < numUsers; i++) {
-			for (int j = 0; j < trainingIndicationMatrix[i].length; j++) {
-				trainingIndicationMatrix[i][j] = true;
-			} // Of for j
-		} // Of for i
-	}// Of setAllTraining
-
-	/**
-	 ************************ 
-	 * Adjust the training data with the mean rating. The ratings are subtracted
-	 * with the mean rating. So do the rating bounds.
-	 ************************ 
-	 */
-	public void adjustUsingMeanRating() {
-		// Step 1. Calculate the mean rating.
-		double tempRatingSum = 0;
-		int tempTrainingSize = 0;
-		for (int i = 0; i < numUsers; i++) {
-			for (int j = 0; j < trainingIndicationMatrix[i].length; j++) {
-				if (trainingIndicationMatrix[i][j]) {
-					tempRatingSum += data[i][j].rating;
-					tempTrainingSize++;
-				} // Of if
-			} // Of for j
-		} // Of for i
-		meanRating = tempRatingSum / tempTrainingSize;
-
-		// Step 2. Update the ratings in the training set.
-		for (int i = 0; i < numUsers; i++) {
-			for (int j = 0; j < trainingIndicationMatrix[i].length; j++) {
-				if (trainingIndicationMatrix[i][j]) {
-					data[i][j].rating -= meanRating;
-				} // Of if
-			} // Of for j
-		} // Of for i
-
-		// Step 3. Also update the bounds.
-		ratingLowerBound -= meanRating;
-		ratingUpperBound -= meanRating;
-	}// Of adjustUsingMeanRating
 
 	/**
 	 ************************ 
@@ -364,6 +158,23 @@ public class MF2DBoolean {
 
 	/**
 	 ************************ 
+	 * Predict the ratings of the user to each item.
+	 * 
+	 * @param paraUser
+	 *            The user index.
+	 ************************ 
+	 */
+	public double[] predictForUser(int paraUser) {
+		//System.out.println("predictForUser(" + paraUser + ")");
+		double[] resultPredictions = new double[numItems];
+		for (int i = 0; i < numItems; i++) {
+			resultPredictions[i] = predict(paraUser, i);
+		} // Of for i
+		return resultPredictions;
+	}// Of predictForUser
+
+	/**
+	 ************************ 
 	 * Train.
 	 * 
 	 * @param paraRounds
@@ -380,6 +191,25 @@ public class MF2DBoolean {
 			} // Of if
 		} // Of for i
 	}// Of train
+
+	/**
+	 ************************ 
+	 * Pre-train.
+	 * 
+	 * @param paraRounds
+	 *            The number of rounds.
+	 ************************ 
+	 */
+	public void pretrain(int paraRounds) {
+		setParameters(10, 0.0001, 0.005, NO_REGULAR);
+		setAllTraining();
+		adjustUsingMeanRating();
+
+		// Step 2. Pre-train
+		initializeSubspaces(0.5);
+		System.out.println("Pre-training " + paraRounds + " rounds ...");
+		train(paraRounds);
+	}// Of pretrain
 
 	/**
 	 ************************ 
@@ -460,14 +290,16 @@ public class MF2DBoolean {
 				// Update user subspace
 				double tempValue = 0;
 				for (int k = 0; k < rank; k++) {
-					tempValue = 2 * tempResidual * itemSubspace[tempItemId][k] - lambda * userSubspace[tempUserId][k];
+					tempValue = 2 * tempResidual * itemSubspace[tempItemId][k]
+							- lambda * userSubspace[tempUserId][k];
 
 					userSubspace[tempUserId][k] += alpha * tempValue;
 				} // Of for j
 
 				// Update item subspace
 				for (int k = 0; k < rank; k++) {
-					tempValue = 2 * tempResidual * userSubspace[tempUserId][k] - lambda * itemSubspace[tempItemId][k];
+					tempValue = 2 * tempResidual * userSubspace[tempUserId][k]
+							- lambda * itemSubspace[tempItemId][k];
 					itemSubspace[tempItemId][k] += alpha * tempValue;
 				} // Of for k
 			} // Of for j
@@ -561,15 +393,16 @@ public class MF2DBoolean {
 	 * The training testing scenario.
 	 ************************ 
 	 */
-	public static void testTrainingTesting(String paraFilename, int paraNumUsers, int paraNumItems, int paraNumRatings,
-			double paraRatingLowerBound, double paraRatingUpperBound, int paraRounds) {
+	public static void testTrainingTesting(String paraFilename, int paraNumUsers, int paraNumItems,
+			int paraNumRatings, double paraRatingLowerBound, double paraRatingUpperBound,
+			int paraRounds) {
 		try {
 			// Step 1. read the training and testing data
-			MF2DBoolean tempMF = new MF2DBoolean(paraFilename, paraNumUsers, paraNumItems, paraNumRatings,
-					paraRatingLowerBound, paraRatingUpperBound);
+			MF2DBoolean tempMF = new MF2DBoolean(paraFilename, paraNumUsers, paraNumItems,
+					paraNumRatings, paraRatingLowerBound, paraRatingUpperBound);
 
-			tempMF.setParameters(10, 0.0001, 0.005, NO_REGULAR);
-			tempMF.initializeTraining(0.5);
+			tempMF.setParameters(10, 0.0001, 0.005, PQ_REGULAR);
+			tempMF.initializeTraining(0.8);
 			tempMF.adjustUsingMeanRating();
 
 			// tempMF.setTestingSetRemainder(2);
@@ -594,12 +427,13 @@ public class MF2DBoolean {
 	 * Training and testing using the same data.
 	 ************************ 
 	 */
-	public static void testAllTrainingTesting(String paraFilename, int paraNumUsers, int paraNumItems, int paraNumRatings,
-			double paraRatingLowerBound, double paraRatingUpperBound, int paraRounds) {
+	public static void testAllTrainingTesting(String paraFilename, int paraNumUsers,
+			int paraNumItems, int paraNumRatings, double paraRatingLowerBound,
+			double paraRatingUpperBound, int paraRounds) {
 		try {
 			// Step 1. read the training and testing data
-			MF2DBoolean tempMF = new MF2DBoolean(paraFilename, paraNumUsers, paraNumItems, paraNumRatings,
-					paraRatingLowerBound, paraRatingUpperBound);
+			MF2DBoolean tempMF = new MF2DBoolean(paraFilename, paraNumUsers, paraNumItems,
+					paraNumRatings, paraRatingLowerBound, paraRatingUpperBound);
 
 			tempMF.setParameters(10, 0.0001, 0.005, NO_REGULAR);
 			tempMF.initializeTraining(1.0);
@@ -622,14 +456,15 @@ public class MF2DBoolean {
 			e.printStackTrace();
 		} // of try
 	}// Of testAllTrainingTesting
-	
+
 	/**
 	 ************************ 
 	 * @param args
 	 ************************ 
 	 */
 	public static void main(String args[]) {
-		testTrainingTesting("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10, 200);
+		testAllTrainingTesting("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10,
+				200);
 		// testSameTrainingTesting("data/jester-data-1/jester-data-1.txt",
 		// 24983, 101, 1810455, -10, 10, 500);
 	}// Of main

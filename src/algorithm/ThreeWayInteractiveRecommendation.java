@@ -1,28 +1,23 @@
 package algorithm;
+
 import algorithm.GLFactorizationJournal;
 import java.io.*;
 import java.util.Arrays;
 import java.util.Random;
 import datamodel.*;
 /**
- * 
- * Title: ThreeWayInteractiveRecommendation.java
- * 
- * @author Fan Min, Yuan-Yuan Xu www.fansmale.com minfan@swpu.edu.cn Created:
- *         July 25, 2019
- * @date 2019.11.4
- */
-
-// import java.io.File;
-
-/*
  * @(#)ThreeWayInteractiveRecommendation.java
- * 
- * Project: Three-way interactive recommendation. Author: Fan Min, Yuan-Yuan Xu
- * www.fansmale.com Email: minfan@swpu.edu.cn Created: July 25, 2019. Last
- * modified: Oct 4, 2019.
+ * Project: Matrix factorization for recommender systems.
+ * The data is organized in 2D of triples. Boolean means that a boolean matrix indicates 
+ * the training set. The purpose is to enable incremental learning. Now only uncompressed 
+ * data file is supported, that is, missing value is indicated by 99. In the near future, 
+ * the data organized by triples should also be supported. <br>
+ * @author Fan Min
+ * www.fansmale.com, github.com/fansmale
+ * Email: minfan@swpu.edu.cn, minfanphd@163.com.<br>
+ * @date Created July 25, 2019.
+ * Last modified: January 27, 2020.
  */
-
 public class ThreeWayInteractiveRecommendation {
 	GLFactorizationJournal tempGLF;
 	/**

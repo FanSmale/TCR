@@ -1,7 +1,5 @@
 package algorithm;
 
-import java.util.Arrays;
-
 /*
  * @(#)MF2DBoolean.java
  
@@ -99,7 +97,7 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 
 		// Step 2. Update the user subspace.
 		for (int i = 0; i < paraRounds; i++) {
-			update(paraUser);
+			updateUserSubspace(paraUser);
 		} // Of for i
 	}// Of trainUser
 
@@ -108,7 +106,7 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 	 * Update sub-spaces using the training data.
 	 ************************ 
 	 */
-	public void update(int paraUser) {
+	public void updateUserSubspace(int paraUser) {
 		switch (regularScheme) {
 		case NO_REGULAR:
 			updateUserSubspaceNoRegular(paraUser);
@@ -121,40 +119,6 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 			System.exit(0);
 		}// Of switch
 	}// Of update
-
-	/**
-	 ************************ 
-	 * Update sub-spaces using the training data.
-	 ************************ 
-	 */
-	public void updateNoRegular(int paraUser) {
-		for (int i = 0; i < data[paraUser].length; i++) {
-			// Ignore the testing set.
-			if (!trainingIndicationMatrix[paraUser][i]) {
-				continue;
-			} // Of if
-
-			int tempItemId = data[paraUser][i].item;
-			double tempRate = data[paraUser][i].rating;
-
-			double tempResidual = tempRate - predict(paraUser, tempItemId); // Residual
-			// tempResidual = Math.abs(tempResidual);
-
-			// Update user subspace
-			double tempValue = 0;
-			for (int j = 0; j < rank; j++) {
-				tempValue = 2 * tempResidual * itemSubspace[tempItemId][j];
-				userSubspace[paraUser][j] += alpha * tempValue;
-			} // Of for j
-
-			// Update item subspace
-			for (int j = 0; j < rank; j++) {
-				tempValue = 2 * tempResidual * userSubspace[paraUser][j];
-
-				itemSubspace[tempItemId][j] += alpha * tempValue;
-			} // Of for j
-		} // Of for i
-	}// Of updateNoRegular
 
 	/**
 	 ************************ 
@@ -187,39 +151,6 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 		} // Of for i
 	}// Of updateUserSubspaceNoRegular	
 	
-	/**
-	 ************************ 
-	 * Update sub-spaces using the training data.
-	 ************************ 
-	 */
-	public void updatePQRegular(int paraUser) {
-		for (int i = 0; i < data[paraUser].length; i++) {
-			// Ignore the testing set.
-			if (!trainingIndicationMatrix[paraUser][i]) {
-				continue;
-			} // Of if
-
-			int tempItemId = data[paraUser][i].item;
-			double tempRate = data[paraUser][i].rating;
-
-			double tempResidual = tempRate - predict(paraUser, tempItemId); // Residual
-			// tempResidual = Math.abs(tempResidual);
-
-			// Update user subspace
-			double tempValue = 0;
-			for (int j = 0; j < rank; j++) {
-				tempValue = 2 * tempResidual * itemSubspace[tempItemId][j] - lambda * userSubspace[paraUser][j];
-				userSubspace[paraUser][j] += alpha * tempValue;
-			} // Of for j
-
-			// Update item subspace
-			for (int j = 0; j < rank; j++) {
-				tempValue = 2 * tempResidual * userSubspace[paraUser][j] - lambda * itemSubspace[tempItemId][j];
-				itemSubspace[tempItemId][j] += alpha * tempValue;
-			} // Of for j
-		} // Of for i
-	}// Of updatePQRegular
-
 	/**
 	 ************************ 
 	 * Update the user sub-space using the training data of the given user.
