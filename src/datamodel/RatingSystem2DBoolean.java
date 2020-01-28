@@ -243,6 +243,45 @@ public class RatingSystem2DBoolean {
 
 	/**
 	 ************************ 
+	 * Getter.
+	 ************************ 
+	 */
+	public int getNumUsers() {
+		return numUsers;
+	}//Of getNumUsers
+
+	/**
+	 ************************ 
+	 * Getter.
+	 ************************ 
+	 */
+	public int getNumItems() {
+		return numItems;
+	}//Of getNumItems
+
+	/**
+	 ************************ 
+	 * Getter.
+	 ************************ 
+	 */
+	public int getNumRatings() {
+		return numRatings;
+	}//Of getNumRatings
+
+	/**
+	 *********************************** 
+	 * Show me.
+	 *********************************** 
+	 */
+	public String toString() {
+		String resultString = "I am a recommender system.\r\n";
+		resultString += "I have " + numUsers + " users, " + numItems + " items, and " + numRatings
+				+ " ratings.";
+		return resultString;
+	}// Of toString
+
+	/**
+	 ************************ 
 	 * Adjust the training data with the mean rating. The ratings are subtracted
 	 * with the mean rating. So do the rating bounds.
 	 ************************ 

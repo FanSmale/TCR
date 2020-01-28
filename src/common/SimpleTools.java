@@ -3,27 +3,32 @@
  *
  */
 
-package tool;
+package common;
 
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.*;
 
-import datamodel.Triple;
+import weka.core.Instance;
+import weka.core.Instances;
 
 /**
  * Frequently used methods to convert strings, integers, codings, etc.
  * <p>
- * Author: <b>Fan Min</b> minfanphd@163.com <br>
+ * Author: <b>Fan Min</b> minfanphd@163.com, minfan@swpu.edu.cn <br>
  * Copyright: The source code and all documents are open and free. PLEASE keep
  * this header while revising the program. <br>
- * Organization: <a href=http://grc.fjzs.edu.cn/>Lab of Granular Computing</a>,
- * Zhangzhou Normal University, Fujian 363000, China.<br>
- * Project: The granular association rules project.
+ * Organization: <a href=http://www.fansmale.com/>Lab of Machine Learning</a>,
+ * Southwest Petroleum University, Chengdu 610500, China.<br>
+ * Project: The cost-sensitive active learning project.
  * <p>
- * Progress: OK. <br>
- * Written time: April 03, 2013. <br>
- * Last modify time: December 23, 2013.
+ * Progress: Changing all the time.<br>
+ * Written time: October 20, 2008. <br>
+ * Last modify time: July 27, 2019.
  */
-public class SimpleTool extends Object {
+
+public class SimpleTools extends Object {
 	/**
 	 * Maximal length of the parsed array (for int and double).
 	 */
@@ -35,11 +40,94 @@ public class SimpleTool extends Object {
 	public static final Random random = new Random();
 
 	/**
+	 * Console output for debugging? If so, output. Otherwise ignore the output
+	 * information.
+	 */
+	static boolean ifConsoleOutput = false;
+
+	/**
+	 * Track the process?
+	 */
+	public static boolean processTracking = false;
+
+	/**
+	 * Track the variables?
+	 */
+	public static boolean variableTracking = false;
+
+	/**
+	 * Output to file?
+	 */
+	public static boolean fileOutput = false;
+
+	/**
+	 ****************** 
+	 * Output for process tracking.
+	 * 
+	 * @param paraString
+	 *            The string for display.
+	 ****************** 
+	 */
+	public static void processTrackingOutput(String paraString) {
+		if (processTracking) {
+			System.out.print(paraString);
+		} // Of if
+	}// Of processTrackingOutput
+
+	/**
+	 ****************** 
+	 * Output for variable tracking.
+	 * 
+	 * @param paraString
+	 *            The string for display.
+	 ****************** 
+	 */
+	public static void variableTrackingOutput(String paraString) {
+		if (variableTracking) {
+			System.out.println(paraString);
+		} // Of if
+	}// Of variableTrackingOutput
+
+	/**
+	 ********************************** 
+	 * Console output.
+	 * 
+	 * @param paraString
+	 *            the given string.
+	 ********************************** 
+	 */
+	public static void consoleOutput(String paraString) {
+		if (ifConsoleOutput) {
+			System.out.println(paraString);
+		} // Of if
+	}// Of consoleOutput
+
+	/**
+	 ************************* 
+	 * An instance converted to a double array, where the class label is not
+	 * considered.
+	 * 
+	 * @param paraInstance
+	 *            The given instance.
+	 * @return A double array.
+	 ************************* 
+	 */
+	public static double[] instanceToDoubleArray(Instance paraInstance) {
+		double[] resultArray = new double[paraInstance.numAttributes() - 1];
+		for (int i = 0; i < resultArray.length; i++) {
+			resultArray[i] = paraInstance.value(i);
+		} // Of for i
+
+		return resultArray;
+	}// Of instanceToDoubleArray
+	
+	/**
 	 ********************************** 
 	 * Convert a double value into a shorter string.
 	 * 
 	 * @param paraDouble
 	 *            the double value to be converted.
+	 * @return A shorter representation of the double value.
 	 ********************************** 
 	 */
 	public static String shorterDouble(double paraDouble) {
@@ -54,6 +142,7 @@ public class SimpleTool extends Object {
 	 *            the double value to be converted.
 	 * @param paraLength
 	 *            the length of reserved double.
+	 * @return A shorter representation of the double value.
 	 ********************************** 
 	 */
 	public static String shorterDouble(double paraDouble, int paraLength) {
@@ -85,7 +174,7 @@ public class SimpleTool extends Object {
 	 * For example, "a, bc, def, g" will be converted into a string array with 4
 	 * elements "a", "bc", "def" and "g".
 	 * 
-	 * @param prmString
+	 * @param paraString
 	 *            The source string
 	 * @return A string array.
 	 * @throws Exception
@@ -93,26 +182,26 @@ public class SimpleTool extends Object {
 	 * @see #stringArrayToString(java.lang.String[])
 	 ********************************** 
 	 */
-	public static String[] stringToStringArray(String prmString) throws Exception {
+	public static String[] stringToStringArray(String paraString) throws Exception {
 		/*
 		 * Convert this string into an array such that another method could be
 		 * invoked.
 		 */
 		int tempCounter = 1;
-		for (int i = 0; i < prmString.length(); i++) {
-			if (prmString.charAt(i) == ',') {
+		for (int i = 0; i < paraString.length(); i++) {
+			if (paraString.charAt(i) == ',') {
 				tempCounter++;
 			} // Of if
 		} // Of for i
 
 		String[] theStringArray = new String[tempCounter];
 
-		String remainString = new String(prmString) + ",";
+		String remainString = new String(paraString) + ",";
 		for (int i = 0; i < tempCounter; i++) {
 			theStringArray[i] = remainString.substring(0, remainString.indexOf(",")).trim();
 			if (theStringArray[i].equals("")) {
 				throw new Exception("Error occurred in common.SimpleTool.stringToStringArray()."
-						+ "\n\tBlank attribute or data is not allowed as a data. " + "\n\tThe string is:" + prmString);
+						+ "\n\tBlank attribute or data is not allowed as a data. " + "\n\tThe string is:" + paraString);
 			} // Of if
 				// Common.println(theStringArray[i]);
 			remainString = remainString.substring(remainString.indexOf(",") + 1);
@@ -176,13 +265,13 @@ public class SimpleTool extends Object {
 	 * 
 	 * @param prmStringArray
 	 *            The string quisi-array (elements are separated by commas).
-	 * @param prmString
+	 * @param paraString
 	 *            Respect string.
 	 * @return If it is contained.
 	 * @see #stringToStringArray(java.lang.String)
 	 ********************************** 
 	 */
-	public static boolean stringArrayContainsString(String prmStringArray, String prmString) {
+	public static boolean stringArrayContainsString(String prmStringArray, String paraString) {
 		String[] realStringArray = null;
 		try {
 			realStringArray = stringToStringArray(prmStringArray);
@@ -191,7 +280,7 @@ public class SimpleTool extends Object {
 		} // Of try
 
 		for (int i = 0; i < realStringArray.length; i++) {
-			if (realStringArray[i].equals(prmString)) {
+			if (realStringArray[i].equals(paraString)) {
 				return true;
 			} // Of if
 		} // Of for
@@ -206,7 +295,7 @@ public class SimpleTool extends Object {
 	 *            The first attribute string
 	 * @param prmSecondString
 	 *            The second attribute string
-	 * @return concated string.
+	 * @return joined string.
 	 ********************************** 
 	 */
 	public static String joinString(String prmFirstString, String prmSecondString) {
@@ -226,20 +315,20 @@ public class SimpleTool extends Object {
 	 * latter only permits commas to be delimiters. For more detail please
 	 * contact <A href="mailto:qiheliu@uestc.edu.cn">Liu Qihe</A>
 	 * 
-	 * @param prmString
+	 * @param paraString
 	 *            The given string
-	 * @param prmDelimiter
+	 * @param paraDelimiter
 	 *            The given delimiter
-	 * @param prmReturnTokens
+	 * @param paraReturnTokens
 	 *            Is the delimiter permitted after convertion.
 	 * @return string array separated by commas
 	 ********************************** 
 	 */
-	public static String[] parseString(String prmString, String prmDelimiter, boolean prmReturnTokens) {
+	public static String[] parseString(String paraString, String paraDelimiter, boolean paraReturnTokens) {
 		String[] returnString = null;
 		StringTokenizer token;
-		if (prmString != null) {
-			token = new StringTokenizer(prmString.trim(), prmDelimiter, prmReturnTokens);
+		if (paraString != null) {
+			token = new StringTokenizer(paraString.trim(), paraDelimiter, paraReturnTokens);
 			returnString = new String[token.countTokens()];
 			int i = 0;
 			while (token.hasMoreTokens()) {
@@ -256,18 +345,18 @@ public class SimpleTool extends Object {
 	 * Remove string from a string array, and return a string. For more detail
 	 * please contact <A href="mailto:qiheliu@uestc.edu.cn">Liu Qihe</A>
 	 * 
-	 * @param prmString
-	 *            ï¿½Ö·ï¿½ï¿½ï¿½
+	 * @param paraString
+	 *            ×Ö·û´®
 	 * @param index
-	 *            È¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»\uFFFD
-	 * @return ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÖµÖ®ï¿½ï¿½ï¿½Ã¶ï¿½ï¿½Å·Ö¸ï¿½.
+	 *            È¥µô´®µÄÎ»\uFFFD
+	 * @return ×Ö·û´®£¬ÊôÐÔÖµÖ®¼äÓÃ¶ººÅ·Ö¸ô.
 	 ***********************************/
-	public static String generateString(String[] prmString, int index) {
+	public static String generateString(String[] paraString, int index) {
 		String result = "";
-		for (int i = 0; i < prmString.length; i++) {
+		for (int i = 0; i < paraString.length; i++) {
 			if (i == index)
 				continue;
-			result += prmString[i] + ",";
+			result += paraString[i] + ",";
 		}
 		result = result.substring(0, result.length() - 1);
 		return result;
@@ -393,6 +482,8 @@ public class SimpleTool extends Object {
 	 * @return A result string. #see
 	 *         scheme.Reduction.computeOptimalMReductByEntropy(java.lang.String,
 	 *         java.lang.String, java.lang.String)
+	 * @throws Exception
+	 *             The exception generated by stringToStringArray(String).
 	 ********************************** 
 	 */
 	public static String stringUnionString(String prmFirstString, String prmSecondString) throws Exception {
@@ -427,32 +518,34 @@ public class SimpleTool extends Object {
 
 	/**
 	 *************************** 
-	 * Judge whether or not the elements of the given array are zero totally.
-	 *************************** 
-	 */
-	public static boolean isZeroElementsOfArray(double[] paraArray) {
-		if (paraArray == null) {
-			System.out.println("The given array is null!");
-			return true;
-		} // of if
-		for (int i = 0; i < paraArray.length; i++) {
-			if (paraArray[i] > 1E-6) {
-				return false;
-			} // of if
-		} // of for i
-
-		return true;
-	}// Of isZeroElementsOfArray
-
-	/**
-	 *************************** 
 	 * Judge whether or not the given string is null/empty.
+	 * 
+	 * @param paraString
+	 *            The given string.
+	 * @return True if it is null or empty.
 	 *************************** 
 	 */
 	public static boolean isEmptyStr(String paraString) {
 		if (paraString == null)
 			return true;
 		if (paraString.equals(""))
+			return true;
+		return false;
+	}// Of isEmptyStr
+
+	/**
+	 *************************** 
+	 * Judge whether or not the given string is specified.
+	 * 
+	 * @param paraString
+	 *            The given string.
+	 * @return True if the string is empty or "unspecified."
+	 *************************** 
+	 */
+	public static boolean isUnspecifiedStr(String paraString) {
+		if (isEmptyStr(paraString))
+			return true;
+		if (paraString.equals(Common.unspecifiedString))
 			return true;
 		return false;
 	}// Of isEmptyStr
@@ -471,6 +564,8 @@ public class SimpleTool extends Object {
 	 *            The separator of data, blank and commas are most commonly uses
 	 *            ones.
 	 * @return The constructed array.
+	 * @throws Exception
+	 *             for format.
 	 *************************** 
 	 */
 	public static int[] parseIntArray(String paraString, int paraNumberOfInts, char paraSeparator) throws Exception {
@@ -499,7 +594,7 @@ public class SimpleTool extends Object {
 					+ "May caused by incorrect separator (e.g., comma, blank).\r\n" + nfe);
 		} catch (Exception ee) {
 			throw new Exception("Error occurred in common.SimpleTool.parseIntArray.\r\n" + ee);
-		}
+		} // Of try
 
 		return returnArray;
 	}// Of parseIntArray
@@ -645,10 +740,12 @@ public class SimpleTool extends Object {
 	 * @return The constructed String.
 	 *************************** 
 	 */
-	public static String arrayToString(int[] paraArray, char paraSeparator) throws Exception {
+	public static String intArrayToString(int[] paraArray, char paraSeparator) {
 		String returnString = "[]";
-		if ((paraArray == null) || (paraArray.length < 1))
+		if ((paraArray == null) || (paraArray.length < 1)) {
 			return returnString;
+		} // Of if
+
 		// throw new Exception(
 		// "Error occurred in common.SimpleTool. Cannot convert an empty array
 		// into a string.");
@@ -660,7 +757,35 @@ public class SimpleTool extends Object {
 		returnString = "[" + returnString + "]";
 
 		return returnString;
-	}// Of arrayToString
+	}// Of intArrayToString
+
+	/**
+	 *************************** 
+	 * Convert an integer matrix into a string. Integers are separated by
+	 * separators. Author Xiangju Li.
+	 * 
+	 * @param paraArray
+	 *            The given array.
+	 * @param paraSeparator
+	 *            The separator of data, blank and commas are most commonly uses
+	 *            ones.
+	 * @return The constructed String.
+	 *************************** 
+	 */
+	public static String intMatrixToString(int[][] paraArray, char paraSeparator) {
+		String returnString = "[]";
+		if ((paraArray == null) || (paraArray.length < 1))
+			return returnString;
+		returnString = "";
+		for (int i = 0; i < paraArray.length; i++) {
+			for (int j = 0; j < paraArray[i].length - 1; j++) {
+				returnString += "" + paraArray[i][j] + paraSeparator;
+			} // Of for j
+			returnString += paraArray[i][paraArray.length - 1];
+			returnString += "\r\n";
+		} // Of for i
+		return returnString;
+	}// Of intMatrixToString
 
 	/**
 	 *************************** 
@@ -677,6 +802,8 @@ public class SimpleTool extends Object {
 	 *            The separator of data, blank and commas are most commonly uses
 	 *            ones.
 	 * @return The constructed array.
+	 * @throws Exception
+	 *             If index out of bounds.
 	 *************************** 
 	 */
 	public static double[] parseDoubleArray(String paraString, int paraNumberOfDoubles, char paraSeparator)
@@ -724,6 +851,7 @@ public class SimpleTool extends Object {
 	 * @param paraString
 	 *            The given string.
 	 * @return The constructed array.
+	 * @throws Exception if the array length exceeds the bound.
 	 *************************** 
 	 */
 	public static double[] parseDoubleArray(String paraString) throws Exception {
@@ -771,32 +899,14 @@ public class SimpleTool extends Object {
 
 	/**
 	 *************************** 
-	 * Conver a double matrix into a string. Doubles are separated by \t. Author
-	 * Fan Min.
-	 * 
-	 * @param paraMatrix
-	 *            The given matrix.
-	 * @param paraLength
-	 *            make the double shorter according to the length.
-	 * @return The constructed String.
-	 *************************** 
-	 */
-	public static String doubleMatrixToString(double[][] paraMatrix, int paraLength) throws Exception {
-		String returnString = "";
-		for (int i = 0; i < paraMatrix.length; i++) {
-			returnString += doubleArrayToString(paraMatrix[i], '\t', paraLength) + "\r\n";
-		} // Of for i
-		return returnString;
-	}// Of doubleMatrixToString
-
-	/**
-	 *************************** 
 	 * Conver a double array into a string. Doubles are separated by blanks.
 	 * Author Fan Min.
 	 * 
 	 * @param paraArray
 	 *            The given array.
 	 * @return The constructed String.
+	 * @throws Exception
+	 *             for empty array.
 	 *************************** 
 	 */
 	public static String doubleArrayToString(double[] paraArray) throws Exception {
@@ -814,6 +924,8 @@ public class SimpleTool extends Object {
 	 *            The separator of data, blank and commas are most commonly uses
 	 *            ones.
 	 * @return The constructed String.
+	 * @throws Exception
+	 *             for null or empty array.
 	 *************************** 
 	 */
 	public static String doubleArrayToString(double[] paraArray, char paraSeparator) throws Exception {
@@ -824,33 +936,6 @@ public class SimpleTool extends Object {
 			returnString += "" + paraArray[i] + paraSeparator;
 		} // Of for i
 		returnString += paraArray[paraArray.length - 1];
-
-		return returnString;
-	}// Of doubleArrayToString
-
-	/**
-	 *************************** 
-	 * Conver a double array into a string. Doubles are separated by separators.
-	 * Author Fan Min.
-	 * 
-	 * @param paraArray
-	 *            The given array.
-	 * @param paraSeparator
-	 *            The separator of data, blank and commas are most commonly uses
-	 *            ones.
-	 * @param paraLength
-	 *            make the double shorter according to the length.
-	 * @return The constructed String.
-	 *************************** 
-	 */
-	public static String doubleArrayToString(double[] paraArray, char paraSeparator, int paraLength) throws Exception {
-		if ((paraArray == null) || (paraArray.length < 1))
-			throw new Exception("Error occurred in common.SimpleTool. Cannot convert an empty array into a string.");
-		String returnString = "";
-		for (int i = 0; i < paraArray.length - 1; i++) {
-			returnString += "" + shorterDouble(paraArray[i], paraLength) + paraSeparator;
-		} // Of for i
-		returnString += shorterDouble(paraArray[paraArray.length - 1], paraLength);
 
 		return returnString;
 	}// Of doubleArrayToString
@@ -966,6 +1051,8 @@ public class SimpleTool extends Object {
 	 * @param paraString
 	 *            The given string.
 	 * @return The constructed array.
+	 * @throws Exception
+	 *             For format error.
 	 *************************** 
 	 */
 	public static int[] parseIntArray(String paraString) throws Exception {
@@ -1025,6 +1112,8 @@ public class SimpleTool extends Object {
 	 * @param paraString
 	 *            The given string.
 	 * @return A double value.
+	 * @throws Exception
+	 *             If cannot be parsed.
 	 *************************** 
 	 */
 	public static double parseDoubleValueAfterColon(String paraString) throws Exception {
@@ -1047,7 +1136,7 @@ public class SimpleTool extends Object {
 	 * @return A double value.
 	 *************************** 
 	 */
-	public static int parseIntValueAfterColon(String paraString) throws Exception {
+	public static int parseIntValueAfterColon(String paraString) {
 		// char separator = ' ';
 		int tempValue = 0;
 		String tempString = new String(paraString);
@@ -1060,72 +1149,13 @@ public class SimpleTool extends Object {
 
 	/**
 	 *************************** 
-	 * Bubble sort. <br>
-	 * ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-	 * 
-	 * @param paraArray
-	 *            The given array.
-	 * @author Zhanghr 2014/06/14
-	 * @return The constructed array.
-	 *************************** 
-	 */
-	public static double[] bubbleSort(double[] paraArray) {
-		int tempLength = paraArray.length;
-		double tempValue = 0;
-		for (int i = 0; i <= tempLength - 1; i++) {
-			for (int j = tempLength - 1; j > i; j--) {
-				if (paraArray[j] < paraArray[j - 1]) {
-					tempValue = paraArray[j];
-					paraArray[j] = paraArray[j - 1];
-					paraArray[j - 1] = tempValue;
-				} // of if
-			} // of for j
-		} // of for i
-		return paraArray;
-	}// of bubbleSort
-
-	/**
-	 *************************** 
-	 * Bubble sort. <br>
-	 * ï¿½Ó´ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½
-	 * 
-	 * @param paraArray
-	 *            The given array.
-	 * @param paraItemsInices
-	 *            The indices of items corresponding to paraArray
-	 * 
-	 * @author Zhanghr 2014/06/18
-	 *************************** 
-	 */
-	public static void bubbleSortBasedOnIndices(double[] paraArray, int[] paraItemsInices) {
-		int tempLength = paraArray.length;
-		double tempValue = 0;
-		int tempIndex = 0;
-		// ï¿½ï¿½ï¿½Ë¶ï¿½Ó¦ï¿½ï¿½Öµï¿½ï¿½ï¿½Ð½ï¿½ï¿½ï¿½ï¿½â£¬ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½Ä¿ID(ï¿½Ó´ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½)
-		for (int i = 0; i <= tempLength - 1; i++) {
-			for (int j = tempLength - 1; j > i; j--) {
-				if (paraArray[j] > paraArray[j - 1]) {
-					tempValue = paraArray[j];
-					tempIndex = paraItemsInices[j];
-					paraArray[j] = paraArray[j - 1];
-					paraItemsInices[j] = paraItemsInices[j - 1];
-					paraArray[j - 1] = tempValue;
-					paraItemsInices[j - 1] = tempIndex;
-				} // of if
-			} // of for j
-		} // of for i
-			// return paraUnbrowsedItems;
-	}// of overload bubbleSortBasedOnIndices
-
-	/**
-	 *************************** 
 	 * Compress an int array so that no duplicate elements, no redundant elemnts
 	 * exist, and it is in an ascendent order. <br>
 	 * 
 	 * @param paraIntArray
 	 *            The given int array.
 	 * @param paraLength
-	 *            The effective length of the given int array.
+	 *            The effecitive length of the given int array.
 	 * @return The constructed array.
 	 *************************** 
 	 */
@@ -1137,7 +1167,7 @@ public class SimpleTool extends Object {
 		for (int i = 0; i < paraLength; i++) {
 			if (paraIntArray[i] == Integer.MAX_VALUE) {
 				continue;
-			} // Of if
+			}
 
 			currentLeast = paraIntArray[i];
 			currentLeastIndex = i;
@@ -1237,6 +1267,8 @@ public class SimpleTool extends Object {
 	 *            The left index.
 	 * @param paraRight
 	 *            The right index.
+	 * @throws Exception
+	 *             For valueBasedLongArrayPartition().
 	 ********************************** 
 	 */
 	public static void measureBasedQuickSort(long[] paraData, int[] paraMeasuredValues, int paraLeft, int paraRight)
@@ -1245,11 +1277,8 @@ public class SimpleTool extends Object {
 		if (paraLeft < paraRight) {
 			pivotLoc = valueBasedLongArrayPartition(paraData, paraMeasuredValues, paraLeft, paraRight);
 			measureBasedQuickSort(paraData, paraMeasuredValues, paraLeft, pivotLoc - 1);// For
-																						// the
 																						// left
 			measureBasedQuickSort(paraData, paraMeasuredValues, pivotLoc + 1, paraRight);// For
-																							// the
-																							// right
 		} // Of if
 	}// Of measureBasedQuickSort
 
@@ -1317,196 +1346,6 @@ public class SimpleTool extends Object {
 		} // Of for
 		return newBooleanArray;
 	}// Of copyBooleanArray
-
-	/**
-	 *************************** 
-	 * Copy double array
-	 * 
-	 * @param paraArray
-	 *            The given double array.
-	 * @return An identical double array.
-	 *************************** 
-	 */
-	public static double[] copyDoubleArray(double[] paraArray) {
-		double[] tempArray = new double[paraArray.length];
-		for (int i = 0; i < paraArray.length; i++) {
-			tempArray[i] = paraArray[i];
-		} // Of for
-		return tempArray;
-	}// Of copyArray
-
-	/**
-	 *************************** 
-	 * Copy int array
-	 * 
-	 * @param paraArray
-	 *            The given int array.
-	 * @return An identical int array.
-	 *************************** 
-	 */
-	public static int[] copyArray(int[] paraArray) {
-		int[] tempArray = new int[paraArray.length];
-		for (int i = 0; i < paraArray.length; i++) {
-			tempArray[i] = paraArray[i];
-		} // Of for
-		return tempArray;
-	}// Of copyArray
-
-	/**
-	 *************************** 
-	 * Copy int matrix
-	 * 
-	 * @param paraIntMatrx
-	 *            The given int matrix.
-	 * @return An identical int matrix.
-	 *************************** 
-	 */
-	public static int[][] copyIntMatrix(int[][] paraIntMatrix) {
-		int[][] newIntMatrix = new int[paraIntMatrix.length][paraIntMatrix[0].length];
-		for (int i = 0; i < paraIntMatrix.length; i++) {
-			for (int j = 0; j < paraIntMatrix[0].length; j++) {
-				newIntMatrix[i][j] = paraIntMatrix[i][j];
-			} // Of for j
-		} // Of for
-		return newIntMatrix;
-	}// Of copyIntMatrix
-
-	/**
-	 *************************** 
-	 * Copy double matrix
-	 * 
-	 * @param paraDoubleMatrx
-	 *            The given double matrix.
-	 * @return An identical double matrix.
-	 * 
-	 * @author Hengru Zhang 2013/12/30
-	 *************************** 
-	 */
-	public static double[][] copyDoubleMatrix(int[][] paraDoubleMatrix) {
-		double[][] newIntMatrix = new double[paraDoubleMatrix.length][paraDoubleMatrix[0].length];
-		for (int i = 0; i < paraDoubleMatrix.length; i++) {
-			for (int j = 0; j < paraDoubleMatrix[0].length; j++) {
-				newIntMatrix[i][j] = paraDoubleMatrix[i][j];
-			} // Of for j
-		} // Of for
-		return newIntMatrix;
-	}// Of copyDoubleMatrix
-
-	/**
-	 *************************** 
-	 * Copy double matrix
-	 * 
-	 * @param paraDoubleMatrx
-	 *            The given double matrix.
-	 * @return An identical double matrix.
-	 * 
-	 * @author Hengru Zhang 2013/12/30
-	 *************************** 
-	 */
-	public static double[][] copyDoubleMatrix(double[][] paraDoubleMatrix) {
-		double[][] newIntMatrix = new double[paraDoubleMatrix.length][paraDoubleMatrix[0].length];
-		for (int i = 0; i < paraDoubleMatrix.length; i++) {
-			for (int j = 0; j < paraDoubleMatrix[0].length; j++) {
-				newIntMatrix[i][j] = paraDoubleMatrix[i][j];
-			} // Of for j
-		} // Of for
-		return newIntMatrix;
-	}// Of copyIntMatrix
-
-	/**
-	 *************************** 
-	 * Transpose boolean matrix
-	 * 
-	 * @param paraMatrx
-	 *            The given matrix.
-	 * @return A reverted matrix.
-	 *************************** 
-	 */
-	public static boolean[][] transposeMatrix(boolean[][] paraMatrix) {
-		boolean[][] newMatrix = new boolean[paraMatrix[0].length][paraMatrix.length];
-		for (int i = 0; i < paraMatrix.length; i++) {
-			for (int j = 0; j < paraMatrix[0].length; j++) {
-				newMatrix[j][i] = paraMatrix[i][j];
-			} // Of for j
-		} // Of for
-		return newMatrix;
-	}// Of transposeMatrix
-
-	/**
-	 *************************** 
-	 * Transpose int matrix
-	 * 
-	 * @param paraMatrx
-	 *            The given matrix.
-	 * @return A reverted matrix.
-	 *************************** 
-	 */
-	public static int[][] transposeMatrix(int[][] paraMatrix) {
-		int[][] newMatrix = new int[paraMatrix[0].length][paraMatrix.length];
-		for (int i = 0; i < paraMatrix.length; i++) {
-			for (int j = 0; j < paraMatrix[0].length; j++) {
-				newMatrix[j][i] = paraMatrix[i][j];
-			} // Of for j
-		} // Of for
-		return newMatrix;
-	}// Of transposeMatrix
-
-	/**
-	 *************************** 
-	 * Transpose int matrix
-	 * 
-	 * @param paraMatrx
-	 *            The given matrix.
-	 * @return A reverted matrix.
-	 *************************** 
-	 */
-	public static float[][] transposeMatrix(float[][] paraMatrix) {
-		float[][] newMatrix = new float[paraMatrix[0].length][paraMatrix.length];
-		for (int i = 0; i < paraMatrix.length; i++) {
-			for (int j = 0; j < paraMatrix[0].length; j++) {
-				newMatrix[j][i] = paraMatrix[i][j];
-			} // Of for j
-		} // Of for
-		return newMatrix;
-	}// Of transposeMatrix
-
-	/**
-	 *************************** 
-	 * Transpose int matrix
-	 * 
-	 * @param paraMatrx
-	 *            The given matrix.
-	 * @return A reverted matrix.
-	 *************************** 
-	 */
-	public static double[][] transposeMatrix(double[][] paraMatrix) {
-		double[][] newMatrix = new double[paraMatrix[0].length][paraMatrix.length];
-		for (int i = 0; i < paraMatrix.length; i++) {
-			for (int j = 0; j < paraMatrix[0].length; j++) {
-				newMatrix[j][i] = paraMatrix[i][j];
-			} // Of for j
-		} // Of for
-		return newMatrix;
-	}// Of transposeMatrix
-
-	/**
-	 *************************** 
-	 * Transpose the matrix
-	 * 
-	 * @param paraBooleanMatrx
-	 *            The given boolean matrix.
-	 * @return An identical boolean matrix.
-	 *************************** 
-	 */
-	public static boolean[][] copyBooleanMatrix(boolean[][] paraMatrix) {
-		boolean[][] newMatrix = new boolean[paraMatrix.length][paraMatrix[0].length];
-		for (int i = 0; i < paraMatrix.length; i++) {
-			for (int j = 0; j < paraMatrix[0].length; j++) {
-				newMatrix[i][j] = paraMatrix[i][j];
-			} // Of for j
-		} // Of for
-		return newMatrix;
-	}// Of copyBooleanMatrix
 
 	/**
 	 *************************** 
@@ -1635,6 +1474,8 @@ public class SimpleTool extends Object {
 	 * @param paraBooleanArray
 	 *            The given boolean array.
 	 * @return A long to indicate which positions (bits) are included.
+	 * @throws Exception
+	 *             for array longer than that can be handled.
 	 *************************** 
 	 */
 	public static long booleanArrayToLong(boolean[] paraBooleanArray) throws Exception {
@@ -1733,6 +1574,8 @@ public class SimpleTool extends Object {
 	 * @param paraBooleanArray
 	 *            The given boolean array.
 	 * @return An integer to indicate which positions (bits) are included.
+	 * @throws Exception
+	 *             for long array.
 	 *************************** 
 	 */
 	public static int booleanArrayToInt(boolean[] paraBooleanArray) throws Exception {
@@ -1762,121 +1605,17 @@ public class SimpleTool extends Object {
 	 *************************** 
 	 */
 	public static void printIntArray(int[] paraIntArray) {
-		if (paraIntArray == null || paraIntArray.length == 0) {
+		if (paraIntArray.length == 0) {
 			System.out.println("This is an empty int array.");
 			return;
 		} else {
 			System.out.print("This is an int array: ");
 		}
 		for (int i = 0; i < paraIntArray.length; i++) {
-			System.out.printf("%8d", paraIntArray[i]);
+			System.out.print("" + paraIntArray[i] + "\t");
 		} // Of for i
 		System.out.println();
 	}// Of paraIntArray
-
-	/**
-	 *************************** 
-	 * Print an int array, simply for test.
-	 * 
-	 * @param paraIntArray
-	 *            The given int array.
-	 *************************** 
-	 */
-	public static void printIntMatrix(int[][] paraIntMatrix) {
-		if ((paraIntMatrix == null) || (paraIntMatrix.length == 0)) {
-			System.out.println("This is an empty int matrix.");
-			return;
-		} else {
-			System.out.print("This is an int matrix: ");
-		} // Of if
-
-		for (int i = 0; i < paraIntMatrix.length; i++) {
-			// System.out.println("Length")
-			for (int j = 0; j < paraIntMatrix[i].length; j++) {
-				System.out.print("" + paraIntMatrix[i][j] + ", ");
-			} // Of for j
-			System.out.println();
-		} // Of for i
-		System.out.println();
-	}// Of printIntMatrix
-
-	/**
-	 *************************** 
-	 * Print an int matrix, simply for test.
-	 * 
-	 * @param paraMatrix
-	 *            The given matrix. Different rows may contain different number
-	 *            of values.
-	 *************************** 
-	 */
-	public static void printMatrix(int[][] paraMatrix) {
-		if (paraMatrix.length == 0) {
-			System.out.println("This is an empty matrix.");
-			return;
-		} else {
-			System.out.println("This is an int matrix: ");
-		} // Of if
-
-		for (int i = 0; i < paraMatrix.length; i++) {
-			if (paraMatrix[i] == null) { // modified by zhr 2014/3/30
-				continue;
-			} // of if
-			for (int j = 0; j < paraMatrix[i].length; j++) {
-				System.out.print("" + paraMatrix[i][j] + ",");
-			} // Of for j
-			System.out.println();
-		} // Of for i
-	}// Of printMatrix
-
-	/**
-	 *************************** 
-	 * Print an int matrix, simply for test.
-	 * 
-	 * @param paraMatrix
-	 *            The given matrix. Different rows may contain different number
-	 *            of values.
-	 *************************** 
-	 */
-	public static void printMatrix(double[][] paraMatrix) {
-		if (paraMatrix.length == 0) {
-			System.out.println("This is an empty matrix.");
-			return;
-		} else {
-			System.out.println("This is a matrix: ");
-		} // Of if
-
-		for (int i = 0; i < paraMatrix.length; i++) {
-			for (int j = 0; j < paraMatrix[i].length; j++) {
-				System.out.print("" + paraMatrix[i][j] + "\t");
-			} // Of for j
-			System.out.println();
-		} // Of for i
-	}// Of printMatrix
-
-	/**
-	 *************************** 
-	 * Print an int matrix, simply for test.
-	 * 
-	 * @param paraMatrix
-	 *            The given matrix. Different rows may contain different number
-	 *            of values.
-	 *************************** 
-	 */
-	public static void printMatrix(boolean[][] paraMatrix) {
-		if (paraMatrix.length == 0) {
-			System.out.println("This is an empty matrix.");
-			return;
-		} else {
-			System.out.println("This is an boolean matrix: ");
-		} // Of if
-
-		for (int i = 0; i < paraMatrix.length; i++) {
-			for (int j = 0; j < paraMatrix[i].length; j++) {
-				System.out.print("" + paraMatrix[i][j] + "\t");
-			} // Of for j
-			System.out.println();
-		} // Of for i
-	}// Of printMatrix
 
 	/**
 	 *************************** 
@@ -1932,6 +1671,9 @@ public class SimpleTool extends Object {
 	/**
 	 ************************* 
 	 * Print a boolean array.
+	 * 
+	 * @param paraBooleanArray
+	 *            The boolean array.
 	 ************************* 
 	 */
 	public static void printBooleanArray(boolean[] paraBooleanArray) {
@@ -1949,6 +1691,9 @@ public class SimpleTool extends Object {
 	/**
 	 ************************* 
 	 * Print a boolean matrix.
+	 * 
+	 * @param paraBooleanMatrix
+	 *            The boolean matrix.
 	 ************************* 
 	 */
 	public static void printBooleanMatrix(boolean[][] paraBooleanMatrix) {
@@ -1968,18 +1713,9 @@ public class SimpleTool extends Object {
 	/**
 	 ************************* 
 	 * Print a double array.
-	 ************************* 
-	 */
-	public static void printFloatArray(float[] paraFloatArray) {
-		for (int i = 0; i < paraFloatArray.length; i++) {
-			System.out.print(paraFloatArray[i] + " ");
-		} // Of for i
-		System.out.println();
-	}// Of printAllReducts
-
-	/**
-	 ************************* 
-	 * Print a double array.
+	 * 
+	 * @param paraDoubleArray
+	 *            The given array.
 	 ************************* 
 	 */
 	public static void printDoubleArray(double[] paraDoubleArray) {
@@ -1987,7 +1723,7 @@ public class SimpleTool extends Object {
 			System.out.print(paraDoubleArray[i] + " ");
 		} // Of for i
 		System.out.println();
-	}// Of printAllReducts
+	}// Of printDoubleArray
 
 	/**
 	 ********************************** 
@@ -1999,6 +1735,8 @@ public class SimpleTool extends Object {
 	 *            The first index of the double array.
 	 * @param dest
 	 *            The second index of the double array.
+	 * @throws Exception
+	 *             for index out of bounds.
 	 ********************************** 
 	 */
 	public static void swap(double[] paraDoubleArray, int src, int dest) throws Exception {
@@ -2018,6 +1756,8 @@ public class SimpleTool extends Object {
 	 *            The first index of the long array.
 	 * @param dest
 	 *            The second index of the long array.
+	 * @throws Exception
+	 *             if index out of bounds.
 	 ********************************** 
 	 */
 	public static void swap(long[] paraLongArray, int src, int dest) throws Exception {
@@ -2037,6 +1777,8 @@ public class SimpleTool extends Object {
 	 *            The first index of the long array.
 	 * @param dest
 	 *            The second index of the long array.
+	 * @throws Exception
+	 *             For index out of bounds.
 	 ********************************** 
 	 */
 	public static void swap(int[] paraLongArray, int src, int dest) throws Exception {
@@ -2099,6 +1841,8 @@ public class SimpleTool extends Object {
 	 * @param paraAttributes
 	 *            Number of attributes.
 	 * @return is the first set a subset of the second one?
+	 * @throws Exception
+	 *             That is generated by longToBooleanArray() or isSubset().
 	 ********************************** 
 	 */
 	public static boolean isSubset(long paraFirstSet, long paraSecondSet, int paraAttributes) throws Exception {
@@ -2112,10 +1856,50 @@ public class SimpleTool extends Object {
 	 * Is the first set a subset of the second one.
 	 * 
 	 * @param paraFirstSet
+	 *            The first set in int array.
+	 * @param paraSecondSet
+	 *            The second set in int array.
+	 * @return is the first set a subset of the second one?
+	 * @throws Exception
+	 *             for emptyset.
+	 ********************************** 
+	 */
+	public static boolean isSubset(int[] paraFirstSet, int[] paraSecondSet) throws Exception {
+		Common.computationTime++;
+		if ((paraFirstSet.length > paraSecondSet.length)
+				|| (paraFirstSet[paraFirstSet.length - 1] > paraSecondSet[paraSecondSet.length - 1])
+				|| paraSecondSet[paraSecondSet.length - 1] > 100) {
+			return false;
+		} // Of if
+
+		int indexInTheFirstSet = 0;
+		int indexInTheSecondSet = 0;
+		while (indexInTheFirstSet < paraFirstSet.length) {
+			Common.computationTime++;
+			if (paraFirstSet[indexInTheFirstSet] > paraSecondSet[indexInTheSecondSet]) {
+				indexInTheSecondSet++;
+			} else if (paraFirstSet[indexInTheFirstSet] < paraSecondSet[indexInTheSecondSet]) {
+				return false;
+			} else {
+				indexInTheFirstSet++;
+				indexInTheSecondSet++;
+			} // Of if
+		} // Of while
+
+		return true;
+	}// Of isSubset
+
+	/**
+	 ********************************** 
+	 * Is the first set a subset of the second one.
+	 * 
+	 * @param paraFirstSet
 	 *            The first set in boolean array.
 	 * @param paraSecondSet
 	 *            The second set in boolean array.
 	 * @return is the first set a subset of the second one?
+	 * @throws Exception
+	 *             For empty sets.
 	 ********************************** 
 	 */
 	public static boolean isSubset(boolean[] paraFirstSet, boolean[] paraSecondSet) throws Exception {
@@ -2214,8 +1998,8 @@ public class SimpleTool extends Object {
 		boolean supportPositive = true;
 		boolean supportNegative = true;
 
-		int[] firstSubset = SimpleTool.longToIntArray(paraFirstSet, paraNumberOfConditions);
-		int[] secondSubset = SimpleTool.longToIntArray(paraSecondSet, paraNumberOfConditions);
+		int[] firstSubset = SimpleTools.longToIntArray(paraFirstSet, paraNumberOfConditions);
+		int[] secondSubset = SimpleTools.longToIntArray(paraSecondSet, paraNumberOfConditions);
 
 		for (int i = 0; i < paraNumberOfConditions; i++) {
 			if (firstSubset[i] - secondSubset[i] > 0) {
@@ -2241,13 +2025,17 @@ public class SimpleTool extends Object {
 	/**
 	 ********************************** 
 	 * Convert a boolean matrix to string
+	 * 
+	 * @param paraMatrix
+	 *            The boolean matrix.
+	 * @return The string.
 	 ********************************** 
 	 */
-	public static String matrixToString(boolean[][] tempMatrix) {
+	public static String booleanMatrixToString(boolean[][] paraMatrix) {
 		String tempString = "";
-		for (int i = 0; i < tempMatrix.length; i++) {
-			for (int j = 0; j < tempMatrix[0].length; j++) {
-				if (tempMatrix[i][j]) {
+		for (int i = 0; i < paraMatrix.length; i++) {
+			for (int j = 0; j < paraMatrix[0].length; j++) {
+				if (paraMatrix[i][j]) {
 					tempString += " 1";
 				} else {
 					tempString += " 0";
@@ -2256,74 +2044,7 @@ public class SimpleTool extends Object {
 			tempString += "\r\n";
 		} // Of for i
 		return tempString;
-	}// Of matrixToString
-
-	/**
-	 ********************************** 
-	 * Convert an int matrix to string
-	 ********************************** 
-	 */
-	public static String matrixToString(int[][] paraMatrix) {
-		String tempString = "";
-		for (int i = 0; i < paraMatrix.length; i++) {
-			for (int j = 0; j < paraMatrix[0].length; j++) {
-				tempString += " " + paraMatrix[i][j];
-			} // Of for j
-			tempString += "\r\n";
-		} // Of for i
-		return tempString;
-	}// Of matrixToString
-
-	/**
-	 ********************************** 
-	 * Convert an double matrix to string
-	 ********************************** 
-	 */
-	public static String matrixToString(double[][] paraMatrix) {
-		String tempString = "";
-		for (int i = 0; i < paraMatrix.length; i++) {
-			for (int j = 0; j < paraMatrix[0].length; j++) {
-				tempString += " " + paraMatrix[i][j];
-			} // Of for j
-			tempString += "\r\n";
-		} // Of for i
-		return tempString;
-	}// Of matrixToString
-
-	/**
-	 ********************************** 
-	 * Convert an int matrix to string
-	 ********************************** 
-	 */
-	public static String intMatrixToString(int[][] paraMatrix, char paraSeparator) {
-		String tempString = "";
-		for (int i = 0; i < paraMatrix.length; i++) {
-			for (int j = 0; j < paraMatrix[0].length; j++) {
-				tempString += "" + paraMatrix[i][j] + paraSeparator;
-			} // Of for j
-			tempString += "\r\n";
-		} // Of for i
-		return tempString;
-	}// Of intMatrixToString
-
-	/**
-	 ********************************** 
-	 * Convert an int matrix to string
-	 * 
-	 * @author Hengru Zhang 2013/12/30
-	 * @see intMatrixToString
-	 ********************************** 
-	 */
-	public static String doubleMatrixToString(double[][] paraMatrix, char paraSeparator) {
-		String tempString = "";
-		for (int i = 0; i < paraMatrix.length; i++) {
-			for (int j = 0; j < paraMatrix[0].length; j++) {
-				tempString += "" + paraMatrix[i][j] + paraSeparator;
-			} // Of for j
-			tempString += "\r\n";
-		} // Of for i
-		return tempString;
-	}// Of doubleMatrixToString
+	}// Of booleanMatrixToString
 
 	/**
 	 ********************************** 
@@ -2332,8 +2053,10 @@ public class SimpleTool extends Object {
 	 * @param paraDatasetSize
 	 *            the dataset size
 	 * @param paraPercentage
-	 *            the percentage of the first subset
+	 *            the percentage of the first subset.
+	 * @return The result boolean array.
 	 * @throws Exception
+	 *             If the percentage exceeds lower/upper bounds.
 	 ********************************** 
 	 */
 	public static boolean[] generateBooleanArrayForDivision(int paraDatasetSize, double paraPercentage)
@@ -2354,6 +2077,7 @@ public class SimpleTool extends Object {
 		int secondSetCurrentSize = 0;
 
 		int tempInt;
+
 		for (int i = 0; i < paraDatasetSize; i++) {
 			tempInt = random.nextInt(paraDatasetSize);
 			if (tempInt < firstSetSize) {
@@ -2377,6 +2101,9 @@ public class SimpleTool extends Object {
 				break;
 			} // Of if
 		} // Of for i
+			// for (int i = 0; i < firstSetSize; i++) {
+			// tempBooleanArray[i] = true;
+			// }// Of for i
 
 		return tempBooleanArray;
 	}// Of generateBooleanArrayForDivision
@@ -2409,7 +2136,7 @@ public class SimpleTool extends Object {
 	 * @return a set of reducts without superflous attributes.
 	 ********************************** 
 	 */
-	public static long[] removeSupersets(long[] paraSets, int paraNumberOfConditions) throws Exception {
+	public static long[] removeSupersets(long[] paraSets, int paraNumberOfConditions) {
 		char check = 0;
 
 		// Check who is who's child.
@@ -2422,7 +2149,7 @@ public class SimpleTool extends Object {
 					continue;
 				} // Of if
 
-				check = SimpleTool.subSetCheck(paraSets[i], paraSets[j], paraNumberOfConditions);
+				check = SimpleTools.subSetCheck(paraSets[i], paraSets[j], paraNumberOfConditions);
 				if (check == '1') {
 					paraSets[i] = -1;
 					break;
@@ -2452,6 +2179,59 @@ public class SimpleTool extends Object {
 
 		return returnArray;
 	}// Of removeSupersets
+
+	/**
+	 ********************************** 
+	 * Set intersection. The sets should be sorted.
+	 * 
+	 * @param paraFirstSet
+	 *            The first set indicated by numbers for indices.
+	 * @param paraSecondSet
+	 *            The second set indicated by numbers for indices.
+	 * @return a set for the intersection.
+	 * @throws Exception
+	 *             For unordered data.
+	 ********************************** 
+	 */
+	public static int[] setIntersection(int[] paraFirstSet, int[] paraSecondSet) throws Exception {
+		int[] emptyArray = new int[0];
+		if ((paraFirstSet.length == 0) || (paraSecondSet.length == 0)) {
+			return emptyArray;
+		}
+
+		if (!isAscendingOrder(paraFirstSet)) {
+			throw new Exception("The first array is not in an ascending order: " + intArrayToString(paraFirstSet, ','));
+		}
+		if (!isAscendingOrder(paraSecondSet)) {
+			throw new Exception(
+					"The second array is not in an ascending order: " + intArrayToString(paraSecondSet, ','));
+		}
+
+		int[] tempSet = new int[paraFirstSet.length + paraSecondSet.length];
+		int tempLength = 0;
+		int firstIndex = 0;
+		int secondIndex = 0;
+		while ((firstIndex < paraFirstSet.length) && (secondIndex < paraSecondSet.length)) {
+			Common.computationTime++;
+			if (paraFirstSet[firstIndex] < paraSecondSet[secondIndex]) {
+				firstIndex++;
+			} else if (paraFirstSet[firstIndex] > paraSecondSet[secondIndex]) {
+				secondIndex++;
+			} else {
+				tempSet[tempLength] = paraFirstSet[firstIndex];
+				firstIndex++;
+				secondIndex++;
+				tempLength++;
+			} // Of if
+		} // Of while
+
+		int[] resultSet = new int[tempLength];
+		for (int i = 0; i < tempLength; i++) {
+			resultSet[i] = tempSet[i];
+		} // Of for
+
+		return resultSet;
+	}// Of setIntersection
 
 	/**
 	 ********************************** 
@@ -2493,65 +2273,354 @@ public class SimpleTool extends Object {
 	}// Of isUpperTriangleBooleanMatrix
 
 	/**
-	 *************************** 
-	 * Compute the entropy of the given array.
+	 ************************* 
+	 * Print a boolean array as IDs.
 	 * 
-	 * @see #computeEntropy(double[])
-	 *************************** 
+	 * @param paraBooleanArray
+	 *            The given array.
+	 ************************* 
 	 */
-	public static double computeEntropy(int[] paraIntArray) throws Exception {
-		double[] tempDoubleArray = new double[paraIntArray.length];
-		for (int i = 0; i < paraIntArray.length; i++) {
-			tempDoubleArray[i] = paraIntArray[i];
+	public static void printBooleanArrayAsID(boolean[] paraBooleanArray) {
+		for (int i = 0; i < paraBooleanArray.length; i++) {
+			if (paraBooleanArray[i]) {
+				System.out.print(i + ", ");
+			} // Of if
 		} // Of for i
-		return computeEntropy(tempDoubleArray);
-	}// Of computeEntropy
+		System.out.println();
+	}// Of printBooleanArrayAsID
 
 	/**
-	 *************************** 
-	 * Compute the entropy of the given array. If the sum of all elements are
-	 * not equal to 1, elements will be normalized.
+	 ************************* 
+	 * Compute the size of the intersection of two sets. These sets should be
+	 * ordered from small to big.
 	 * 
-	 * @param paraDoubleArray
-	 *            The given array.
-	 * @return The information entropy.
-	 * @throws Exception
-	 *             if negative values exist
-	 *************************** 
+	 * @param paraFirstSet
+	 *            The indices of the first set.
+	 * @param paraSecondSet
+	 *            The indices of the second set.
+	 * @return the intersection size
+	 ************************* 
 	 */
-	public static double computeEntropy(double[] paraDoubleArray) throws Exception {
-		// Step 1. Normalize
-		double[] tempArray = new double[paraDoubleArray.length];
-		double tempSum = 0;
-		for (int i = 0; i < paraDoubleArray.length; i++) {
-			if (paraDoubleArray[i] < 0) {
-				throw new Exception("Error occurred in SimpleTool.computeEntropy(double)\r\n"
-						+ "The element should not be negative: " + paraDoubleArray[i] + ".");
+	public static int intersectionSize(int[] paraFirstSet, int[] paraSecondSet) {
+		int resultSize = 0;
+		int tempFirstIndex = 0;
+		int tempSecondIndex = 0;
+
+		while ((tempFirstIndex < paraFirstSet.length) && (tempSecondIndex < paraSecondSet.length)) {
+			if (paraFirstSet[tempFirstIndex] == paraSecondSet[tempSecondIndex]) {
+				resultSize++;
+				tempFirstIndex++;
+				tempSecondIndex++;
+			} else if (paraFirstSet[tempFirstIndex] < paraSecondSet[tempSecondIndex]) {
+				tempFirstIndex++;
+			} else {
+				tempSecondIndex++;
 			} // Of if
+		} // Of while
 
-			tempArray[i] = paraDoubleArray[i];
-			tempSum += paraDoubleArray[i];
-		} // Of for i
+		return resultSize;
+	}// Of intersectionSize
 
-		// Normalize now
-		if (Math.abs(tempSum - 1) > 1e-6) {
-			for (int i = 0; i < tempArray.length; i++) {
-				tempArray[i] /= tempSum;
-			} // Of for i
+	/**
+	 ************************* 
+	 * Compute the intersection of two sets. These sets should be ordered from
+	 * small to big.
+	 * 
+	 * @param paraFirstSet
+	 *            The indices of the first set.
+	 * @param paraSecondSet
+	 *            The indices of the second set.
+	 * @return the intersection. May be an empty array.
+	 ************************* 
+	 */
+	public static int[] intersection(int[] paraFirstSet, int[] paraSecondSet) {
+		int tempSize = intersectionSize(paraFirstSet, paraSecondSet);
+		int[] resultArray = new int[tempSize];
+		int tempIndex = 0;
+
+		int tempFirstIndex = 0;
+		int tempSecondIndex = 0;
+
+		while ((tempFirstIndex < paraFirstSet.length) && (tempSecondIndex < paraSecondSet.length)) {
+			if (paraFirstSet[tempFirstIndex] == paraSecondSet[tempSecondIndex]) {
+				resultArray[tempIndex] = paraFirstSet[tempFirstIndex];
+				tempIndex++;
+				tempFirstIndex++;
+				tempSecondIndex++;
+			} else if (paraFirstSet[tempFirstIndex] < paraSecondSet[tempSecondIndex]) {
+				tempFirstIndex++;
+			} else {
+				tempSecondIndex++;
+			} // Of if
+		} // Of while
+
+		return resultArray;
+	}// Of intersection
+
+	/**
+	 ************************* 
+	 * Compute the maximal intersections of two set families. These sets
+	 * families should be composed by exactly two sets.
+	 * 
+	 * @param paraFirstSetFamily
+	 *            The first set family, e.g., [[1, 3, 5, 7], [0, 2, 4, 6]].
+	 * @param paraSecondSetFamily
+	 *            The second set family, e.g., [[1, 2, 3], [0, 4, 5, 6, 7]].
+	 * @return the maximal intersection family.
+	 ************************* 
+	 */
+	public static int[][] binarySetFamilyMaximalIntersection(int[][] paraFirstSetFamily, int[][] paraSecondSetFamily) {
+		int[][] resultSetFamily = new int[2][];
+		int tempIntersectionSize = intersectionSize(paraFirstSetFamily[0], paraSecondSetFamily[0]);
+
+		if (tempIntersectionSize > paraFirstSetFamily[0].length / 2) {
+			// A1 cap B1, A2 cap B2
+			resultSetFamily[0] = intersection(paraFirstSetFamily[0], paraSecondSetFamily[0]);
+			resultSetFamily[1] = intersection(paraFirstSetFamily[1], paraSecondSetFamily[1]);
+		} else {
+			// A1 cap B2, A2 cap B1
+			resultSetFamily[0] = intersection(paraFirstSetFamily[0], paraSecondSetFamily[1]);
+			resultSetFamily[1] = intersection(paraFirstSetFamily[1], paraSecondSetFamily[0]);
 		} // Of if
 
-		// Step 2. Compute the entropy
-		double tempEntropy = 0;
-		for (int i = 0; i < tempArray.length; i++) {
-			if (tempArray[i] < 1e-6) {
-				continue;
-			} // Of if
+		return resultSetFamily;
+	}// Of binarySetFamilyMaximalIntersection
 
-			tempEntropy -= tempArray[i] * Math.log(tempArray[i]) / Math.log(Math.E);
+	/**
+	 ************************* 
+	 * Are double matrices equal?
+	 * 
+	 * @param paraMatrix1
+	 *            The first matrix.
+	 * @param paraMatrix2
+	 *            The second matrix.
+	 * @return True if equal.
+	 ************************* 
+	 */
+	public static boolean doubleMatricesEqual(double[][] paraMatrix1, double[][] paraMatrix2) {
+		if (paraMatrix1.length != paraMatrix2.length) {
+			return false;
+		} // Of if
+		if (paraMatrix1[0].length != paraMatrix2[0].length) {
+			return false;
+		} // Of if
+
+		for (int i = 0; i < paraMatrix1.length; i++) {
+			for (int j = 0; j < paraMatrix1[0].length; j++) {
+				if (Math.abs(paraMatrix1[i][j] - paraMatrix2[i][j]) > 1e-6) {
+					return false;
+				} // Of if
+			} // Of if
 		} // Of for i
 
-		return tempEntropy;
-	}// Of computeEntropy
+		return true;
+	}// Of doubleMatricesEqual
+
+	/**
+	 ************************* 
+	 * Test the method doubleMatricesEqual
+	 ************************* 
+	 */
+	public static void testDoubleMatricesEqual() {
+		double[][] tempMatrix1 = { { 1.2, 2.3, 3.33298999 }, { 2.1, 2.2, 2.4 } };
+		double[][] tempMatrix2 = { { 1.2, 2.3, 3.333 }, { 2.1, 2.2, 2.4 } };
+
+		boolean tempEqual = doubleMatricesEqual(tempMatrix1, tempMatrix2);
+		System.out.println("Are the matrices equal? " + tempEqual);
+	}// Of testDoubleMatricesEqual
+
+	/**
+	 ************************* 
+	 * Normalize a decision system. Attention: the given data will be changed!
+	 * 
+	 * @param paraData
+	 *            The given data.
+	 ************************* 
+	 */
+	public static void normalizeDecisionSystem(Instances paraData) {
+		double tempMin, tempMax;
+		double tempValue, tempNewValue;
+		// Normalize each attribute except the last one (decision)
+		for (int i = 0; i < paraData.numAttributes() - 1; i++) {
+			tempMin = Double.MAX_VALUE;
+			tempMax = Double.MIN_VALUE;
+			// The first scan for minimal/maximal values.
+			for (int j = 0; j < paraData.numInstances(); j++) {
+				tempValue = paraData.instance(j).value(i);
+				if (tempValue < tempMin) {
+					tempMin = tempValue;
+				} // Of if
+
+				if (tempValue > tempMax) {
+					tempMax = tempValue;
+				} // Of if
+			} // Of for j
+
+			if (tempMax == tempMin) {
+				System.out.println(
+						"Fatal error occurred in SimpleTools.normalize()! Attribute #" + i + " has only one value.");
+				System.exit(0);
+			} // Of if
+
+			// The second scan for change the values.
+			for (int j = 0; j < paraData.numInstances(); j++) {
+				tempNewValue = (paraData.instance(j).value(i) - tempMin) / (tempMax - tempMin);
+				paraData.instance(j).setValue(i, tempNewValue);
+			} // Of for j
+		} // Of for i
+
+		consoleOutput("The normalized data is: \r\n" + paraData);
+	}// Of normalizeDecisionSystem
+
+	/**
+	 ************************* 
+	 * Get the index of the maximal value.
+	 * 
+	 * @param paraArray
+	 *            The given array.
+	 * @return The index.
+	 ************************* 
+	 */
+	public static int getMaxIndex(int[] paraArray) {
+		int tempMaxValue = -1;
+		int tempMaxValueIndex = -1;
+		for (int i = 0; i < paraArray.length; i++) {
+			if (tempMaxValue < paraArray[i]) {
+				tempMaxValue = paraArray[i];
+				tempMaxValueIndex = i;
+			} // Of if
+		} // Of for i
+		return tempMaxValueIndex;
+	}// Of getMaxIndex
+
+	/**
+	 ************************* 
+	 * Is the given index in the block?
+	 * 
+	 * @param paraBlock
+	 *            The given block which is sorted in ascending order. In this
+	 *            way we can use binary searching.
+	 * @param paraInt
+	 *            The given index.
+	 * @return In block or not.
+	 ************************* 
+	 */
+	public static boolean inBlock(int[] paraBlock, int paraInt) {
+		boolean resultInBlock = false;
+		int tempLeft = 0;
+		int tempRight = paraBlock.length - 1;
+		int tempMiddle;
+
+		while (tempLeft <= tempRight) {
+			tempMiddle = (tempLeft + tempRight) / 2;
+			if (paraBlock[tempMiddle] == paraInt) {
+				resultInBlock = true;
+				break;
+			} else if (paraBlock[tempMiddle] < paraInt) {
+				tempLeft = tempMiddle + 1;
+			} else {
+				tempRight = tempMiddle - 1;
+			} // Of if
+		} // Of while
+
+		return resultInBlock;
+	}// Of inBlock
+
+	/**
+	 ********************************** 
+	 * Get a random order index array.
+	 * 
+	 * @param paraLength
+	 *            The length of the array.
+	 * @return A random order.
+	 ********************************** 
+	 */
+	public static int[] getRandomOrder(int paraLength) {
+		// Step 1. Initialize
+		int[] resultArray = new int[paraLength];
+		for (int i = 0; i < paraLength; i++) {
+			resultArray[i] = i;
+		} // Of for i
+
+		// Step 2. Swap many times
+		int tempFirst, tempSecond;
+		int tempValue;
+		for (int i = 0; i < paraLength * 10; i++) {
+			tempFirst = random.nextInt(paraLength);
+			tempSecond = random.nextInt(paraLength);
+
+			tempValue = resultArray[tempFirst];
+			resultArray[tempFirst] = resultArray[tempSecond];
+			resultArray[tempSecond] = tempValue;
+		} // Of for i
+
+		return resultArray;
+	}// Of getRandomOrder
+
+	/**
+	 ********************************** 
+	 * Disorder a dataset, so that the order does not influence the results.
+	 * 
+	 * @param paraFilename
+	 *            The given filename.
+	 ********************************** 
+	 */
+	public static void disorderData(String paraFilename) {
+		// Step 1. Read the data.
+		Instances tempData = null;
+		try {
+			FileReader fileReader = new FileReader(paraFilename);
+			tempData = new Instances(fileReader);
+			fileReader.close();
+		} catch (Exception ee) {
+			System.out.println("Cannot read the file: " + paraFilename + "\r\n" + ee);
+			System.exit(0);
+		} // Of try
+
+		// Step 2. Disorder.
+		int[] tempNewOrders = getRandomOrder(tempData.numInstances());
+		// Copy.
+		Instances tempNewData = new Instances(tempData);
+		tempNewData.delete();
+		System.out.println("The empty data is: " + tempNewData);
+		for (int i = 0; i < tempNewOrders.length; i++) {
+			tempNewData.add(tempData.instance(tempNewOrders[i]));
+		} // Of for i
+
+		System.out.println("Writing to a new file:");
+		// Step 3. Write to a new file.
+		int tempLength = paraFilename.length();
+		String tempNewFilename = paraFilename.substring(0, tempLength - 5) + "_disorder.arff";
+		System.out.println(tempNewFilename);
+		try {
+			RandomAccessFile tempNewFile = new RandomAccessFile(tempNewFilename, "rw");
+			tempNewFile.writeBytes(tempNewData.toString());
+			tempNewFile.close();
+		} catch (IOException ee) {
+			System.out.println(ee);
+		} // Of try
+	}// Of disorderData
+
+	/**
+	 ********************************** 
+	 * Disorder a dataset, so that the order does not influence the results.
+	 * 
+	 * @param paraData
+	 *            The given dataset.
+	 ********************************** 
+	 */
+	public static void disorderData(Instances paraData) {
+		// Step 1. New orders.
+		int[] tempNewOrders = getRandomOrder(paraData.numInstances());
+
+		// Step 2. Copy.
+		Instances tempData = new Instances(paraData);
+		paraData.delete();
+
+		for (int i = 0; i < tempNewOrders.length; i++) {
+			paraData.add(tempData.instance(tempNewOrders[i]));
+		} // Of for i
+	}// Of disorderData
 
 	/**
 	 *************************** 
@@ -2565,20 +2634,21 @@ public class SimpleTool extends Object {
 	 *         time rated
 	 *************************** 
 	 */
-	public static int[] recommendTimesToDistribution(int[] paraTimesArray) throws Exception {
+	public static int[] recommendTimesToDistribution(int[] paraTimesArray)
+			throws Exception {
 		// Scan one time to obtain the maximal value
 		int tempMaxTimes = 0;
 		for (int i = 0; i < paraTimesArray.length; i++) {
 			if (tempMaxTimes < paraTimesArray[i]) {
 				tempMaxTimes = paraTimesArray[i];
-			} // Of if
-		} // Of for i
+			}// Of if
+		}// Of for i
 
 		// Scan the second time for statistics
 		int[] returnArray = new int[tempMaxTimes + 1];
 		for (int i = 0; i < paraTimesArray.length; i++) {
 			returnArray[paraTimesArray[i]]++;
-		} // Of for i
+		}// Of for i
 
 		return returnArray;
 	}// Of recommendTimesToDistribution
@@ -2599,7 +2669,7 @@ public class SimpleTool extends Object {
 		int[] tempResultArray = new int[paraLength];
 		for (int i = 0; i < paraLength; i++) {
 			tempResultArray[i] = i;
-		} // Of for i
+		}// Of for i
 
 		// Swap some elements
 		int tempFirstIndex, tempSecondIndex, tempValue;
@@ -2611,7 +2681,7 @@ public class SimpleTool extends Object {
 			tempValue = tempResultArray[tempFirstIndex];
 			tempResultArray[tempFirstIndex] = tempResultArray[tempSecondIndex];
 			tempResultArray[tempSecondIndex] = tempValue;
-		} // Of for i
+		}// Of for i
 
 		return tempResultArray;
 	}// Of generateRandomSequence
@@ -2630,11 +2700,13 @@ public class SimpleTool extends Object {
 	 *         paraSequenceLength - 1].
 	 ********************************** 
 	 */
-	public static int[] generateRandomIndices(int paraSequenceLength, int paraSelectionLength) throws Exception {
+	public static int[] generateRandomIndices(int paraSequenceLength,
+			int paraSelectionLength) throws Exception {
 		if (paraSequenceLength < paraSequenceLength) {
-			throw new Exception("Error occurred in SimpleTool.generateRandomIndices()\r\n"
-					+ "The selection length is greater than the sequence length.");
-		} // Of if
+			throw new Exception(
+					"Error occurred in SimpleTool.generateRandomIndices()\r\n"
+							+ "The selection length is greater than the sequence length.");
+		}// Of if
 
 		// Generate a random sequence
 		int[] tempSequence = generateRandomSequence(paraSequenceLength);
@@ -2649,783 +2721,91 @@ public class SimpleTool extends Object {
 		for (int i = 0; i < paraSelectionLength; i++) {
 			tempMinimalValue = Integer.MAX_VALUE;
 			for (int j = 0; j < paraSelectionLength; j++) {
-				if (!tempSelectedArray[j] && (tempSequence[j] < tempMinimalValue)) {
+				if (!tempSelectedArray[j]
+						&& (tempSequence[j] < tempMinimalValue)) {
 					tempMinimalValue = tempSequence[j];
 					tempMinimalIndex = j;
-				} // Of if
-			} // Of for j
+				}// Of if
+			}// Of for j
 
 			tempResultArray[i] = tempMinimalValue;
 			tempSelectedArray[tempMinimalIndex] = true;
-		} // Of for i
+		}// Of for i
 
 		return tempResultArray;
 	}// Of generateRandomIndices
 
 	/**
-	 ********************************** 
-	 * Select some elements from the given int array.
-	 * 
-	 * @author Hengru Zhang Revised by Fan Min 2013/12/24
-	 * 
-	 * @param paraArray
-	 *            The array used to select.
-	 * @param paraSelected
-	 *            The number of values to be selected.
-	 ********************************** 
+	 ************************* 
+	 * Test the method.
+	 ************************* 
 	 */
-	public static int[] randomSelect(int[] paraArray, int paraSelected) throws Exception {
-		if ((paraArray == null) || (paraArray.length == 0)) {
-			throw new Exception(
-					"Error occurred in SimpleTool.randomSelect().\r\n" + "The given array is null or empty.");
-		} // Of if
+	public static void testInBlock() {
+		int[] tempBlock = { 1, 3, 5, 8, 149 };
+		int tempInt = 3;
+		boolean tempInBlock = inBlock(tempBlock, tempInt);
+		System.out.println("" + tempInt + " in the block " + Arrays.toString(tempBlock) + "? " + tempInBlock);
 
-		if (paraSelected > paraArray.length) {
-			paraSelected = paraArray.length;
-		} // of if
+		tempInt = 6;
+		tempInBlock = inBlock(tempBlock, tempInt);
+		System.out.println("" + tempInt + " in the block " + Arrays.toString(tempBlock) + "? " + tempInBlock);
 
-		int[] tempSelectedIndices = generateRandomIndices(paraArray.length, paraSelected);
+		tempInt = 9;
+		tempInBlock = inBlock(tempBlock, tempInt);
+		System.out.println("" + tempInt + " in the block " + Arrays.toString(tempBlock) + "? " + tempInBlock);
 
-		// Copy elements
-		int[] tempArray = new int[paraSelected];
-		for (int i = 0; i < paraSelected; i++) {
-			tempArray[i] = paraArray[tempSelectedIndices[i]];
-		} // of for i
+		tempInt = 0;
+		tempInBlock = inBlock(tempBlock, tempInt);
+		System.out.println("" + tempInt + " in the block " + Arrays.toString(tempBlock) + "? " + tempInBlock);
 
-		return tempArray;
-	}// randomSelect
-
-	/**
-	 ********************************** 
-	 * Select some non-zero elements to remove.
-	 * 
-	 * @param paraArray
-	 *            The array used to select.
-	 * @param paraSelected
-	 *            The number of values to be selected.
-	 * @return a boolean array indicating which ones are removed
-	 * @author Fan Min 2013/12/26
-	 ********************************** 
-	 */
-	public static boolean[] randomSelectNonzeros(int[] paraArray, int paraSelected) throws Exception {
-		if ((paraArray == null) || (paraArray.length == 0)) {
-			throw new Exception(
-					"Error occurred in SimpleTool.randomSelectNonzeros().\r\n" + "The given array is null or empty.");
-		} // Of if
-
-		// Step 1. Count non-zero elements
-		int tempCount = 0;
-		for (int i = 0; i < paraArray.length; i++) {
-			if (paraArray[i] > 0) {
-				tempCount++;
-			} // Of if
-		} // Of for i
-
-		// No element to remove
-		if (tempCount == 0) {
-			return new boolean[paraArray.length];
-		} // Of if
-
-		// Select as many element as is
-		if (tempCount < paraSelected) {
-			tempCount = paraSelected;
-		} // Of if
-
-		// Step 2. Generate a random indice sequence
-		int[] tempRemovedIndices = generateRandomIndices(tempCount, paraSelected);
-
-		// Step 3. Decide which ones to remove
-		boolean[] tempRemovedElements = new boolean[paraArray.length];
-		int tempIndex = 0;
-		tempCount = 0;
-		for (int i = 0; i < paraArray.length; i++) {
-			if (paraArray[i] > 0) {
-				if (tempCount == tempRemovedIndices[tempIndex]) {
-					tempRemovedElements[i] = true;
-					tempIndex++;
-				} // Of if
-				tempCount++;
-			} // Of if
-
-			if (tempIndex >= tempRemovedIndices.length) {
-				break;
-			} // Of if
-		} // Of for i
-
-		return tempRemovedElements;
-	}// randomSelectNonzeros
-
-	/**
-	 ********************************** 
-	 * Select some non-zero elements to remove.
-	 * 
-	 * @param paraArray
-	 *            The array used to select.
-	 * @param paraSelected
-	 *            The number of values to be selected.
-	 * @return a boolean array indicating which ones are removed
-	 * @author Fan Min 2013/12/31
-	 ********************************** 
-	 */
-	public static boolean[] randomSelectNonzeros(double[] paraArray, int paraSelected) throws Exception {
-		if ((paraArray == null) || (paraArray.length == 0)) {
-			throw new Exception(
-					"Error occurred in SimpleTool.randomSelectNonzeros().\r\n" + "The given array is null or empty.");
-		} // Of if
-
-		// Step 1. Count non-zero elements
-		int tempNonzeroElements = 0;
-		for (int i = 0; i < paraArray.length; i++) {
-			if (paraArray[i] > 0) {
-				tempNonzeroElements++;
-			} // Of if
-		} // Of for i
-
-		// No element to remove
-		if (tempNonzeroElements == 0) {
-			return new boolean[paraArray.length];
-		} // Of if
-
-		// Select as many element as is
-		int tempSelection = 0;
-		if (tempNonzeroElements < paraSelected) {
-			tempSelection = tempNonzeroElements;
-		} else {
-			tempSelection = paraSelected;
-		} // Of if
-
-		// Step 2. Generate a random indice sequence
-		int[] tempRemovedIndices = generateRandomIndices(tempNonzeroElements, tempSelection);
-
-		// Step 3. Decide which ones to remove
-		boolean[] tempRemovedElements = new boolean[paraArray.length];
-		int tempIndex = 0;
-		int tempCount = 0;
-		for (int i = 0; i < paraArray.length; i++) {
-			if (paraArray[i] > 0) {
-				if (tempCount == tempRemovedIndices[tempIndex]) {
-					tempRemovedElements[i] = true;
-					tempIndex++;
-					if (tempIndex >= tempRemovedIndices.length) {
-						break;
-					} // Of if
-				} // Of if
-				tempCount++;
-			} // Of if
-		} // Of for i
-
-		return tempRemovedElements;
-	}// randomSelectNonzeros
-
-	/**
-	 ********************************** 
-	 * Assign fold number randomly to non-zero elements.
-	 * 
-	 * @param paraArray
-	 *            The array used to select.
-	 * @param paraFolds
-	 *            The number of folds.
-	 * @return an int array to indicate which element is assigned to the
-	 *         corresponding fold.
-	 * @author Fan Min 2013/12/26
-	 ********************************** 
-	 */
-	public static int[] randomAssignFold(double[] paraArray, int paraFolds) throws Exception {
-		if ((paraArray == null) || (paraArray.length == 0)) {
-			throw new Exception(
-					"Error occurred in SimpleTool.randomAssignFold().\r\n" + "The given array is null or empty.");
-		} // Of if
-		if (paraFolds < 2) {
-			throw new Exception("Error occurred in SimpleTool.randomAssignFold().\r\n"
-					+ "The number of folds should be at least 2.");
-		} // Of if
-
-		// Step 1. Initialize, the default value is -1
-		int[] returnArray = new int[paraArray.length];
-		for (int i = 0; i < returnArray.length; i++) {
-			returnArray[i] = -1;
-		} // Of for i
-
-		// Step 2. Count non-zero elements
-		int tempNonzeroCount = 0;
-		for (int i = 0; i < paraArray.length; i++) {
-			if (paraArray[i] > 0) {
-				tempNonzeroCount++;
-			} // Of if
-		} // Of for i
-
-		// No element to assign
-		if (tempNonzeroCount == 0) {
-			return returnArray;
-		} // Of if
-
-		// Step 3. Generate a random indice sequence and the fold index
-		int[] tempIndexSequence = generateRandomSequence(tempNonzeroCount);
-		for (int i = 0; i < tempIndexSequence.length; i++) {
-			tempIndexSequence[i] %= paraFolds;
-		} // Of for i
-
-		// Step 4. Assign fold index
-		int tempCount = 0;
-		for (int i = 0; i < paraArray.length; i++) {
-			if (paraArray[i] > 0) {
-				returnArray[i] = tempIndexSequence[tempCount];
-				tempCount++;
-			} // Of if
-		} // Of for i
-
-		return returnArray;
-	}// randomAssignFold
+		tempInt = 149;
+		tempInBlock = inBlock(tempBlock, tempInt);
+		System.out.println("" + tempInt + " in the block " + Arrays.toString(tempBlock) + "? " + tempInBlock);
+	}// Of testInBlock
 
 	/**
 	 ************************* 
-	 * Compute the cosine value of two vectors. The method is the same as
-	 * cosine(double[], double[]), however we cannot invoke that method for
-	 * efficiency.
-	 * 
-	 * @param paraFirstVector
-	 *            the first vector
-	 * @param paraSecondVector
-	 *            the second vector
-	 * @throws exception
-	 *             if there are negative values the algorithm ID
-	 * @author Fan Min 2013/12/26
+	 * Test the method.
 	 ************************* 
 	 */
-	public static double cosine(int[] paraFirstVector, int[] paraSecondVector) throws Exception {
-		// Check length
-		if (paraFirstVector.length != paraSecondVector.length) {
-			throw new Exception("Error occurred in SimpleTool.cosine(). The arrays should have the same length.");
-		} // Of if
-
-		// Check elements, might be unuseful
-		for (int i = 0; i < paraFirstVector.length; i++) {
-			if ((paraFirstVector[i] < 0) || (paraSecondVector[i] < 0)) {
-				throw new Exception("Error occurred in SimpleTool.cosine(). Elements should be non-negative.");
-			} // Of if
-		} // Of for i
-
-		double tempNumerator = 0;
-		double tempFirstModule = 0;
-		double tempSecondModule = 0;
-		for (int i = 0; i < paraFirstVector.length; i++) {
-			tempNumerator += paraFirstVector[i] * paraSecondVector[i];
-			tempFirstModule += paraFirstVector[i] * paraFirstVector[i];
-			tempSecondModule += paraSecondVector[i] * paraSecondVector[i];
-		} // Of for i
-		double tempDenominator = Math.sqrt(tempFirstModule) * Math.sqrt(tempSecondModule);
-
-		if (tempDenominator == 0) {
-			return 9999;
-		} // Of if
-		return tempNumerator / tempDenominator;
-	}// Of cosine
+	public static void testBinarySetFamilyMaximalIntersection() {
+		int[][] tempFirstSetFamily = { { 1, 3, 5, 7 }, { 0, 2, 4, 6 } };
+		int[][] tempSecondSetFamily = { { 1, 2, 3 }, { 0, 4, 5, 6, 7 } };
+		int[][] resultFamily = binarySetFamilyMaximalIntersection(tempFirstSetFamily, tempSecondSetFamily);
+		System.out.println("The result set family is: " + Arrays.deepToString(resultFamily));
+	}// Of testBinarySetFamilyMaximalIntersection
 
 	/**
 	 ************************* 
-	 * Compute the cosine value of two vectors. The method is the same as
-	 * cosine(double[], double[]), however we cannot invoke that method for
-	 * efficiency.
-	 * 
-	 * @param paraFirstVector
-	 *            the first vector
-	 * @param paraSecondVector
-	 *            the second vector
-	 * @throws exception
-	 *             if there are negative values the algorithm ID
-	 * @author Hengru Zhang 2014/06/04
+	 * Test the method.
 	 ************************* 
 	 */
-	public static double cosine(boolean[] paraFirstVector, boolean[] paraSecondVector) throws Exception {
-		// Check length
-		if (paraFirstVector.length != paraSecondVector.length) {
-			throw new Exception("Error occurred in SimpleTool.cosine(). The arrays should have the same length.");
-		} // Of if
-
-		double tempNumerator = 0;
-		double tempFirstModule = 0;
-		double tempSecondModule = 0;
-		int tempFirstValue = 0;
-		int tempSecondValue = 0;
-		for (int i = 0; i < paraFirstVector.length; i++) {
-			if (paraFirstVector[i]) {
-				tempFirstValue = 1;
-			} else {
-				tempFirstValue = 0;
-			} // of if
-			if (paraSecondVector[i]) {
-				tempSecondValue = 1;
-			} else {
-				tempSecondValue = 0;
-			} // of if
-			tempNumerator += tempFirstValue * tempSecondValue;
-			tempFirstModule += tempFirstValue * tempFirstValue;
-			tempSecondModule += tempSecondValue * tempSecondValue;
-		} // Of for i
-		double tempDenominator = Math.sqrt(tempFirstModule) * Math.sqrt(tempSecondModule);
-
-		if (tempDenominator == 0) {
-			// return 9999;
-			return -2; // modified by zhanghr 2014/06/09
-		} // Of if
-		return tempNumerator / tempDenominator;
-	}// Of cosine
+	public static void testIntersectionSize() {
+		int[] tempFirstSet = { 1, 3, 5, 7, 9 };
+		int[] tempSecondSet = { 3, 4, 5, 9 };
+		int resultSize = intersectionSize(tempFirstSet, tempSecondSet);
+		System.out.println("The size is: " + resultSize);
+	}// Of testIntersectionSize
 
 	/**
 	 ************************* 
-	 * Compute the cosine value of two vectors.
-	 * 
-	 * @param paraFirstVector
-	 *            the first vector
-	 * @param paraSecondVector
-	 *            the second vector
-	 * @throws exception
-	 *             if there are negative values the algorithm ID
-	 * @author Fan Min 2013/12/30
-	 * @modified by Henry 2015/06/25 zero rating-->null
+	 * Test the method.
 	 ************************* 
 	 */
-	public static double cosine(double[] paraFirstVector, double[] paraSecondVector) throws Exception {
-		// Check length
-		if (paraFirstVector.length != paraSecondVector.length) {
-			throw new Exception("Error occurred in SimpleTool.cosine(). The arrays should have the same length.");
-		} // Of if
-
-		// Check elements, might be unuseful
-		for (int i = 0; i < paraFirstVector.length; i++) {
-			if ((paraFirstVector[i] < 0) || (paraSecondVector[i] < 0)) {
-				throw new Exception("Error occurred in SimpleTool.cosine(). Elements should be non-negative.");
-			} // Of if
-		} // Of for i
-
-		double tempNumerator = 0;
-		double tempFirstModule = 0;
-		double tempSecondModule = 0;
-		for (int i = 0; i < paraFirstVector.length; i++) {
-			// zero rating --> null
-			// for examle: paraFirstVector = (0, 2, 5, 0), paraSecondVector =
-			// (1, 3, 0, 4)
-			// only {2} and {3}
-			if (paraFirstVector[i] > 1e-6 && paraSecondVector[i] > 1e-6) {
-				tempNumerator += paraFirstVector[i] * paraSecondVector[i];
-				tempFirstModule += paraFirstVector[i] * paraFirstVector[i];
-				tempSecondModule += paraSecondVector[i] * paraSecondVector[i];
-			} // of if
-		} // Of for i
-		double tempDenominator = Math.sqrt(tempFirstModule) * Math.sqrt(tempSecondModule);
-
-		if (tempDenominator == 0) {
-			return -9999; // Ô­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½0ï¿½ï¿½ï¿½Ë´ï¿½ï¿½Þ¸ï¿½Îªï¿½ï¿½ï¿½ï¿½-9999
-		} // of if
-
-		return tempNumerator / tempDenominator;
-	}// Of cosine
+	public static void testIntersection() {
+		int[] tempFirstSet = { 1, 3, 5, 7, 9 };
+		int[] tempSecondSet = { 4 };
+		int[] resultArray = intersection(tempFirstSet, tempSecondSet);
+		System.out.println("The size is: " + Arrays.toString(resultArray));
+	}// Of testIntersection
 
 	/**
-	 ************************* 
-	 * Compute the cosine value of two vectors.
-	 * 
-	 * @param paraFirstVector
-	 *            the first vector
-	 * @param paraSecondVector
-	 *            the second vector
-	 * @throws exception
-	 *             if there are negative values the algorithm ID
-	 * @author Fan Min 2013/12/30
-	 * @modified by Henry 2015/06/25 zero rating-->null
-	 ************************* 
-	 */
-	public static double adjustedCosine(double[] paraFirstVector, double[] paraSecondVector) throws Exception {
-		// Check length
-		if (paraFirstVector.length != paraSecondVector.length) {
-			throw new Exception("Error occurred in SimpleTool.cosine(). The arrays should have the same length.");
-		} // Of if
-
-		double tempNumerator = 0;
-		double tempFirstModule = 0;
-		double tempSecondModule = 0;
-		for (int i = 0; i < paraFirstVector.length; i++) {
-			// zero rating --> null
-			// for examle: paraFirstVector = (0, 2, 5, 0), paraSecondVector =
-			// (1, 3, 0, 4)
-			// only {2} and {3}
-			if (paraFirstVector[i] == 0 || paraSecondVector[i] == 0) {
-				continue;
-			} // Of if
-			tempNumerator += paraFirstVector[i] * paraSecondVector[i];
-			tempFirstModule += paraFirstVector[i] * paraFirstVector[i];
-			tempSecondModule += paraSecondVector[i] * paraSecondVector[i];
-		} // Of for i
-		double tempDenominator = Math.sqrt(tempFirstModule) * Math.sqrt(tempSecondModule);
-
-		if (tempDenominator == 0) {
-			return -9999; // Ô­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½0ï¿½ï¿½ï¿½Ë´ï¿½ï¿½Þ¸ï¿½Îªï¿½ï¿½ï¿½ï¿½-9999
-		} // of if
-
-		return tempNumerator / tempDenominator;
-	}// Of cosine
-
-	/**
-	 ************************* 
-	 * Remove elements in indices with zeros which indicate missing values, and
-	 * compute the cosine value of two vectors. For example, {0, 1, 2, 4} and
-	 * {1, 2, 0, 5} with be changed to {1, 4} and {2, 5}, and then the cosine
-	 * value is computed.
-	 * 
-	 * @param paraFirstVector
-	 *            the first vector
-	 * @param paraSecondVector
-	 *            the second vector
-	 * @throws Exception
-	 *             if there is no non-zero value pair.
-	 * @author Fan Min 2013/12/26
-	 ************************* 
-	 */
-	public static double cosineRemoveZeros(int[] paraFirstVector, int[] paraSecondVector) throws Exception {
-		boolean[] tempHasZeroValues = new boolean[paraFirstVector.length];
-		int tempValidValues = paraFirstVector.length;
-		for (int i = 0; i < paraFirstVector.length; i++) {
-			if ((paraFirstVector[i] == 0) || (paraSecondVector[i] == 0)) {
-				tempHasZeroValues[i] = true;
-				tempValidValues--;
-			} // Of if
-		} // Of for i
-
-		if (tempValidValues <= 0) {
-			throw new Exception("Error occurred in SimpleTool.cosineRemoveZeros()\r\n"
-					+ "There is no non-zero value pair for the two given arrays.");
-		} // Of if
-
-		int[] tempFirstVector = new int[tempValidValues];
-		int[] tempSecondVector = new int[tempValidValues];
-		int tempCounter = 0;
-		for (int i = 0; i < paraFirstVector.length; i++) {
-			if (!tempHasZeroValues[i]) {
-				tempFirstVector[tempCounter] = paraFirstVector[i];
-				tempSecondVector[tempCounter] = paraSecondVector[i];
-				tempCounter++;
-			} // Of if
-		} // Of for i
-
-		return cosine(tempFirstVector, tempSecondVector);
-	}// Of cosineRemoveZeros
-
-	/**
-	 ************************* 
-	 * Remove elements in indices with zeros which indicate missing values, and
-	 * compute the cosine value of two vectors. For example, {0, 1, 2, 4} and
-	 * {1, 2, 0, 5} with be changed to {1, 4} and {2, 5}, and then the cosine
-	 * value is computed.
-	 * 
-	 * @param paraFirstVector
-	 *            the first vector
-	 * @param paraSecondVector
-	 *            the second vector
-	 * @throws Exception
-	 *             if there is no non-zero value pair.
-	 * @author Fan Min 2013/12/30
-	 ************************* 
-	 */
-	public static double cosineRemoveZeros(double[] paraFirstVector, double[] paraSecondVector) throws Exception {
-		boolean[] tempHasZeroValues = new boolean[paraFirstVector.length];
-		int tempValidValues = paraFirstVector.length;
-		for (int i = 0; i < paraFirstVector.length; i++) {
-			if ((paraFirstVector[i] == 0) || (paraSecondVector[i] == 0)) {
-				tempHasZeroValues[i] = true;
-				tempValidValues--;
-			} // Of if
-		} // Of for i
-
-		if (tempValidValues <= 0) {
-			throw new Exception("Error occurred in SimpleTool.cosineRemoveZeros()\r\n"
-					+ "There is no non-zero value pair for the two given arrays.");
-		} // Of if
-
-		double[] tempFirstVector = new double[tempValidValues];
-		double[] tempSecondVector = new double[tempValidValues];
-		int tempCounter = 0;
-		for (int i = 0; i < paraFirstVector.length; i++) {
-			if (!tempHasZeroValues[i]) {
-				tempFirstVector[tempCounter] = paraFirstVector[i];
-				tempSecondVector[tempCounter] = paraSecondVector[i];
-				tempCounter++;
-			} // Of if
-		} // Of for i
-
-		return cosine(tempFirstVector, tempSecondVector);
-	}// Of cosineRemoveZeros
-
-	/**
-	 ************************* 
-	 * Remove elements in indices with zeros which indicate missing values, and
-	 * compute the cosine value of two vectors. For example, {0, 1, 2, 4} and
-	 * {1, 2, 0, 5} with be changed to {1, 4} and {2, 5}, and then the cosine
-	 * value is computed.
-	 * 
-	 * @param paraFirstVector
-	 *            the first vector
-	 * @param paraSecondVector
-	 *            the second vector
-	 * @throws Exception
-	 *             if there is no non-zero value pair.
-	 * @author Fan Min 2013/12/26
-	 ************************* 
-	 */
-	public static double cosineDefaultValue(int[] paraFirstVector, int[] paraSecondVector, int paraDefaultValue)
-			throws Exception {
-		int[] tempFirstVector = new int[paraFirstVector.length];
-		for (int i = 0; i < paraFirstVector.length; i++) {
-			if (paraFirstVector[i] == 0) {
-				tempFirstVector[i] = paraDefaultValue;
-			} else {
-				tempFirstVector[i] = paraFirstVector[i];
-			} // Of if
-		} // Of for i
-
-		int[] tempSecondVector = new int[paraSecondVector.length];
-		for (int i = 0; i < paraSecondVector.length; i++) {
-			if (paraSecondVector[i] == 0) {
-				tempSecondVector[i] = paraDefaultValue;
-			} else {
-				tempSecondVector[i] = paraSecondVector[i];
-			} // Of if
-		} // Of for i
-
-		return cosine(tempFirstVector, tempSecondVector);
-	}// Of cosineDefaultValue
-
-	/**
-	 ************************* 
-	 * Remove elements in indices with zeros which indicate missing values, and
-	 * compute the cosine value of two vectors. For example, {0, 1, 2, 4} and
-	 * {1, 2, 0, 5} with be changed to {1, 4} and {2, 5}, and then the cosine
-	 * value is computed.
-	 * 
-	 * @param paraFirstVector
-	 *            the first vector
-	 * @param paraSecondVector
-	 *            the second vector
-	 * @throws Exception
-	 *             if there is no non-zero value pair.
-	 * @author Fan Min 2013/12/30
-	 ************************* 
-	 */
-	public static double cosineDefaultValue(double[] paraFirstVector, double[] paraSecondVector,
-			double paraDefaultValue) throws Exception {
-		double[] tempFirstVector = new double[paraFirstVector.length];
-		for (int i = 0; i < paraFirstVector.length; i++) {
-			if (paraFirstVector[i] == 0) {
-				tempFirstVector[i] = paraDefaultValue;
-			} else {
-				tempFirstVector[i] = paraFirstVector[i];
-			} // Of if
-		} // Of for i
-
-		double[] tempSecondVector = new double[paraSecondVector.length];
-		for (int i = 0; i < paraSecondVector.length; i++) {
-			if (paraSecondVector[i] == 0) {
-				tempSecondVector[i] = paraDefaultValue;
-			} else {
-				tempSecondVector[i] = paraSecondVector[i];
-			} // Of if
-		} // Of for i
-
-		return cosine(tempFirstVector, tempSecondVector);
-	}// Of cosineDefaultValue
-
-	/**
-	 ************************* 
-	 * Weight common rating item and set a default elements in indices with
-	 * zeros , and compute the cosine value of two vectors. For example, {0, 1,
-	 * 2, 4} and {1, 2, 0, 5} is two common rating items.{1,4} and {2,5} will be
-	 * changed to {1*2,4*2} and {2*2,5*2} ,then the cosine value is computed.
-	 * 
-	 * @param paraFirstVector
-	 *            the first vector
-	 * @param paraSecondVector
-	 *            the second vector
-	 * @throws Exception
-	 *             if there is no non-zero value pair.
-	 * @author Hengru Zhang 2014/1/2
-	 ************************* 
-	 */
-	public static double cosineDefaultValueAndWeighted(double[] paraFirstVector, double[] paraSecondVector,
-			double paraDefaultValue) throws Exception {
-		// Step 1.Compute number of common rating items
-		int tempCommonItems = 0;
-		for (int i = 0; i < paraFirstVector.length; i++) {
-			if (paraFirstVector[i] > 1e-6 && paraSecondVector[i] > 1e-6) {
-				tempCommonItems++;
-			} // of if
-		} // of for i
-
-		// Step 2. Set default value
-		double[] tempFirstVector = new double[paraFirstVector.length];
-		for (int i = 0; i < paraFirstVector.length; i++) {
-			if (paraFirstVector[i] == 0) {
-				tempFirstVector[i] = paraDefaultValue;
-			} else {
-				tempFirstVector[i] = paraFirstVector[i];
-			} // Of if
-		} // Of for i
-
-		double[] tempSecondVector = new double[paraSecondVector.length];
-		for (int i = 0; i < paraSecondVector.length; i++) {
-			if (paraSecondVector[i] == 0) {
-				tempSecondVector[i] = paraDefaultValue;
-			} else {
-				tempSecondVector[i] = paraSecondVector[i];
-			} // Of if
-		} // Of for i
-
-		// Step 3.Weight common rating.
-		for (int i = 0; i < paraFirstVector.length; i++) {
-			if (paraFirstVector[i] > 1e-6 && paraSecondVector[i] > 1e-6) {
-				tempFirstVector[i] = paraFirstVector[i] * Math.pow(tempCommonItems, 1);
-				tempSecondVector[i] = paraSecondVector[i] * Math.pow(tempCommonItems, 1);
-			} // of if
-		} // of for i
-
-		// Step 4. Compute cosine value with weighted rating
-		return cosine(tempFirstVector, tempSecondVector);
-	}// Of cosineDefaultValue
-
-	/**
-	 ************************* 
-	 * Get the minimal value of a given array.
-	 * 
-	 * @param paraArray
-	 *            the given array vector
-	 * 
-	 * @author Heng-Ru Zhang 2015/1/19
-	 ************************* 
-	 */
-	public static double minimalValueOfArray(double[] paraArray) {
-		if (paraArray == null || paraArray.length < 2) {
-			return 0;
-		} // of if
-		double tempMin = paraArray[0];
-		for (int i = 1; i < paraArray.length; i++) {
-			if (tempMin > paraArray[i]) {
-				tempMin = paraArray[i];
-			} // of if
-		} // of for i
-
-		return tempMin;
-	}// of minimalValueOfArray
-
-	/**
-	 ************************* 
-	 * Get the minimal value of a given array.
-	 * 
-	 * @param paraArray
-	 *            the given array vector
-	 * 
-	 * @author Heng-Ru Zhang 2015/1/19
-	 ************************* 
-	 */
-	public static int minimalValueOfArray(int[] paraArray) {
-		if (paraArray == null || paraArray.length < 2) {
-			return 0;
-		} // of if
-		int tempMin = paraArray[0];
-		for (int i = 1; i < paraArray.length; i++) {
-			if (tempMin > paraArray[i]) {
-				tempMin = paraArray[i];
-			} // of if
-		} // of for i
-
-		return tempMin;
-	}// of minimalValueOfArray
-
-	/**
-	 ************************* 
-	 * Get the minimal value of a given array.
-	 * 
-	 * @param paraArray
-	 *            the given array vector
-	 * 
-	 * @author Heng-Ru Zhang 2015/1/19
-	 ************************* 
-	 */
-	public static int maximumValueOfArray(int[] paraArray) {
-		if (paraArray == null || paraArray.length < 2) {
-			return 0;
-		} // of if
-		int tempMax = paraArray[0];
-		for (int i = 1; i < paraArray.length; i++) {
-			if (tempMax < paraArray[i]) {
-				tempMax = paraArray[i];
-			} // of if
-		} // of for i
-
-		return tempMax;
-	}// of maximumValueOfArray
-
-	/**
-	 ************************* 
-	 * Get the minimal value of a given array.
-	 * 
-	 * @param paraArray
-	 *            the given array vector
-	 * 
-	 * @author Heng-Ru Zhang 2015/1/19
-	 ************************* 
-	 */
-	public static double maximumValueOfArray(double[] paraArray) {
-		if (paraArray == null || paraArray.length < 2) {
-			return 0;
-		} // of if
-		double tempMax = paraArray[0];
-		for (int i = 1; i < paraArray.length; i++) {
-			if (tempMax < paraArray[i]) {
-				tempMax = paraArray[i];
-			} // of if
-		} // of for i
-
-		return tempMax;
-	}// of maximumValueOfArray
-
-	/**
-	 ************************* 
-	 * Get the minimal value of a given array.
-	 * 
-	 * @param paraArray
-	 *            the given array vector
-	 * 
-	 * @author Heng-Ru Zhang 2015/1/19
-	 ************************* 
-	 */
-	public static int minimalValueIndexOfArray(double[] paraArray) {
-		if (paraArray == null || paraArray.length < 2) {
-			return 0;
-		} // of if
-		double tempMin = paraArray[0];
-		int tempMinIndex = 0;
-		for (int i = 1; i < paraArray.length; i++) {
-			if (tempMin > paraArray[i]) {
-				tempMin = paraArray[i];
-				tempMinIndex = i;
-			} // of if
-		} // of for i
-
-		return tempMinIndex;
-	}// of minimalValueOfArray
-
-	public static void printTriple(Triple[] paraTriple) {
-		for (int i = 0; i < paraTriple.length; i++) {
-			System.out.println(
-					"user: " + paraTriple[i].user + " item: " + paraTriple[i].item + " rate: " + paraTriple[i].rating);
-		} // Of for i
-
-	}// Of printTriple
-
-	/**
-	 ********************************** 
+	 ************************** 
 	 * Testing method.
 	 * 
 	 * @param args
-	 ********************************** 
+	 *            The parameters.
+	 ************************** 
 	 */
 	public static void main(String args[]) {
 		// int[] firstSet = {1, 2, 6};
@@ -3437,58 +2817,11 @@ public class SimpleTool extends Object {
 		 * thirdSet = {}; try { thirdSet = setIntersection(firstSet, secondSet);
 		 * } catch (Exception ee) { System.out.println(ee); return; }
 		 * printIntArray(thirdSet);
-		 * 
-		 * 
-		 * int[] tempArray = null; try { tempArray = generateRandomIndices(10,
-		 * 5); printIntArray(tempArray); } catch (Exception ee) {
-		 * System.out.print(ee.toString()); }
-		 * 
-		 * int[] tempArray2 = {2, 6, 8, 12, 18, 23}; try { int[]
-		 * tempSelectedArray = randomSelect(tempArray2, 3);
-		 * printIntArray(tempSelectedArray); } catch (Exception ee) {
-		 * System.out.print(ee.toString()); } int[] tempArray1 = { 1, 0, 1 };
-		 * 
-		 * int[] tempArray2 = { 1, 2, 1 };
-		 * 
-		 * try { System.out.print("Array 1: "); printIntArray(tempArray1);
-		 * System.out.print("Array 2: "); printIntArray(tempArray2);
-		 * 
-		 * double tempCosine = cosine(tempArray1, tempArray2);
-		 * System.out.println("The cosine value is: " + tempCosine);
-		 * 
-		 * tempCosine = cosineRemoveZeros(tempArray1, tempArray2);
-		 * System.out.println("The zero-removed cosine value is: " +
-		 * tempCosine); } catch (Exception ee) {
-		 * System.out.print(ee.toString()); }
 		 */
-
-		/*
-		 * int[] tempArray = { 1, 0, 2, 3, 0, 5 };
-		 * 
-		 * try { System.out.print("Array 1: "); printIntArray(tempArray);
-		 * 
-		 * boolean[] tempRemoved = randomSelectNonzeros(tempArray, 2);
-		 * 
-		 * System.out.println("removing");
-		 * 
-		 * printBooleanArray(tempRemoved); } catch (Exception ee) {
-		 * System.out.print(ee.toString()); }
-		 */
-		double[] tempArray = { 1, 0, 2, 3, 0, 5, 3 };
-
-		try {
-			System.out.print("Array 1: ");
-			printDoubleArray(tempArray);
-
-			// boolean[] tempRemoved = randomSelectNonzeros(tempArray, 2);
-			int[] tempIndices = randomAssignFold(tempArray, 3);
-
-			System.out.println("removing");
-
-			// printBooleanArray(tempRemoved);
-			printIntArray(tempIndices);
-		} catch (Exception ee) {
-			System.out.print(ee.toString());
-		}
+		// testIntersectionSize();
+		// testIntersection();
+		// testBinarySetFamilyMaximalIntersection();
+		// testInBlock();
+		disorderData("src/data/spiral.arff");
 	}// Of main
 }// Of class SimpleTool

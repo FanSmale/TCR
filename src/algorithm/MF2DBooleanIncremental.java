@@ -14,6 +14,11 @@ package algorithm;
 
 public class MF2DBooleanIncremental extends MF2DBoolean {
 	/**
+	 * Incremental training rounds.
+	 */
+	int incrementalTrainRounds = 20;
+
+	/**
 	 ************************ 
 	 * The first constructor.
 	 * 
@@ -31,6 +36,15 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 			double paraRatingLowerBound, double paraRatingUpperBound) {
 		super(paraFilename, paraNumUsers, paraNumItems, paraNumRatings, paraRatingLowerBound, paraRatingUpperBound);
 	}// Of the first constructor
+	
+	/**
+	 ************************ 
+	 * Setter.
+	 ************************ 
+	 */
+	public void setIncrementalTrainRounds(int paraValue){
+		incrementalTrainRounds = paraValue;
+	}//Of setIncrementalTrainRounds
 
 	/**
 	 ************************ 
@@ -88,7 +102,7 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 	 *            The number of rounds.
 	 ************************ 
 	 */
-	public void trainUser(int paraUser, int paraRounds) {
+	public void trainUser(int paraUser) {
 		// Step 1. Reset the user subspace of the given user.
 		for (int i = 0; i < rank; i++) {
 			userSubspace[paraUser][i] += (rand.nextDouble() - 0.5) * 2 * subspaceValueRange;
@@ -96,7 +110,7 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 		//System.out.println("initialize userSubspace[" + paraUser + "] = " + Arrays.toString(userSubspace[paraUser]));
 
 		// Step 2. Update the user subspace.
-		for (int i = 0; i < paraRounds; i++) {
+		for (int i = 0; i < incrementalTrainRounds; i++) {
 			updateUserSubspace(paraUser);
 		} // Of for i
 	}// Of trainUser
@@ -184,6 +198,22 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 
 	/**
 	 ************************ 
+	 * Pre-train. All data are employed for training.
+	 ************************ 
+	 */
+	public void pretrain() {
+		//setParameters(10, 0.0001, 0.005, NO_REGULAR, paraRounds);
+		setAllTraining();
+		adjustUsingMeanRating();
+
+		// Step 2. Pre-train
+		initializeSubspaces(0.5);
+		//System.out.println("Pre-training " + paraRounds + " rounds ...");
+		train();
+	}// Of pretrain
+
+	/**
+	 ************************ 
 	 * The training testing scenario.
 	 ************************ 
 	 */
@@ -198,7 +228,7 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 			e.printStackTrace();
 		} // Of try
 
-		tempMF.setParameters(10, 0.0001, 0.005, NO_REGULAR);
+		tempMF.setParameters(10, 0.0001, 0.005, NO_REGULAR, 200);
 		tempMF.setAllTraining();
 		tempMF.adjustUsingMeanRating();
 
@@ -224,7 +254,7 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 			tempMF.setUserTraining(i, tempIndices);
 			
 			// Step 3.2 Incremental training.
-			tempMF.trainUser(i, paraIncrementalRounds);
+			tempMF.trainUser(i);
 
 			// Step 3.3 Prediction and compute error.
 			int tempItem;

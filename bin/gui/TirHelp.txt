@@ -1,0 +1,42 @@
+ Project:          The cost-sensitive co-training project.
+ Author:           Fan Min, minfanphd@163.com, minfan@swpu.edu.cn.
+ Copyright:        The source code and all documents are open and free.
+ Organization:     Lab of machine learning, Southwest Petroleum University, Chengdu 610500, China. www.fansmale.com.
+ Progress:         Over 75%.
+ Written time:     September 30, 2010.
+ Last modify time: October 04, 2019.
+
+This is the help document of our paper "Co-training using attribute reduct pairs."
+
+Here are the explanation of settings. We will use the wdbc_norm_ex dataset with more than 30 attributes for illustration.
+
+The .arff file: The data filename. Please use Browse to select.
+Training fraction: The fraction of the training set.
+Testing fraction: The fraction of the testing set. The remaining part, which is referred to as the unlabeled training set, will serve for training set enlargement.
+
+Co-training iterations: The maximal iterations that each co-trainer selects instances for the other. Quite often we will not reach this number, since there are not enough instances to choose.
+Data increment: How many instances are chosen by each co-trainer each time?
+Balance classes: Select the same number of instances for each class?
+
+Distance measure: The distance measure used throughout the project.
+Distance preference: Used to select instances by the co-trainers.
+  Near: instances close to their neighbors are preferred.
+  Far: instances far from their neighbors are preferred.
+
+Normalize: Normalize the data or not. We suggest to turn it on.
+Disorder: Disorder the data or not. Some data are ordered according to the class labels. There some algorithms may take advantage of this to obtain "good" results. We suggest to turn it on.
+
+Confidence threshold: Instances with confidence no small than this threshold can be added to the training set.
+Confidence computation:
+  kNN: the confidence is defined by the number of instances with the majority label.
+  random forest: the confidence is defined by the number of trees producing the majority label. Attention: not implemented yet!
+k: The value for kNN.
+
+Classifier: Employed to compute the classification accuracy before and after training set enlargement.
+Feature selector: Select two feature subsets to build co-trainers.
+
+Process tracking: Track the process in the console.
+Variable tracking: Track variables for detailed debugging.
+Output to file: Output the results to a file in the "results" folder. Attention: It is not implmented here yet!
+
+Repeat times: How many time the experiment repeats.

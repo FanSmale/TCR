@@ -63,6 +63,11 @@ public class MF2DBoolean extends RatingSystem2DBoolean {
 	public static final int PQ_REGULAR = 1;
 
 	/**
+	 * How many rounds for training.
+	 */
+	int trainRounds = 200;
+	
+	/**
 	 ************************ 
 	 * The first constructor.
 	 * 
@@ -94,11 +99,22 @@ public class MF2DBoolean extends RatingSystem2DBoolean {
 	 ************************ 
 	 */
 	public void setParameters(int paraRank, double paraAlpha, double paraLambda,
-			int paraRegularScheme) {
+			int paraRegularScheme, int paraTrainRounds) {
 		rank = paraRank;
 		alpha = paraAlpha;
 		lambda = paraLambda;
 		regularScheme = paraRegularScheme;
+		trainRounds = paraTrainRounds;
+	}// Of setParameters
+
+	/**
+	 ************************ 
+	 * Get parameters.
+	 ************************ 
+	 */
+	public String getParameters() {
+		String resultString = "" + rank + ", " + alpha + ", " + lambda  + ", " + regularScheme  + ", " + trainRounds;
+		return resultString;
 	}// Of setParameters
 
 	/**
@@ -148,7 +164,6 @@ public class MF2DBoolean extends RatingSystem2DBoolean {
 	 ************************ 
 	 */
 	public double predict(int paraUser, int paraItem) {
-		// System.out.println("Predict in the superclass");
 		double resultValue = 0;
 		for (int i = 0; i < rank; i++) {
 			resultValue += userSubspace[paraUser][i] * itemSubspace[paraItem][i];
@@ -181,6 +196,19 @@ public class MF2DBoolean extends RatingSystem2DBoolean {
 	 *            The number of rounds.
 	 ************************ 
 	 */
+	public void train() {
+		train(trainRounds);
+	}//Of train
+	
+	
+	/**
+	 ************************ 
+	 * Train.
+	 * 
+	 * @param paraRounds
+	 *            The number of rounds.
+	 ************************ 
+	 */
 	public void train(int paraRounds) {
 		for (int i = 0; i < paraRounds; i++) {
 			update();
@@ -191,25 +219,6 @@ public class MF2DBoolean extends RatingSystem2DBoolean {
 			} // Of if
 		} // Of for i
 	}// Of train
-
-	/**
-	 ************************ 
-	 * Pre-train.
-	 * 
-	 * @param paraRounds
-	 *            The number of rounds.
-	 ************************ 
-	 */
-	public void pretrain(int paraRounds) {
-		setParameters(10, 0.0001, 0.005, NO_REGULAR);
-		setAllTraining();
-		adjustUsingMeanRating();
-
-		// Step 2. Pre-train
-		initializeSubspaces(0.5);
-		System.out.println("Pre-training " + paraRounds + " rounds ...");
-		train(paraRounds);
-	}// Of pretrain
 
 	/**
 	 ************************ 
@@ -401,7 +410,7 @@ public class MF2DBoolean extends RatingSystem2DBoolean {
 			MF2DBoolean tempMF = new MF2DBoolean(paraFilename, paraNumUsers, paraNumItems,
 					paraNumRatings, paraRatingLowerBound, paraRatingUpperBound);
 
-			tempMF.setParameters(10, 0.0001, 0.005, PQ_REGULAR);
+			tempMF.setParameters(10, 0.0001, 0.005, PQ_REGULAR, 200);
 			tempMF.initializeTraining(0.8);
 			tempMF.adjustUsingMeanRating();
 
@@ -435,7 +444,7 @@ public class MF2DBoolean extends RatingSystem2DBoolean {
 			MF2DBoolean tempMF = new MF2DBoolean(paraFilename, paraNumUsers, paraNumItems,
 					paraNumRatings, paraRatingLowerBound, paraRatingUpperBound);
 
-			tempMF.setParameters(10, 0.0001, 0.005, NO_REGULAR);
+			tempMF.setParameters(10, 0.0001, 0.005, NO_REGULAR, 200);
 			tempMF.initializeTraining(1.0);
 			tempMF.adjustUsingMeanRating();
 

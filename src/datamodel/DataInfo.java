@@ -1,12 +1,11 @@
 package datamodel;
-import tool.SimpleTool;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import tool.SimpleTool;
+import common.SimpleTools;
 
 public class DataInfo {
 	public static int userNumber = 24983;// 49290 //9439;//88238;//4696;
@@ -200,7 +199,7 @@ public class DataInfo {
 			DataInfo tempData = new DataInfo(dataPath);
 
 			// Step3. Test
-			SimpleTool.printTriple(tempData.data);
+			//SimpleTools.printTriple(tempData.data);
 			// Triple tempElement = getDataInfo(9, 6);
 			// SimpleTool.printTriple(tempElement);
 

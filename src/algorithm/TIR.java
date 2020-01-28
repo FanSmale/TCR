@@ -1,11 +1,12 @@
 package algorithm;
 
 import algorithm.MF2DBooleanIncremental;
+import common.SimpleTools;
+
 import java.io.*;
 import java.util.Arrays;
 import java.util.Random;
 import datamodel.*;
-import tool.SimpleTool;
 
 /**
  * TIR2.java <br>
@@ -123,29 +124,21 @@ public class TIR extends MF2DBooleanIncremental {
 	int maxItemPop;
 
 	/**
-	 * The item pop threshold (normalization).
+	 * Item popularity no less than the second value may be recommended, no less
+	 * than the first value may be promoted.
 	 */
-	double popThreshold = 0.5;
+	double[] popularityThresholds = { 0.3, 0.5 };
 
 	/**
-	 * The threshold for recommendation (predicted by M-distance).
+	 * Item predicted rating no less than the second value may be recommended, no less
+	 * than the first value may be promoted.
 	 */
-	double recommendScoreThreshold = 0.5;
-
-	/**
-	 * The threshold for promotion (predicted by M-distance).
-	 */
-	double promoteScoreThreshold = -2.0;
+	double[] favoriteThresholds = { -2.0, 0.5 };
 
 	/**
 	 * The popular items (for recommend).
 	 */
 	int[] popItems;
-
-	/**
-	 * The item semi-pop threshold (normalization).
-	 */
-	double semiPopThreshold = 0.3;
 
 	/**
 	 * The semi-popular items (for recommend).
@@ -227,6 +220,15 @@ public class TIR extends MF2DBooleanIncremental {
 
 	/**
 	 *********************************** 
+	 * Setter.
+	 *********************************** 
+	 */
+	public void setLikeThreshold(double paraValue) {
+		likeThreshold = paraValue;
+	}// Of setLikeThreshold
+
+	/**
+	 *********************************** 
 	 * Compute both popular items, which may be recommended, and semi-popular
 	 * items, which may be promoted.
 	 * 
@@ -273,19 +275,30 @@ public class TIR extends MF2DBooleanIncremental {
 			} // Of if
 		} // Of for i
 
-		//System.out.println("Pop items: " + Arrays.toString(popItems));
-		//System.out.println("Semi-popular items: " + Arrays.toString(semiPopItems));
+		// System.out.println("Pop items: " + Arrays.toString(popItems));
+		// System.out.println("Semi-popular items: " +
+		// Arrays.toString(semiPopItems));
 	}// Of computePopAndSemipopItems
 
 	/**
 	 *********************************** 
-	 * Set popular and semi-popular thresholds.
+	 * Set thresholds for popularity-based recommendation.
+	 * @param paraThresholds Should have exactly two elements.
 	 *********************************** 
 	 */
-	public void setPopThresholds(double paraPopThreshold, double paraSemiPopThreshold) {
-		popThreshold = paraPopThreshold;
-		semiPopThreshold = paraSemiPopThreshold;
-	}// Of setPopThresholds
+	public void setPopularityThresholds(double[] paraThresholds) {
+		popularityThresholds = paraThresholds;
+	}// Of setPopularityThresholds
+
+	/**
+	 *********************************** 
+	 * Set thresholds for prediction-based recommendation.
+	 * @param paraThresholds Should have exactly two elements.
+	 *********************************** 
+	 */
+	public void setFavoriteThresholds(double[] paraThreshold) {
+		favoriteThresholds = paraThreshold;
+	}// Of setFavoriteThresholds
 
 	/**
 	 *********************************** 
@@ -388,8 +401,6 @@ public class TIR extends MF2DBooleanIncremental {
 			// System.out.println();
 		} // Of for i
 
-		System.out.println("User " + paraUser + " cost: " + resultTotalCost);
-
 		return resultTotalCost;
 	}// Of computeTotalCostForUser
 
@@ -431,9 +442,10 @@ public class TIR extends MF2DBooleanIncremental {
 		popBasedRecommend(paraUser);
 		resultTotalCost = computeTotalCostForUser(paraUser, currentUserRecommendations,
 				currentUserPromotions);
-		System.out.print("Only popularity-based recommendtaion. The cost of user " + paraUser
-				+ " is: " + resultTotalCost);
-		System.out.println();
+		System.out.println("User " + paraUser + ", after popularity based recommendation, total cost = " + resultTotalCost);
+		//System.out.print("Only popularity-based recommendtaion. The cost of user " + paraUser
+		//		+ " is: " + resultTotalCost);
+		//System.out.println();
 
 		// Step 3. M-distance-based recommendation.
 		// mDistanceBasedRecommend(paraUser);
@@ -442,13 +454,14 @@ public class TIR extends MF2DBooleanIncremental {
 		// MF2DBooleanIncremental(paraUser);
 
 		// Step 3. MF based recommendation.
-		
+
 		mfBasedRecommend(paraUser);
 
 		resultTotalCost = computeTotalCostForUser(paraUser, currentUserRecommendations,
 				currentUserPromotions);
-		System.out.print("Finally, the cost of user " + paraUser + " is: " + resultTotalCost);
-		System.out.println();
+		System.out.println("User " + paraUser + ", after MF based recommendation, total cost = " + resultTotalCost);
+		//System.out.print("Finally, the cost of user " + paraUser + " is: " + resultTotalCost);
+		//System.out.println();
 
 		return resultTotalCost;
 	}// Of recommendForUser
@@ -479,9 +492,9 @@ public class TIR extends MF2DBooleanIncremental {
 		double tempMaturity = 0;
 		int[] tempPopItems = new int[numItems];
 		int tempNumPopItems = 0;
-		System.out.print("Popular items: ");
+		//System.out.print("Popular items: ");
 		for (int i = 0; i < numItems; i++) {
-			if (tempItemPopArray[i] >= popThreshold * maxItemPop) {
+			if (tempItemPopArray[i] >= popularityThresholds[1] * maxItemPop) {
 				tempPopItems[tempNumPopItems] = i;
 				System.out.print(", " + i);
 				tempNumPopItems++;
@@ -491,12 +504,12 @@ public class TIR extends MF2DBooleanIncremental {
 		// Step 3. Compute semi-popular items.
 		int[] tempSemiPopItems = new int[numItems];
 		int tempNumSemiPopItems = 0;
-		System.out.print("\r\nSemi-popular items: ");
+		//System.out.print("\r\nSemi-popular items: ");
 		for (int i = 0; i < numItems; i++) {
-			if ((tempItemPopArray[i] < popThreshold * maxItemPop)
-					&& (tempItemPopArray[i] >= semiPopThreshold * maxItemPop)) {
+			if ((tempItemPopArray[i] < popularityThresholds[1] * maxItemPop)
+					&& (tempItemPopArray[i] >= popularityThresholds[0] * maxItemPop)) {
 				tempSemiPopItems[tempNumSemiPopItems] = i;
-				System.out.print("; " + i);
+				//System.out.print("; " + i);
 				tempNumSemiPopItems++;
 			} // Of for i
 		} // Of for i
@@ -522,7 +535,8 @@ public class TIR extends MF2DBooleanIncremental {
 			} // Of for i
 			tempNumPopItems -= tempNumRecommend;
 			tempPopItems = eliminateProcessed(tempPopItems, tempProcessedArray);
-			//System.out.println("\r\nRecommending " + Arrays.toString(tempRecommendations));
+			// System.out.println("\r\nRecommending " +
+			// Arrays.toString(tempRecommendations));
 
 			// Step 4.2 Promote
 			// Step 4.2.1 Compute items with popularity between the pop and
@@ -535,7 +549,8 @@ public class TIR extends MF2DBooleanIncremental {
 			// Step 4.2.2 Randomly select 7 to promote
 			int[] tempPromotions = randomSelectFromArray(tempSemiPopItems, tempNumSemiPopItems,
 					tempNumPromote);
-			//System.out.println("\r\nPromoting " + Arrays.toString(tempPromotions));
+			// System.out.println("\r\nPromoting " +
+			// Arrays.toString(tempPromotions));
 			tempNumSemiPopItems -= tempNumPromote;
 			for (int i = 0; i < tempPromotions.length; i++) {
 				tempProcessedArray[tempPromotions[i]] = true;
@@ -557,12 +572,14 @@ public class TIR extends MF2DBooleanIncremental {
 					currentUserPromotions);
 		} // Of while
 
+		/*
 		if (tempMaturity >= maturityThreshold) {
 			System.out.println("Matured.");
 		} else {
 			System.out.println("The maturity " + tempMaturity + " is smaller than the threshold "
 					+ maturityThreshold);
 		} // Of if
+		*/
 	}// Of popBasedRecommend
 
 	/**
@@ -575,7 +592,7 @@ public class TIR extends MF2DBooleanIncremental {
 	 *********************************** 
 	 */
 	public void mfBasedRecommend(int paraUser) {
-		System.out.println("mfBasedRecommend");
+		//System.out.println("mfBasedRecommend");
 		int[] tempAcquiredItems = new int[data[paraUser].length];
 		int tempCounter = 0;
 		int[] tempRecommendationCandidates = new int[numItems];
@@ -583,7 +600,7 @@ public class TIR extends MF2DBooleanIncremental {
 
 		int tempNumRecommend = (int) (recommendRatio * recommendationLength);
 		int tempNumPromote = recommendationLength - tempNumRecommend;
-		
+
 		int[] tempRandomIndices = null;
 
 		while (true) {
@@ -617,11 +634,12 @@ public class TIR extends MF2DBooleanIncremental {
 					continue;
 				} // Of if
 
-				//System.out.println("tempPredicts[" + i + "]= " + tempPredicts[i]);
-				if (tempPredicts[i] >= recommendScoreThreshold) {
+				// System.out.println("tempPredicts[" + i + "]= " +
+				// tempPredicts[i]);
+				if (tempPredicts[i] >= favoriteThresholds[1]) {
 					tempRecommendationCandidates[tempRecommendationCandidatesLength] = i;
 					tempRecommendationCandidatesLength++;
-				} else if (tempPredicts[i] >= promoteScoreThreshold) {
+				} else if (tempPredicts[i] >= favoriteThresholds[0]) {
 					tempPromotionCandidates[tempPromotionCandidatesLength] = i;
 					tempPromotionCandidatesLength++;
 				} // Of if
@@ -630,32 +648,35 @@ public class TIR extends MF2DBooleanIncremental {
 			// Step 4. Handle the situation where no enough to
 			// recommend/promote.
 			if (tempRecommendationCandidatesLength < tempNumRecommend) {
-				System.out.println("User " + paraUser + " has no enough to recommend: "
-						+ tempRecommendationCandidatesLength);
+				//System.out.println("User " + paraUser + " has no enough to recommend: "
+				//		+ tempRecommendationCandidatesLength);
 				break;
 			} else if (tempPromotionCandidatesLength < tempNumPromote) {
-				System.out.println("User " + paraUser + " has no enough to promote: "
-						+ tempPromotionCandidatesLength);
+				//System.out.println("User " + paraUser + " has no enough to promote: "
+				//		+ tempPromotionCandidatesLength);
 				break;
 			} // Of if
-			
-			//Step 5. Randomly select some to recommend/promote.
+
+			// Step 5. Randomly select some to recommend/promote.
 			try {
-				tempRandomIndices = SimpleTool.generateRandomIndices(tempRecommendationCandidatesLength, tempNumRecommend);
+				tempRandomIndices = SimpleTools.generateRandomIndices(
+						tempRecommendationCandidatesLength, tempNumRecommend);
 				for (int j = 0; j < tempNumRecommend; j++) {
 					currentUserRecommendations[tempRecommendationCandidates[tempRandomIndices[j]]] = true;
-					//System.out.println("Recommend: " + tempRecommendationCandidates[tempRandomIndices[j]]);
-				}//Of for j
-				
-				tempRandomIndices = SimpleTool.generateRandomIndices(tempPromotionCandidatesLength, tempNumPromote);
+					// System.out.println("Recommend: " +
+					// tempRecommendationCandidates[tempRandomIndices[j]]);
+				} // Of for j
+
+				tempRandomIndices = SimpleTools.generateRandomIndices(tempPromotionCandidatesLength,
+						tempNumPromote);
 				for (int j = 0; j < tempNumPromote; j++) {
 					currentUserPromotions[tempPromotionCandidates[tempRandomIndices[j]]] = true;
-					//System.out.println("Promote: " + tempPromotionCandidates[tempRandomIndices[j]]);
-				}//Of for j
+					// System.out.println("Promote: " +
+					// tempPromotionCandidates[tempRandomIndices[j]]);
+				} // Of for j
 			} catch (Exception ee) {
-				System.out.println("Error occurred in TIR.mfBasedRecommend(int)\r\n"
-						+ ee);
-			}//Of try
+				System.out.println("Error occurred in TIR.mfBasedRecommend(int)\r\n" + ee);
+			} // Of try
 		} // Of while
 	}// Of mfBasedRecommend
 
@@ -775,15 +796,15 @@ public class TIR extends MF2DBooleanIncremental {
 
 	/**
 	 *********************************** 
-	 * Show me.
+	 * The main entrance.
+	 * 
+	 * @throws IOException
+	 * @throws NumberFormatException
 	 *********************************** 
 	 */
-	public String toString() {
-		String resultString = "I am a recommender system.\r\n";
-		resultString += "I have " + numUsers + " users, " + numItems + " items, and " + numRatings
-				+ " ratings.";
-		return resultString;
-	}// Of toString
+	public void run(){
+		
+	}//Of run
 
 	/**
 	 *********************************** 
@@ -800,10 +821,10 @@ public class TIR extends MF2DBooleanIncremental {
 		System.out.println(tir);
 
 		// tir.computePopAndSemipopItems(0.8, 0.6);
-		tir.setPopThresholds(0.7, 0.3);
+		tir.setPopularityThresholds(new double[]{0.3, 0.7});
 		// double tempTotalCost = tir.leaveUserOutRecommend();
 
-		tir.pretrain(200);
+		tir.pretrain();
 		double tempCost;
 		double tempTotalCost = 0;
 		for (int i = 0; i < tir.numUsers; i++) {
@@ -812,8 +833,8 @@ public class TIR extends MF2DBooleanIncremental {
 			// double tempTotalCost = tir.computeTotalCost();
 			System.out.println("The total cost for user " + i + " is: " + tempCost);
 			tempTotalCost += tempCost;
-		}//Of for i
-		
+		} // Of for i
+
 		System.out.println("The total cost for all users is: " + tempTotalCost);
 	}// Of main
 
