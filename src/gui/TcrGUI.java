@@ -30,7 +30,7 @@ import gui.others.*;
  * @version 1.0
  */
 
-public class TirGUI implements ActionListener, ItemListener {
+public class TcrGUI implements ActionListener, ItemListener {
 	/**
 	 * Select the arff file.
 	 */
@@ -167,7 +167,7 @@ public class TirGUI implements ActionListener, ItemListener {
 	 * The only constructor.
 	 *************************** 
 	 */
-	public TirGUI() {
+	public TcrGUI() {
 		// A simple frame to contain dialogs.
 		Frame mainFrame = new Frame();
 		mainFrame.setTitle("Three-way interactive recommendation. minfan@swpu.edu.cn, minfanphd@163.com");
@@ -309,7 +309,7 @@ public class TirGUI implements ActionListener, ItemListener {
 		exitButton.addActionListener(ApplicationShutdown.applicationShutdown);
 		Button helpButton = new Button(" Help ");
 		helpButton.setSize(20, 10);
-		helpButton.addActionListener(new HelpDialog("Three-way interactive recommendation", "src/gui/TirHelp.txt"));
+		helpButton.addActionListener(new HelpDialog("Three-way interactive recommendation", "src/gui/TcrHelp.txt"));
 		Panel okPanel = new Panel();
 		okPanel.add(okButton);
 		okPanel.add(exitButton);
@@ -467,6 +467,6 @@ public class TirGUI implements ActionListener, ItemListener {
 	 *************************** 
 	 */
 	public static void main(String args[]) {
-		new TirGUI();
+		new TcrGUI();
 	}// Of main
 }// Of class Crop

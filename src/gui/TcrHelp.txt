@@ -1,16 +1,19 @@
- Project:          The cost-sensitive co-training project.
+ Project:          The three-way conversational recommendation project.
  Author:           Fan Min, minfanphd@163.com, minfan@swpu.edu.cn.
  Copyright:        The source code and all documents are open and free.
  Organization:     Lab of machine learning, Southwest Petroleum University, Chengdu 610500, China. www.fansmale.com.
- Progress:         Over 75%.
- Written time:     September 30, 2010.
- Last modify time: October 04, 2019.
+ Progress:         Over 50%.
+ Written time:     January 29, 2020.
+ Last modify time: January 29, 2020.
 
-This is the help document of our paper "Co-training using attribute reduct pairs."
+This is the help document of our paper "three-way conversational recommendation".
 
-Here are the explanation of settings. We will use the wdbc_norm_ex dataset with more than 30 attributes for illustration.
+Here are the explanation of settings.
 
+--Data
 The .arff file: The data filename. Please use Browse to select.
+
+
 Training fraction: The fraction of the training set.
 Testing fraction: The fraction of the testing set. The remaining part, which is referred to as the unlabeled training set, will serve for training set enlargement.
 
