@@ -66,7 +66,7 @@ public class MF2DBoolean extends RatingSystem2DBoolean {
 	 * How many rounds for training.
 	 */
 	int trainRounds = 200;
-	
+
 	/**
 	 ************************ 
 	 * The first constructor.
@@ -113,7 +113,8 @@ public class MF2DBoolean extends RatingSystem2DBoolean {
 	 ************************ 
 	 */
 	public String getParameters() {
-		String resultString = "" + rank + ", " + alpha + ", " + lambda  + ", " + regularScheme  + ", " + trainRounds;
+		String resultString = "" + rank + ", " + alpha + ", " + lambda + ", " + regularScheme + ", "
+				+ trainRounds;
 		return resultString;
 	}// Of setParameters
 
@@ -180,7 +181,7 @@ public class MF2DBoolean extends RatingSystem2DBoolean {
 	 ************************ 
 	 */
 	public double[] predictForUser(int paraUser) {
-		//System.out.println("predictForUser(" + paraUser + ")");
+		// System.out.println("predictForUser(" + paraUser + ")");
 		double[] resultPredictions = new double[numItems];
 		for (int i = 0; i < numItems; i++) {
 			resultPredictions[i] = predict(paraUser, i);
@@ -198,9 +199,8 @@ public class MF2DBoolean extends RatingSystem2DBoolean {
 	 */
 	public void train() {
 		train(trainRounds);
-	}//Of train
-	
-	
+	}// Of train
+
 	/**
 	 ************************ 
 	 * Train.

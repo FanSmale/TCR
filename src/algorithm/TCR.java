@@ -6,18 +6,16 @@ import common.SimpleTools;
 import java.io.*;
 import java.util.Arrays;
 import java.util.Random;
-import datamodel.*;
 
 /**
- * TIR2.java <br>
- * Project: Matrix factorization for recommender systems. Two factorization
- * algorithms are implemented.<br>
+ * TCR.java <br>
+ * Project: Three-way conversational recommendation.<br>
  * 
  * @author Fan Min<br>
  *         www.fansmale.com, github.com/fansmale.<br>
  *         Email: minfan@swpu.edu.cn, minfanphd@163.com.<br>
  * @date Created: December 3, 2019.<br>
- *       Last modified: January 27, 2020.
+ *       Last modified: January 29, 2020.
  * @version 1.0
  */
 
@@ -149,7 +147,12 @@ public class TCR extends MF2DBooleanIncremental {
 	 * Neighborhood radius.
 	 */
 	double neighborhoodRadius;
-
+	
+	/**
+	 * The statistics information (NN, NP, BN, ...) for current user.
+	 */
+	int[][] recommendationStatistics = new int[3][2];
+	
 	/**
 	 *********************************** 
 	 * The constructor.
@@ -226,6 +229,15 @@ public class TCR extends MF2DBooleanIncremental {
 	public void setLikeThreshold(double paraValue) {
 		likeThreshold = paraValue;
 	}// Of setLikeThreshold
+	
+	/**
+	 *********************************** 
+	 * Getter.
+	 *********************************** 
+	 */
+	public int[][] getRecommendationStatistics(){
+		return recommendationStatistics;
+	}//Of getRecommendationStatistics
 	
 	/**
 	 *********************************** 
@@ -361,23 +373,20 @@ public class TCR extends MF2DBooleanIncremental {
 
 	/**
 	 *********************************** 
-	 * Compute the total cost.
+	 * Compute the total cost for a user.
 	 * 
-	 * @return The total cost.
+	 * @param paraUser
+	 *            The index of the given user.
+	 * @param paraRecommendations
+	 *            The recommendations to the user, true for recommendation.
+	 * @param paraPromotions
+	 *            The promotions for the user, true for promotion.
+	 * @return The total cost for the user.
 	 *********************************** 
-	 *         public double computeTotalCost() { double resultTotalcost = 0;
-	 *         int tempBehavior; int tempLike; for (int i = 0; i < numUsers;
-	 *         i++) { for (int j = 0; j <
-	 *         recommendationBehaviorMatrix[i].length; j++) { tempLike = 0;// 0
-	 *         means "dislike". if (data[i][j].rating > likeThreshold) {
-	 *         tempLike = 1;// 1 means "like". } // Of if
-	 * 
-	 *         tempBehavior = recommendationBehaviorMatrix[i][j];
-	 *         resultTotalcost += costMatrix[tempBehavior][tempLike]; }//Of for
-	 *         j } // Of for i
-	 * 
-	 *         return resultTotalcost; }// Of computeTotalCost
 	 */
+	public double computeTotalCostForUser(int paraUser) {
+		return computeTotalCostForUser(paraUser, currentUserRecommendations, currentUserPromotions);
+	}//Of computeTotalCostForUser
 
 	/**
 	 *********************************** 
@@ -414,15 +423,50 @@ public class TCR extends MF2DBooleanIncremental {
 			} // Of if
 
 			resultTotalCost += costMatrix[tempBehavior][tempLike];
-			// int tempIndex = tempBehavior * 2 + tempLike;
-			// recommendationSummaryMatrix[paraUser][tempIndex]++;
-			// System.out.print(" + " + costMatrix[tempBehavior][tempLike]);
-			// System.out.println();
 		} // Of for i
 
 		return resultTotalCost;
 	}// Of computeTotalCostForUser
 
+	/**
+	 *********************************** 
+	 * Compute recommendation statistics for a user.
+	 * 
+	 * @param paraUser
+	 *            The index of the given user.
+	 * @param paraRecommendations
+	 *            The recommendations to the user, true for recommendation.
+	 * @param paraPromotions
+	 *            The promotions for the user, true for promotion.
+	 * @return The recommendation statistics for the user.
+	 *********************************** 
+	 */
+	public int[][] computeUserRecommendationStatitics(int paraUser) {
+		int[][] resultUserRecommendationStatistics = new int[3][2];
+
+		// Step 1. Check them.
+		int tempBehavior;
+		int tempLike;
+		for (int i = 0; i < data[paraUser].length; i++) {
+			if (currentUserRecommendations[data[paraUser][i].item]) {
+				tempBehavior = RECOMMEND;
+			} else if (currentUserPromotions[data[paraUser][i].item]) {
+				tempBehavior = PROMOTE;
+			} else {
+				tempBehavior = NON_RECOMMEND;
+			} // Of if
+
+			tempLike = 0;// 0 means "dislike".
+			if (data[paraUser][i].rating > likeThreshold) {
+				tempLike = 1;// 1 means "like".
+			} // Of if
+
+			resultUserRecommendationStatistics[tempBehavior][tempLike] ++;
+		} // Of for i
+
+		return resultUserRecommendationStatistics;
+	}// Of computeUserRecommendationStatitics
+	
 	/**
 	 *********************************** 
 	 * Leave-user-out recommendation.
@@ -432,11 +476,19 @@ public class TCR extends MF2DBooleanIncremental {
 	 */
 	public double leaveUserOutRecommend() {
 		double resultTotalCost = 0;
+		recommendationStatistics = new int[3][2];
 		for (int i = 0; i < numUsers; i++) {
 			if (i % 100 == 0) {
-				System.out.println("Recommending for user #" + i + ":");
+				SimpleTools.processTrackingOutput("Recommending for user #" + i + ":");
 			} // Of if
+			recommendForUser(i);
 			resultTotalCost += recommendForUser(i);
+			int[][] tempUserStatistics = computeUserRecommendationStatitics(i);
+			for (int j = 0; j < tempUserStatistics.length; j++) {
+				for (int k = 0; k < tempUserStatistics[0].length; k++) {
+					recommendationStatistics[j][k] += tempUserStatistics[j][k];
+				}//Of for k
+			}//Of for j
 		} // Of for i
 
 		return resultTotalCost;
@@ -452,6 +504,7 @@ public class TCR extends MF2DBooleanIncremental {
 	 *********************************** 
 	 */
 	public double recommendForUser(int paraUser) {
+		System.out.println("User " + paraUser);
 		// Step 1. Initialize
 		double resultTotalCost;
 		Arrays.fill(currentUserRecommendations, false);
@@ -461,7 +514,7 @@ public class TCR extends MF2DBooleanIncremental {
 		popBasedRecommend(paraUser);
 		resultTotalCost = computeTotalCostForUser(paraUser, currentUserRecommendations,
 				currentUserPromotions);
-		System.out.println("User " + paraUser + ", after popularity based recommendation, total cost = " + resultTotalCost);
+		SimpleTools.variableTrackingOutput("User " + paraUser + ", after popularity based recommendation, total cost = " + resultTotalCost);
 		//System.out.print("Only popularity-based recommendtaion. The cost of user " + paraUser
 		//		+ " is: " + resultTotalCost);
 		//System.out.println();
@@ -473,12 +526,11 @@ public class TCR extends MF2DBooleanIncremental {
 		// MF2DBooleanIncremental(paraUser);
 
 		// Step 3. MF based recommendation.
-
 		mfBasedRecommend(paraUser);
 
 		resultTotalCost = computeTotalCostForUser(paraUser, currentUserRecommendations,
 				currentUserPromotions);
-		System.out.println("User " + paraUser + ", after MF based recommendation, total cost = " + resultTotalCost);
+		SimpleTools.variableTrackingOutput("User " + paraUser + ", after MF based recommendation, total cost = " + resultTotalCost);
 		//System.out.print("Finally, the cost of user " + paraUser + " is: " + resultTotalCost);
 		//System.out.println();
 
@@ -515,7 +567,7 @@ public class TCR extends MF2DBooleanIncremental {
 		for (int i = 0; i < numItems; i++) {
 			if (tempItemPopArray[i] >= popularityThresholds[1] * maxItemPop) {
 				tempPopItems[tempNumPopItems] = i;
-				System.out.print(", " + i);
+				//System.out.print(", " + i);
 				tempNumPopItems++;
 			} // Of for i
 		} // Of for i
@@ -541,7 +593,7 @@ public class TCR extends MF2DBooleanIncremental {
 
 		while (tempMaturity < maturityThreshold) {
 			if (tempNumRecommend > tempNumPopItems) {
-				System.out.println("No enough to recommend.");
+				SimpleTools.processTrackingOutput("No enough to recommend.");
 				break;
 			} // Of if
 
@@ -561,7 +613,7 @@ public class TCR extends MF2DBooleanIncremental {
 			// Step 4.2.1 Compute items with popularity between the pop and
 			// promotion thresholds.
 			if (tempNumPromote > tempNumSemiPopItems) {
-				System.out.println("No enough to promote.");
+				SimpleTools.processTrackingOutput("No enough to promote.");
 				break;
 			} // Of if
 

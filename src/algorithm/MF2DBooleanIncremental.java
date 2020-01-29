@@ -32,19 +32,20 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 	 *            The number of ratings.
 	 ************************ 
 	 */
-	public MF2DBooleanIncremental(String paraFilename, int paraNumUsers, int paraNumItems, int paraNumRatings,
-			double paraRatingLowerBound, double paraRatingUpperBound) {
-		super(paraFilename, paraNumUsers, paraNumItems, paraNumRatings, paraRatingLowerBound, paraRatingUpperBound);
+	public MF2DBooleanIncremental(String paraFilename, int paraNumUsers, int paraNumItems,
+			int paraNumRatings, double paraRatingLowerBound, double paraRatingUpperBound) {
+		super(paraFilename, paraNumUsers, paraNumItems, paraNumRatings, paraRatingLowerBound,
+				paraRatingUpperBound);
 	}// Of the first constructor
-	
+
 	/**
 	 ************************ 
 	 * Setter.
 	 ************************ 
 	 */
-	public void setIncrementalTrainRounds(int paraValue){
+	public void setIncrementalTrainRounds(int paraValue) {
 		incrementalTrainRounds = paraValue;
-	}//Of setIncrementalTrainRounds
+	}// Of setIncrementalTrainRounds
 
 	/**
 	 ************************ 
@@ -86,7 +87,7 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 		} // Of for j
 
 		// The remaining parts are all testing.
-		//Attention: i should not be re-initialized!
+		// Attention: i should not be re-initialized!
 		for (; i < trainingIndicationMatrix[paraUser].length; i++) {
 			trainingIndicationMatrix[paraUser][i] = false;
 		} // Of for i
@@ -107,7 +108,8 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 		for (int i = 0; i < rank; i++) {
 			userSubspace[paraUser][i] += (rand.nextDouble() - 0.5) * 2 * subspaceValueRange;
 		} // Of for i
-		//System.out.println("initialize userSubspace[" + paraUser + "] = " + Arrays.toString(userSubspace[paraUser]));
+			// System.out.println("initialize userSubspace[" + paraUser + "] = "
+			// + Arrays.toString(userSubspace[paraUser]));
 
 		// Step 2. Update the user subspace.
 		for (int i = 0; i < incrementalTrainRounds; i++) {
@@ -161,10 +163,11 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 				tempValue = 2 * tempResidual * itemSubspace[tempItemId][j];
 				userSubspace[paraUser][j] += alpha * tempValue;
 			} // Of for j
-			//System.out.println("i = " + i + ", userSubspace[" + paraUser + "] = " + Arrays.toString(userSubspace[paraUser]));
+				// System.out.println("i = " + i + ", userSubspace[" + paraUser
+				// + "] = " + Arrays.toString(userSubspace[paraUser]));
 		} // Of for i
-	}// Of updateUserSubspaceNoRegular	
-	
+	}// Of updateUserSubspaceNoRegular
+
 	/**
 	 ************************ 
 	 * Update the user sub-space using the training data of the given user.
@@ -189,11 +192,13 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 			// Update user subspace
 			double tempValue = 0;
 			for (int j = 0; j < rank; j++) {
-				tempValue = 2 * tempResidual * itemSubspace[tempItemId][j] - lambda * userSubspace[paraUser][j];
+				tempValue = 2 * tempResidual * itemSubspace[tempItemId][j]
+						- lambda * userSubspace[paraUser][j];
 				userSubspace[paraUser][j] += alpha * tempValue;
 			} // Of for j
 		} // Of for i
-		//System.out.println("PQ regular: " + Arrays.toString(userSubspace[paraUser]));
+			// System.out.println("PQ regular: " +
+			// Arrays.toString(userSubspace[paraUser]));
 	}// Of updateUserSubspacePQRegular
 
 	/**
@@ -202,13 +207,13 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 	 ************************ 
 	 */
 	public void pretrain() {
-		//setParameters(10, 0.0001, 0.005, NO_REGULAR, paraRounds);
+		// setParameters(10, 0.0001, 0.005, NO_REGULAR, paraRounds);
 		setAllTraining();
 		adjustUsingMeanRating();
 
 		// Step 2. Pre-train
 		initializeSubspaces(0.5);
-		//System.out.println("Pre-training " + paraRounds + " rounds ...");
+		// System.out.println("Pre-training " + paraRounds + " rounds ...");
 		train();
 	}// Of pretrain
 
@@ -217,13 +222,14 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 	 * The training testing scenario.
 	 ************************ 
 	 */
-	public static void testIncremental(String paraFilename, int paraNumUsers, int paraNumItems, int paraNumRatings,
-			double paraRatingLowerBound, double paraRatingUpperBound, int paraRounds, int paraIncrementalRounds) {
+	public static void testIncremental(String paraFilename, int paraNumUsers, int paraNumItems,
+			int paraNumRatings, double paraRatingLowerBound, double paraRatingUpperBound,
+			int paraRounds, int paraIncrementalRounds) {
 		// Step 1. Read data and set parameters.
 		MF2DBooleanIncremental tempMF = null;
 		try {
-			tempMF = new MF2DBooleanIncremental(paraFilename, paraNumUsers, paraNumItems, paraNumRatings,
-					paraRatingLowerBound, paraRatingUpperBound);
+			tempMF = new MF2DBooleanIncremental(paraFilename, paraNumUsers, paraNumItems,
+					paraNumRatings, paraRatingLowerBound, paraRatingUpperBound);
 		} catch (Exception e) {
 			e.printStackTrace();
 		} // Of try
@@ -243,7 +249,7 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 		int tempNumPredictions = 0;
 		double tempErrorSum = 0;
 		for (int i = 0; i < tempMF.numUsers; i++) {
-			//System.out.println("User " + i);
+			// System.out.println("User " + i);
 
 			// Step 3.1 One half items, e.g., {0, 2, 4, ...} for training.
 			tempNumItemsForTrain = tempMF.data[i].length / 2;
@@ -252,7 +258,7 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 				tempIndices[j] = tempMF.data[i][j * 2].item;
 			} // Of for j
 			tempMF.setUserTraining(i, tempIndices);
-			
+
 			// Step 3.2 Incremental training.
 			tempMF.trainUser(i);
 
@@ -271,7 +277,8 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 
 			// Step 3.5 Show message.
 			tempMAE = tempErrorSum / tempNumPredictions;
-			System.out.println("MAE = " + tempErrorSum + " / " + tempNumPredictions + " = " + tempMAE);
+			System.out.println(
+					"MAE = " + tempErrorSum + " / " + tempNumPredictions + " = " + tempMAE);
 		} // Of for i
 
 		tempMAE = tempErrorSum / tempNumPredictions;
@@ -284,6 +291,7 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 	 ************************ 
 	 */
 	public static void main(String args[]) {
-		testIncremental("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10, 200, 100);
+		testIncremental("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10, 200,
+				100);
 	}// Of main
 }// Of class MF2DBooleanIncremental

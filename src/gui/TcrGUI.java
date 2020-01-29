@@ -287,7 +287,7 @@ public class TcrGUI implements ActionListener, ItemListener {
 		alphaField = new DoubleField("0.0001");
 		mfParametersPanel.add(alphaField);
 		
-		mfParametersPanel.add(new Label("? (lambda): "));
+		mfParametersPanel.add(new Label("Convergence control (lambda): "));
 		lambdaField = new DoubleField("0.005");
 		mfParametersPanel.add(lambdaField);
 		
@@ -387,8 +387,7 @@ public class TcrGUI implements ActionListener, ItemListener {
 		SimpleTools.variableTracking = variableTrackingCheckbox.getState();
 		SimpleTools.fileOutput = fileOutputCheckbox.getState();
 
-		String resultMessage = "";
-
+		//String resultMessage = "";
 		double[] tempCostArray = new double[tempRepeatTimes];
 
 		String tempParametersInformation = "Dataset information: filename: " + tempFilename + "\r\n  "
@@ -404,7 +403,7 @@ public class TcrGUI implements ActionListener, ItemListener {
 		tempTcr.setPopularityThresholds(popularityThresholds);
 		tempTcr.setFavoriteThresholds(favoriteThresholds);
 		tempTcr.setLikeThreshold(tempLikeThreshold);
-		tempTcr.setLikeThreshold(tempMaturityThreshold);
+		tempTcr.setMaturityThreshold(tempMaturityThreshold);
 		tempTcr.setRecommendationLength(tempRecommendationLength);
 		tempTcr.setRecommendationRatio(tempRecommendationRatio);
 		tempTcr.setIncrementalTrainRounds(tempIncrementalTrainRounds);
@@ -419,12 +418,11 @@ public class TcrGUI implements ActionListener, ItemListener {
 		for (int i = 0; i < tempRepeatTimes; i++) {
 			// tir.computePopAndSemipopItems(0.8, 0.6);
 			// double tempTotalCost = tir.leaveUserOutRecommend();
-
-			for (int j = 0; j < tempTcr.getNumUsers(); j++) {
-				tempCostArray[i] += tempTcr.recommendForUser(j);
-			}//Of for i
-
-			messageTextArea.append("\r\n" + i + ": cost = " + tempCostArray[i]);
+			
+			tempCostArray[i] = tempTcr.leaveUserOutRecommend();
+			
+			messageTextArea.append("\r\n" + i + ": cost = " + tempCostArray[i]
+					+ "\r\n" + Arrays.deepToString(tempTcr.getRecommendationStatistics()));
 
 			if (tempMinCost > tempCostArray[i]) {
 				tempMinCost = tempCostArray[i];

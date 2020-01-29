@@ -51,8 +51,8 @@ MF algorithm: Plain MF stands for matrix factorization without regular terms.
 Pretrain rounds: The number of rounds for training the subspaces using the original data.
 Incremental train rounds: The number of rounds for training each user in conversation.
 Rank: The rank of subspaces.
-Learning speed (alpha): a parameter controlling the learning speed of MF.
-(Lambda): 
+Learning speed (alpha): A parameter controlling the learning speed of MF.
+Lambda: Control the convergence in regulation.
 
 --Tracking and output
 Process tracking: Track the process in the console.
