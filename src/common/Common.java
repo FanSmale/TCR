@@ -80,11 +80,6 @@ public class Common extends Object {
 	public static boolean ifDebug = false;
 
 	/**
-	 * Computation time.
-	 */
-	public static long computationTime = 0;
-
-	/**
 	 * The project header appears in any files generated.
 	 */
 	public static final String ProjectHeader = "%The cost-sensitive rough sets project."

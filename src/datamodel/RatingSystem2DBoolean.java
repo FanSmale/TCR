@@ -273,7 +273,7 @@ public class RatingSystem2DBoolean {
 	 *********************************** 
 	 */
 	public String toString() {
-		String resultString = "I am a recommender system.\r\n";
+		String resultString = "I am 2D rating system.\r\n";
 		resultString += "I have " + numUsers + " users, " + numItems + " items, and " + numRatings
 				+ " ratings.";
 		return resultString;

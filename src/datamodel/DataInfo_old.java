@@ -7,7 +7,7 @@ import java.io.InputStreamReader;
 
 import common.SimpleTools;
 
-public class DataInfo {
+public class DataInfo_old {
 	public static int userNumber = 24983;// 49290 //9439;//88238;//4696;
 											// //1049511;//6040; 49290
 
@@ -50,7 +50,7 @@ public class DataInfo {
 	 * @param paraFile
 	 * @throws Exception
 	 */
-	public DataInfo(String paraDataPath) throws IOException {
+	public DataInfo_old(String paraDataPath) throws IOException {
 		readData(paraDataPath);
 		// readTestData(paraTestPath);
 		setPot();
@@ -94,7 +94,7 @@ public class DataInfo {
 		teNumber = rateNumber - trNumber;
 		System.out.println("index:" + index);
 		mean_rating = sum / trNumber;// average rating
-		for (int i = 0; i < DataInfo.rateNumber; i++) {
+		for (int i = 0; i < DataInfo_old.rateNumber; i++) {
 			double tmp = (Double) data[i].rating;// - mean_rating;
 			data[i].rating = tmp;// ԭʼ����-ƽ����
 		} // of for i
@@ -105,15 +105,15 @@ public class DataInfo {
 	 * 
 	 */
 	static void setPot() {
-		userCount = new int[DataInfo.userNumber + 1];
-		userPot = new int[DataInfo.userNumber + 1];
+		userCount = new int[DataInfo_old.userNumber + 1];
+		userPot = new int[DataInfo_old.userNumber + 1];
 
-		for (int i = 0; i < DataInfo.rateNumber; i++) {
+		for (int i = 0; i < DataInfo_old.rateNumber; i++) {
 			// userCount[data[i].i]++;
 			userCount[data[i].user]++;
 		} // Of for i
 
-		for (int i = 1; i <= DataInfo.userNumber; i++) {
+		for (int i = 1; i <= DataInfo_old.userNumber; i++) {
 			userPot[i] = userPot[i - 1] + userCount[i - 1];
 		} // Of for i
 	}// Of setPot
@@ -196,7 +196,7 @@ public class DataInfo {
 		// TODO Auto-generated method stub
 		try {
 			// Step 1. Initialize the train and test data based on group information
-			DataInfo tempData = new DataInfo(dataPath);
+			DataInfo_old tempData = new DataInfo_old(dataPath);
 
 			// Step3. Test
 			//SimpleTools.printTriple(tempData.data);

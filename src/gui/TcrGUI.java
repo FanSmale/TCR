@@ -15,9 +15,9 @@ import gui.guidialog.common.HelpDialog;
 import gui.others.*;
 
 /**
- * TIR2.java <br>
- *               Project: Three-way interactive recommendation.<br>
- *               The GUI of the project.<br>
+ * @(#)TcrGUI.java <br>
+ *                 Project: Three-way conversational recommendation.<br>
+ *                 The GUI of the project.<br>
  * 
  * @author Fan Min<br>
  *         www.fansmale.com, github.com/fansmale.<br>
@@ -37,12 +37,12 @@ public class TcrGUI implements ActionListener, ItemListener {
 	 * Eliminate inconsistent instances.
 	 */
 	private Checkbox compressedFormatCheckbox;
-	
+
 	/**
 	 * Number of users.
 	 */
 	private IntegerField numUsersField;
-	
+
 	/**
 	 * Number of items.
 	 */
@@ -56,7 +56,7 @@ public class TcrGUI implements ActionListener, ItemListener {
 	/**
 	 * Cost matrix.
 	 */
-	double[][] costMatrix = {{0, 40}, {20, 10}, {50, 0}};
+	double[][] costMatrix = { { 0, 40 }, { 20, 10 }, { 50, 0 } };
 
 	/**
 	 * For cost matrix.
@@ -66,7 +66,7 @@ public class TcrGUI implements ActionListener, ItemListener {
 	/**
 	 * Rating bounds.
 	 */
-	int[] ratingBounds = {-10, 10};
+	int[] ratingBounds = { -10, 10 };
 
 	/**
 	 * For rating bounds.
@@ -76,13 +76,13 @@ public class TcrGUI implements ActionListener, ItemListener {
 	/**
 	 * Popularity threshold.
 	 */
-	private double[] popularityThresholds = {0.3, 0.5};
+	private double[] popularityThresholds = { 0.3, 0.5 };
 
 	/**
 	 * For popularity threshold.
 	 */
 	private DoubleField[] popularityThresholdFields;
-	
+
 	/**
 	 * For recommendation list.
 	 */
@@ -106,7 +106,7 @@ public class TcrGUI implements ActionListener, ItemListener {
 	/**
 	 * Prediction threshold.
 	 */
-	private double[] favoriteThresholds = {-2.0, 0.5};
+	private double[] favoriteThresholds = { -2.0, 0.5 };
 
 	/**
 	 * For rating prediction threshold.
@@ -176,7 +176,8 @@ public class TcrGUI implements ActionListener, ItemListener {
 	public TcrGUI() {
 		// A simple frame to contain dialogs.
 		Frame mainFrame = new Frame();
-		mainFrame.setTitle("Three-way conversational recommendation. minfan@swpu.edu.cn, minfanphd@163.com");
+		mainFrame.setTitle(
+				"Three-way conversational recommendation. minfan@swpu.edu.cn, minfanphd@163.com");
 
 		// The top part: select data file.
 		Panel sourceFilePanel = new Panel();
@@ -192,7 +193,7 @@ public class TcrGUI implements ActionListener, ItemListener {
 		browsePanel.add(browseButton);
 		browseButton.addActionListener(filenameField);
 		sourceFilePanel.add(browsePanel);
-		
+
 		compressedFormatCheckbox = new Checkbox(" Data in compressed format", false);
 		sourceFilePanel.add(compressedFormatCheckbox);
 
@@ -214,24 +215,24 @@ public class TcrGUI implements ActionListener, ItemListener {
 		Panel costMatrixPanel = new Panel();
 		costMatrixPanel.setLayout(new GridLayout(2, 6));
 		costMatrixFields = new DoubleField[3][2];
-		String[][] tempCostLabels = {{"NN:", "NP:"}, {"BN:", "BP:"}, {"PN:", "PP:"}};
+		String[][] tempCostLabels = { { "NN:", "NP:" }, { "BN:", "BP:" }, { "PN:", "PP:" } };
 		for (int i = 0; i < costMatrixFields.length; i++) {
 			for (int j = 0; j < costMatrixFields[0].length; j++) {
 				costMatrixFields[i][j] = new DoubleField("" + costMatrix[i][j]);
 				costMatrixPanel.add(new Label(tempCostLabels[i][j]));
 				costMatrixPanel.add(costMatrixFields[i][j]);
-			}//Of for j
-		}//Of for i
-		
+			} // Of for j
+		} // Of for i
+
 		Panel ratingBoundsPanel = new Panel();
 		ratingBoundsPanel.setLayout(new GridLayout(2, 6));
 		ratingBoundFields = new IntegerField[2];
-		String[] ratingLabels = {"Rating lower bound: ", "Upper bound: "};
+		String[] ratingLabels = { "Rating lower bound: ", "Upper bound: " };
 		for (int i = 0; i < 2; i++) {
 			ratingBoundsPanel.add(new Label(ratingLabels[i]));
 			ratingBoundFields[i] = new IntegerField("" + ratingBounds[i]);
 			ratingBoundsPanel.add(ratingBoundFields[i]);
-		}//Of for i
+		} // Of for i
 		ratingBoundsPanel.add(new Label("Recommendation list length: "));
 		ratingBoundsPanel.add(recommendationLengthField);
 		ratingBoundsPanel.add(new Label("Recommendation ratio: "));
@@ -240,30 +241,31 @@ public class TcrGUI implements ActionListener, ItemListener {
 		ratingBoundsPanel.add(likeThresholdField);
 		ratingBoundsPanel.add(new Label("Maturity threshold: "));
 		ratingBoundsPanel.add(maturityThresholdField);
-		
+
 		Panel thresholdsPanel = new Panel();
 		thresholdsPanel.setLayout(new GridLayout(2, 4));
 		popularityThresholdFields = new DoubleField[2];
-		String[] popularityThresholdLabels = {"Semi-popular threshold: ", "Popular threshold: "};
+		String[] popularityThresholdLabels = { "Semi-popular threshold: ", "Popular threshold: " };
 		for (int i = 0; i < 2; i++) {
 			thresholdsPanel.add(new Label(popularityThresholdLabels[i]));
 			popularityThresholdFields[i] = new DoubleField("" + popularityThresholds[i]);
 			thresholdsPanel.add(popularityThresholdFields[i]);
-		}//Of for i
-		
+		} // Of for i
+
 		favoriteThresholdFields = new DoubleField[2];
-		String[] favoriteThresholdLabels = {" Semi-favorite threshold: ", " Favorite threshold: "};
+		String[] favoriteThresholdLabels = { " Semi-favorite threshold: ",
+				" Favorite threshold: " };
 		for (int i = 0; i < 2; i++) {
 			thresholdsPanel.add(new Label(favoriteThresholdLabels[i]));
 			favoriteThresholdFields[i] = new DoubleField("" + favoriteThresholds[i]);
 			thresholdsPanel.add(favoriteThresholdFields[i]);
-		}//Of for i
-		
+		} // Of for i
+
 		Panel mfParametersPanel = new Panel();
 		mfParametersPanel.setLayout(new GridLayout(2, 6));
-		
+
 		mfParametersPanel.add(new Label("MF algorithm: "));
-		String[] algorithms = {"Plain MF", "PQ-MF", "GL-MF"};
+		String[] algorithms = { "Plain MF", "PQ-MF", "GL-MF" };
 		mfAlgorithmJComboBox = new JComboBox<String>(algorithms);
 		mfAlgorithmJComboBox.setSelectedIndex(0);
 		mfParametersPanel.add(mfAlgorithmJComboBox);
@@ -271,11 +273,11 @@ public class TcrGUI implements ActionListener, ItemListener {
 		mfParametersPanel.add(new Label("Pretrain rounds: "));
 		pretrainRoundsField = new IntegerField("200");
 		mfParametersPanel.add(pretrainRoundsField);
-		
+
 		mfParametersPanel.add(new Label("Incremental train rounds: "));
 		incrementalTrainRoundsField = new IntegerField("20");
 		mfParametersPanel.add(incrementalTrainRoundsField);
-		
+
 		mfParametersPanel.add(new Label("Rank (k):"));
 		rankField = new IntegerField("10");
 		mfParametersPanel.add(rankField);
@@ -283,11 +285,11 @@ public class TcrGUI implements ActionListener, ItemListener {
 		mfParametersPanel.add(new Label("Learning speed (alpha): "));
 		alphaField = new DoubleField("0.0001");
 		mfParametersPanel.add(alphaField);
-		
+
 		mfParametersPanel.add(new Label("Convergence control (lambda): "));
 		lambdaField = new DoubleField("0.005");
 		mfParametersPanel.add(lambdaField);
-		
+
 		processTrackingCheckbox = new Checkbox(" Process tracking ", false);
 		variableTrackingCheckbox = new Checkbox(" Variable tracking ", false);
 		fileOutputCheckbox = new Checkbox(" Output to file ", false);
@@ -323,7 +325,8 @@ public class TcrGUI implements ActionListener, ItemListener {
 		exitButton.addActionListener(ApplicationShutdown.applicationShutdown);
 		Button helpButton = new Button(" Help ");
 		helpButton.setSize(20, 10);
-		helpButton.addActionListener(new HelpDialog("Three-way conversational recommendation", "src/gui/TcrHelp.txt"));
+		helpButton.addActionListener(
+				new HelpDialog("Three-way conversational recommendation", "src/gui/TcrHelp.txt"));
 		Panel okPanel = new Panel();
 		okPanel.add(okButton);
 		okPanel.add(exitButton);
@@ -365,7 +368,7 @@ public class TcrGUI implements ActionListener, ItemListener {
 			ratingBounds[i] = ratingBoundFields[i].getValue();
 			popularityThresholds[i] = popularityThresholdFields[i].getValue();
 			favoriteThresholds[i] = favoriteThresholdFields[i].getValue();
-		}//Of for i
+		} // Of for i
 
 		int tempRecommendationLength = recommendationLengthField.getValue();
 		double tempRecommendationRatio = recommendationRatioField.getValue();
@@ -377,25 +380,27 @@ public class TcrGUI implements ActionListener, ItemListener {
 		int tempPretrainRounds = pretrainRoundsField.getValue();
 		int tempIncrementalTrainRounds = incrementalTrainRoundsField.getValue();
 		int tempAlgorithm = mfAlgorithmJComboBox.getSelectedIndex();
-		
+
 		int tempRepeatTimes = repeatTimesField.getValue();
 
 		SimpleTools.processTracking = processTrackingCheckbox.getState();
 		SimpleTools.variableTracking = variableTrackingCheckbox.getState();
 		SimpleTools.fileOutput = fileOutputCheckbox.getState();
 
-		//String resultMessage = "";
+		// String resultMessage = "";
 		double[] tempCostArray = new double[tempRepeatTimes];
 
-		String tempParametersInformation = "Dataset information: filename: " + tempFilename + "\r\n  "
-				+ tempNumUsers + " users, " + tempNumItems + " items, " + tempNumRatings + " ratings\r\n  "
-				+ "ratings bounds = " + Arrays.toString(ratingBounds) + ", "
+		String tempParametersInformation = "Dataset information: filename: " + tempFilename
+				+ "\r\n  " + tempNumUsers + " users, " + tempNumItems + " items, " + tempNumRatings
+				+ " ratings\r\n  " + "ratings bounds = " + Arrays.toString(ratingBounds) + ", "
 				+ "rank = " + tempRank + ", alpha = " + tempAlpha + ", lambda = " + tempLambda
-				+ "\r\n  algorithm = " + tempAlgorithm + ", pretrain rounds = " + tempPretrainRounds;
+				+ "\r\n  algorithm = " + tempAlgorithm + ", pretrain rounds = "
+				+ tempPretrainRounds;
 		messageTextArea.append(tempParametersInformation);
 
 		// Read the data here.
-		TCR tempTcr = new TCR(tempFilename, tempNumUsers, tempNumItems, tempNumRatings, ratingBounds[0], ratingBounds[1]);
+		TCR tempTcr = new TCR(tempFilename, tempNumUsers, tempNumItems, tempNumRatings,
+				ratingBounds[0], ratingBounds[1]);
 		tempTcr.setParameters(tempRank, tempAlpha, tempLambda, tempAlgorithm, tempPretrainRounds);
 		tempTcr.setPopularityThresholds(popularityThresholds);
 		tempTcr.setFavoriteThresholds(favoriteThresholds);
@@ -415,19 +420,19 @@ public class TcrGUI implements ActionListener, ItemListener {
 		for (int i = 0; i < tempRepeatTimes; i++) {
 			// tir.computePopAndSemipopItems(0.8, 0.6);
 			// double tempTotalCost = tir.leaveUserOutRecommend();
-			
+
 			tempCostArray[i] = tempTcr.leaveUserOutRecommend();
-			
-			messageTextArea.append("\r\n" + i + ": cost = " + tempCostArray[i]
-					+ "\r\n" + Arrays.deepToString(tempTcr.getRecommendationStatistics()));
+
+			messageTextArea.append("\r\n" + i + ": cost = " + tempCostArray[i] + "\r\n"
+					+ Arrays.deepToString(tempTcr.getRecommendationStatistics()));
 
 			if (tempMinCost > tempCostArray[i]) {
 				tempMinCost = tempCostArray[i];
-			}//Of if
-			
+			} // Of if
+
 			if (tempMaxCost < tempCostArray[i]) {
 				tempMaxCost = tempCostArray[i];
-			}//Of if
+			} // Of if
 		} // Of for i
 
 		double tempAverageCost = tempCostSum / tempRepeatTimes;
@@ -443,8 +448,7 @@ public class TcrGUI implements ActionListener, ItemListener {
 		messageTextArea.append("\r\nSummary:\r\n");
 		messageTextArea.append("; Min: " + tempMinCost);
 		messageTextArea.append("; Max: " + tempMaxCost + "\r\n");
-		messageTextArea
-				.append("; " + tempAverageCost + " +- " + tempStandardDeviation + "\r\n");
+		messageTextArea.append("; " + tempAverageCost + " +- " + tempStandardDeviation + "\r\n");
 
 		Common.endTime = new Date().getTime();
 		long tempTimeUsed = Common.endTime - Common.startTime;
@@ -471,8 +475,8 @@ public class TcrGUI implements ActionListener, ItemListener {
 		for (int i = 0; i < costMatrixFields.length; i++) {
 			for (int j = 0; j < costMatrixFields[0].length; j++) {
 				costMatrixFields[i][j] = new DoubleField("" + costMatrix[i][j]);
-			}//Of for j
-		}//Of for i
+			} // Of for j
+		} // Of for i
 	}// Of setCostMatrix
 
 	/**
