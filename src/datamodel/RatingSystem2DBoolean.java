@@ -4,7 +4,6 @@ import java.io.*;
 import java.util.Arrays;
 import java.util.Random;
 
-import algorithm.MF2DBoolean;
 import datamodel.Triple;
 
 /**

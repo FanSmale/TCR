@@ -2,8 +2,6 @@ package gui;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.io.FileReader;
-import java.io.RandomAccessFile;
 import java.util.Arrays;
 import java.util.Date;
 
@@ -12,7 +10,6 @@ import javax.swing.JComboBox;
 import algorithm.*;
 import common.Common;
 import common.SimpleTools;
-import datamodel.*;
 import gui.guicommon.*;
 import gui.guidialog.common.HelpDialog;
 import gui.others.*;
