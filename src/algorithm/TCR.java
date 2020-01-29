@@ -21,7 +21,7 @@ import datamodel.*;
  * @version 1.0
  */
 
-public class TIR extends MF2DBooleanIncremental {
+public class TCR extends MF2DBooleanIncremental {
 
 	/**
 	 * The cost matrix.
@@ -50,7 +50,7 @@ public class TIR extends MF2DBooleanIncremental {
 	/**
 	 * Some items are recommended, while others are promoted.
 	 */
-	double recommendRatio;
+	double recommendationRatio;
 
 	/**
 	 * The default recommendation ratio.
@@ -164,7 +164,7 @@ public class TIR extends MF2DBooleanIncremental {
 	 * @throws NumberFormatException
 	 *********************************** 
 	 */
-	public TIR(String paraFilename, int paraNumUsers, int paraNumItems, int paraNumRatings,
+	public TCR(String paraFilename, int paraNumUsers, int paraNumItems, int paraNumRatings,
 			double paraRatingLowerBound, double paraRatingUpperBound) {
 		// Step 1. Read data.
 		super(paraFilename, paraNumUsers, paraNumItems, paraNumRatings, paraRatingLowerBound,
@@ -181,7 +181,7 @@ public class TIR extends MF2DBooleanIncremental {
 	 */
 	public void initialize() {
 		recommendationLength = DEFAULT_RECOMMENDATION_LENGTH;
-		recommendRatio = DEFAULT_RECOMMENDATION_RATIO;
+		recommendationRatio = DEFAULT_RECOMMENDATION_RATIO;
 
 		costMatrix = new double[3][2];
 		costMatrix[0][0] = 2; // NN
@@ -226,6 +226,16 @@ public class TIR extends MF2DBooleanIncremental {
 	public void setLikeThreshold(double paraValue) {
 		likeThreshold = paraValue;
 	}// Of setLikeThreshold
+	
+	/**
+	 *********************************** 
+	 * Setter.
+	 *********************************** 
+	 */
+	public void setMaturityThreshold(double paraValue) {
+		maturityThreshold = paraValue;
+	}// Of setMaturityThreshold
+	
 
 	/**
 	 *********************************** 
@@ -317,12 +327,21 @@ public class TIR extends MF2DBooleanIncremental {
 
 	/**
 	 *********************************** 
-	 * Set the recommendation length.
+	 * Setter
 	 *********************************** 
 	 */
 	public void setRecommendationLength(int paraLength) {
 		recommendationLength = paraLength;
 	}// Of setRecommendationLength
+
+	/**
+	 *********************************** 
+	 * Setter
+	 *********************************** 
+	 */
+	public void setRecommendationRatio(double paraRatio) {
+		recommendationRatio = paraRatio;
+	}// Of setRecommendationRatio
 
 	/**
 	 *********************************** 
@@ -515,7 +534,7 @@ public class TIR extends MF2DBooleanIncremental {
 		} // Of for i
 
 		// Step 4. Pop-based recommendation.
-		int tempNumRecommend = (int) (recommendRatio * recommendationLength);
+		int tempNumRecommend = (int) (recommendationRatio * recommendationLength);
 		int tempNumPromote = recommendationLength - tempNumRecommend;
 		boolean[] tempProcessedArray = new boolean[numItems];
 		Arrays.fill(tempProcessedArray, false);
@@ -598,7 +617,7 @@ public class TIR extends MF2DBooleanIncremental {
 		int[] tempRecommendationCandidates = new int[numItems];
 		int[] tempPromotionCandidates = new int[numItems];
 
-		int tempNumRecommend = (int) (recommendRatio * recommendationLength);
+		int tempNumRecommend = (int) (recommendationRatio * recommendationLength);
 		int tempNumPromote = recommendationLength - tempNumRecommend;
 
 		int[] tempRandomIndices = null;
@@ -817,7 +836,7 @@ public class TIR extends MF2DBooleanIncremental {
 	public static void main(String args[]) {
 		// TIR2 tir = new TIR2("data/movielens100k.data", 943, 1682, 100000,
 		// -10, 10);
-		TIR tir = new TIR("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10);
+		TCR tir = new TCR("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10);
 		System.out.println(tir);
 
 		// tir.computePopAndSemipopItems(0.8, 0.6);

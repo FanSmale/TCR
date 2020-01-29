@@ -1,7 +1,9 @@
  Project:          The three-way conversational recommendation project.
  Author:           Fan Min, minfanphd@163.com, minfan@swpu.edu.cn.
  Copyright:        The source code and all documents are open and free.
- Organization:     Lab of machine learning, Southwest Petroleum University, Chengdu 610500, China. www.fansmale.com.
+ URL:              https://github.com/FanSmale/TCR
+ Organization:     Lab of machine learning, Southwest Petroleum University, 
+   Chengdu 610500, China. www.fansmale.com.
  Progress:         Over 50%.
  Written time:     January 29, 2020.
  Last modify time: January 29, 2020.
@@ -10,36 +12,52 @@ This is the help document of our paper "three-way conversational recommendation"
 
 Here are the explanation of settings.
 
---Data
+--Data set information
 The .arff file: The data filename. Please use Browse to select.
+Data in compressed format: No for uncompressed format, where missing value is 
+  indicated by 99. Yes for compressed format, where triples are stored. Attention: it has not been implemented yet!
+Users: Number of users.
+Items: Number of items.
+Ratings: Number of ratings.
 
+--Cost matrix
+NN: The first N stands for not recommend, while the second N stands for dislike.
+NP: P stands for like.
+BN: B stands for boundary or promotion.
+BP
+PN
+PP
 
-Training fraction: The fraction of the training set.
-Testing fraction: The fraction of the testing set. The remaining part, which is referred to as the unlabeled training set, will serve for training set enlargement.
+--Bounds and thresholds
+Rating lower bound: -10 for Jester, and 1 for MovieLens.
+Upper bound: 10 for Jester, and 5 for MovieLens.
+Recommendation length: The length of the recommendation/promotion list in each 
+  conversation.
+Recommendation ratio: The ratio of recommended items in the list.
+Like threshold: A greater actual rating indicates like.
+Maturity threshold: Popularity-based recommendation is employed for cold-start.
+  When there are enough recommendation/promotion, the user is "matured" thus can be handled by prediction algorithms such as MF.
 
-Co-training iterations: The maximal iterations that each co-trainer selects instances for the other. Quite often we will not reach this number, since there are not enough instances to choose.
-Data increment: How many instances are chosen by each co-trainer each time?
-Balance classes: Select the same number of instances for each class?
+Semi-popular threshold: Semi-popular items may be promoted.
+Popular threshold: Popular items may be recommended.
+Semi-favorite threshold: According to the prediction, semi-favorite items may 
+  be promoted.
+Favorite threshold: favorite items may be recommended.
 
-Distance measure: The distance measure used throughout the project.
-Distance preference: Used to select instances by the co-trainers.
-  Near: instances close to their neighbors are preferred.
-  Far: instances far from their neighbors are preferred.
+--Prediction algorithm
+MF algorithm: Plain MF stands for matrix factorization without regular terms.
+  PQ-MF stands for PQ regular.
+  GL-MF stands for generalized Gaussian. It has not been implemented yet.
+Pretrain rounds: The number of rounds for training the subspaces using the original data.
+Incremental train rounds: The number of rounds for training each user in conversation.
+Rank: The rank of subspaces.
+Learning speed (alpha): a parameter controlling the learning speed of MF.
+(Lambda): 
 
-Normalize: Normalize the data or not. We suggest to turn it on.
-Disorder: Disorder the data or not. Some data are ordered according to the class labels. There some algorithms may take advantage of this to obtain "good" results. We suggest to turn it on.
-
-Confidence threshold: Instances with confidence no small than this threshold can be added to the training set.
-Confidence computation:
-  kNN: the confidence is defined by the number of instances with the majority label.
-  random forest: the confidence is defined by the number of trees producing the majority label. Attention: not implemented yet!
-k: The value for kNN.
-
-Classifier: Employed to compute the classification accuracy before and after training set enlargement.
-Feature selector: Select two feature subsets to build co-trainers.
-
+--Tracking and output
 Process tracking: Track the process in the console.
 Variable tracking: Track variables for detailed debugging.
-Output to file: Output the results to a file in the "results" folder. Attention: It is not implmented here yet!
+Output to file: Output the results to a file in the "results" folder. Attention: 
+  It is not implemented here yet!
 
-Repeat times: How many time the experiment repeats.
+--Repeat times: How many time the experiment repeats.
