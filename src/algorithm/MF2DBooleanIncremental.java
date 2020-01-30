@@ -1,15 +1,15 @@
 package algorithm;
 
-/*
- * @(#)MF2DBoolean.java
- 
- * Project: Matrix factorization for recommender systems.
- * Incremental learning. 
- * Author: Fan Min, Yuan-Yuan Xu
- * www.fansmale.com
- * Email: minfan@swpu.edu.cn, minfanphd@163.com.
- * Created: Jan 21, 2020.
- * Last modified: Jan 21, 2020.
+/**
+ * Incremental learning for matrix factorization. <br>
+ * Project: Three-way conversational recommendation.<br>
+ * 
+ * @author Fan Min<br>
+ *         www.fansmale.com, github.com/fansmale/TCR.<br>
+ *         Email: minfan@swpu.edu.cn, minfanphd@163.com.<br>
+ * @date Created: December 3, 2019.<br>
+ *       Last modified: January 30, 2020.
+ * @version 1.0
  */
 
 public class MF2DBooleanIncremental extends MF2DBoolean {
@@ -30,6 +30,12 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 	 *            The number of items.
 	 * @param paraNumRatings
 	 *            The number of ratings.
+	 * @param paraNumRatings
+	 *            The number of ratings.
+	 * @param paraRatingLowerBound
+	 *            The lower bound of ratings.
+	 * @param paraRatingUpperBound
+	 *            The upper bound of ratings.
 	 ************************ 
 	 */
 	public MF2DBooleanIncremental(String paraFilename, int paraNumUsers, int paraNumItems,

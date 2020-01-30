@@ -1,7 +1,3 @@
-/*
- * @(#)SimpleTool.java
- *
- */
 
 package common;
 
@@ -12,18 +8,15 @@ import weka.core.Instance;
 import weka.core.Instances;
 
 /**
- * Frequently used methods to convert strings, integers, codings, etc.
- * <p>
- * Author: <b>Fan Min</b> minfanphd@163.com, minfan@swpu.edu.cn <br>
- * Copyright: The source code and all documents are open and free. PLEASE keep
- * this header while revising the program. <br>
- * Organization: <a href=http://www.fansmale.com/>Lab of Machine Learning</a>,
- * Southwest Petroleum University, Chengdu 610500, China.<br>
- * Project: The cost-sensitive active learning project.
- * <p>
- * Progress: Changing all the time.<br>
- * Written time: October 20, 2008. <br>
- * Last modify time: July 27, 2019.
+ * Frequently used methods to convert strings, integers, codings, etc. <br>
+ * Project: Three-way conversational recommendation.<br>
+ * 
+ * @author Fan Min<br>
+ *         www.fansmale.com, github.com/fansmale/TCR.<br>
+ *         Email: minfan@swpu.edu.cn, minfanphd@163.com.<br>
+ * @date Created: October 20, 2008.<br>
+ *       Last modified: January 30, 2020.
+ * @version 1.0
  */
 
 public class SimpleTools extends Object {

@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.Random;
 import datamodel.*;
 /**
- * @(#)ThreeWayInteractiveRecommendation.java
+ * ThreeWayInteractiveRecommendation.java
  * Project: Matrix factorization for recommender systems.
  * The data is organized in 2D of triples. Boolean means that a boolean matrix indicates 
  * the training set. The purpose is to enable incremental learning. Now only uncompressed 

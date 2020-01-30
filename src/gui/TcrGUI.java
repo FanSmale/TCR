@@ -15,15 +15,14 @@ import gui.guidialog.common.HelpDialog;
 import gui.others.*;
 
 /**
- * @(#)TcrGUI.java <br>
- *                 Project: Three-way conversational recommendation.<br>
- *                 The GUI of the project.<br>
+ * The GUI of TCR. <br>
+ * Project: Three-way conversational recommendation.<br>
  * 
  * @author Fan Min<br>
- *         www.fansmale.com, github.com/fansmale.<br>
+ *         www.fansmale.com, github.com/fansmale/TCR.<br>
  *         Email: minfan@swpu.edu.cn, minfanphd@163.com.<br>
- * @date Created: January 28, 2020.<br>
- *       Last modified: January 28, 2020.
+ * @date Created: January 28, 2020. <br>
+ *       Last modified: January 30, 2020.
  * @version 1.0
  */
 

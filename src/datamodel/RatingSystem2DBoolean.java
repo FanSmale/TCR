@@ -7,17 +7,19 @@ import java.util.Random;
 import datamodel.Triple;
 
 /**
- * RatingSystem2DBoolean.java<br>
+ * The basic data model. The data is organized in 2D of triples. Boolean means
+ * that a boolean matrix indicates the training set. The purpose is to enable
+ * incremental learning. Now only uncompressed data file is supported, that is,
+ * missing value is indicated by 99. In the near future, the data organized by
+ * triples should also be supported. <br>
+ * Project: Three-way conversational recommendation.<br>
  * 
- * Project: Matrix factorization for recommender systems. The data is organized
- * in 2D of triples. Boolean means that a boolean matrix indicates the training
- * set. The purpose is to enable incremental learning. Now only uncompressed
- * data file is supported, that is, missing value is indicated by 99. In the
- * near future, the data organized by triples should also be supported. <br>
- * 
- * @author Fan Min www.fansmale.com, github.com/fansmale Email:
- *         minfan@swpu.edu.cn, minfanphd@163.com.<br>
- * @date Created January 27, 2019. Last modified: January 27, 2020.
+ * @author Fan Min<br>
+ *         www.fansmale.com, github.com/fansmale/TCR.<br>
+ *         Email: minfan@swpu.edu.cn, minfanphd@163.com.<br>
+ * @date Created: January 20, 2020.<br>
+ *       Last modified: January 30, 2020.
+ * @version 1.0
  */
 
 public class RatingSystem2DBoolean {
@@ -52,8 +54,7 @@ public class RatingSystem2DBoolean {
 	protected Triple[][] data;
 
 	/**
-	 * The popularity of items.
-	 * The ith user's popularity is data[i].length.
+	 * The popularity of items. The ith user's popularity is data[i].length.
 	 */
 	protected int[] itemPopArray;
 
@@ -99,6 +100,10 @@ public class RatingSystem2DBoolean {
 	 *            The number of items.
 	 * @param paraNumRatings
 	 *            The number of ratings.
+	 * @param paraRatingLowerBound
+	 *            The lower bound of ratings.
+	 * @param paraRatingUpperBound
+	 *            The upper bound of ratings.
 	 ************************ 
 	 */
 	public RatingSystem2DBoolean(String paraFilename, int paraNumUsers, int paraNumItems,
@@ -123,7 +128,15 @@ public class RatingSystem2DBoolean {
 	 * 
 	 * @param paraFilename
 	 *            The given file.
+	 * @param paraNumUsers
+	 *            The number of users.
+	 * @param paraNumItems
+	 *            The number of items.
+	 * @param paraNumRatings
+	 *            The number of ratings.
+	 * @return The data in two-dimensional matrix of triples.
 	 * @throws IOException
+	 *             In case the file cannot be read.
 	 ************************ 
 	 */
 	public Triple[][] readData(String paraFilename, int paraNumUsers, int paraNumItems,
@@ -158,7 +171,7 @@ public class RatingSystem2DBoolean {
 					tempTripleArrayForUser[tempCurrentUserRatings] = new Triple(tempUserIndex,
 							tempItemIndex, tempRating);
 					tempCurrentUserRatings++;
-					itemPopArray[tempItemIndex] ++;
+					itemPopArray[tempItemIndex]++;
 					itemRatingSumArray[tempItemIndex] += tempRating;
 				} // Of if
 			} // Of for i
@@ -174,7 +187,7 @@ public class RatingSystem2DBoolean {
 		buffRead.close();
 
 		for (int i = 0; i < numItems; i++) {
-			//0.01 to avoid NaN due to unrated items.
+			// 0.01 to avoid NaN due to unrated items.
 			itemAverageRatingArray[i] = itemRatingSumArray[i] / (itemPopArray[i] + 0.01);
 		} // Of for i
 
@@ -247,7 +260,7 @@ public class RatingSystem2DBoolean {
 	 */
 	public int getNumUsers() {
 		return numUsers;
-	}//Of getNumUsers
+	}// Of getNumUsers
 
 	/**
 	 ************************ 
@@ -256,7 +269,7 @@ public class RatingSystem2DBoolean {
 	 */
 	public int getNumItems() {
 		return numItems;
-	}//Of getNumItems
+	}// Of getNumItems
 
 	/**
 	 ************************ 
@@ -265,7 +278,7 @@ public class RatingSystem2DBoolean {
 	 */
 	public int getNumRatings() {
 		return numRatings;
-	}//Of getNumRatings
+	}// Of getNumRatings
 
 	/**
 	 *********************************** 
@@ -312,21 +325,21 @@ public class RatingSystem2DBoolean {
 		ratingLowerBound -= meanRating;
 		ratingUpperBound -= meanRating;
 	}// Of adjustUsingMeanRating
-	
+
 	/**
 	 ************************ 
 	 * Training and testing using the same data.
 	 ************************ 
 	 */
-	public static void testReadingData(String paraFilename, int paraNumUsers,
-			int paraNumItems, int paraNumRatings, double paraRatingLowerBound,
-			double paraRatingUpperBound) {
+	public static void testReadingData(String paraFilename, int paraNumUsers, int paraNumItems,
+			int paraNumRatings, double paraRatingLowerBound, double paraRatingUpperBound) {
 		try {
 			// Step 1. read the training and testing data
-			RatingSystem2DBoolean tempMF = new RatingSystem2DBoolean(paraFilename, paraNumUsers, paraNumItems,
-					paraNumRatings, paraRatingLowerBound, paraRatingUpperBound);
-			System.out.println("" + tempMF.numUsers + " user, " + tempMF.numItems + " items, " + tempMF.numRatings + " ratings. "
-					+ "\r\nAvearge ratings: " + Arrays.toString(tempMF.itemAverageRatingArray));
+			RatingSystem2DBoolean tempMF = new RatingSystem2DBoolean(paraFilename, paraNumUsers,
+					paraNumItems, paraNumRatings, paraRatingLowerBound, paraRatingUpperBound);
+			System.out.println("" + tempMF.numUsers + " user, " + tempMF.numItems + " items, "
+					+ tempMF.numRatings + " ratings. " + "\r\nAvearge ratings: "
+					+ Arrays.toString(tempMF.itemAverageRatingArray));
 		} catch (Exception e) {
 			e.printStackTrace();
 		} // of try

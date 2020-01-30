@@ -5,14 +5,15 @@ import java.io.*;
 import datamodel.RatingSystem2DBoolean;
 
 /**
- * @(#)MF2DBoolean.java <br>
- *                      Project: Matrix factorization for recommender systems.
- *                      Two factorization algorithms are implemented.<br>
+ * Implement two matrix factorization algorithms. <br>
+ * Project: Three-way conversational recommendation.<br>
+ * 
  * @author Fan Min<br>
- *         www.fansmale.com, github.com/fansmale.<br>
+ *         www.fansmale.com, github.com/fansmale/TCR.<br>
  *         Email: minfan@swpu.edu.cn, minfanphd@163.com.<br>
  * @date Created: December 3, 2019.<br>
- *       Last modified: January 27, 2020.
+ *       Last modified: January 30, 2020.
+ * @version 1.0
  */
 
 public class MF2DBoolean extends RatingSystem2DBoolean {
@@ -79,6 +80,10 @@ public class MF2DBoolean extends RatingSystem2DBoolean {
 	 *            The number of items.
 	 * @param paraNumRatings
 	 *            The number of ratings.
+	 * @param paraRatingLowerBound
+	 *            The lower bound of ratings.
+	 * @param paraRatingUpperBound
+	 *            The upper bound of ratings.
 	 ************************ 
 	 */
 	public MF2DBoolean(String paraFilename, int paraNumUsers, int paraNumItems, int paraNumRatings,
