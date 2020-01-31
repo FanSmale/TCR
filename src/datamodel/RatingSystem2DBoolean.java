@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.Arrays;
 import java.util.Random;
 
+import common.Common;
 import datamodel.Triple;
 
 /**
@@ -29,11 +30,6 @@ public class RatingSystem2DBoolean {
 	public static final String SPLIT_SIGN = new String("	");
 
 	/**
-	 * Used to generate random numbers.
-	 */
-	protected Random rand = new Random();
-
-	/**
 	 * Number of users.
 	 */
 	protected int numUsers;
@@ -56,7 +52,7 @@ public class RatingSystem2DBoolean {
 	/**
 	 * The popularity of items. The ith user's popularity is data[i].length.
 	 */
-	protected int[] itemPopularityArray;
+	public int[] itemPopularityArray;
 
 	/**
 	 * The sum of ratings of each item.
@@ -215,7 +211,7 @@ public class RatingSystem2DBoolean {
 		// Step 2. Handle each user.
 		for (int i = 0; i < numUsers; i++) {
 			for (int j = 0; j < trainingIndicationMatrix[i].length; j++) {
-				tempDouble = rand.nextDouble();
+				tempDouble = Common.random.nextDouble();
 				if (tempDouble <= paraTrainingFraction) {
 					if (tempTrainingSize < tempTotalTrainingSize) {
 						trainingIndicationMatrix[i][j] = true;
@@ -255,6 +251,52 @@ public class RatingSystem2DBoolean {
 
 	/**
 	 ************************ 
+	 * Set all data of the user for training.
+	 * 
+	 * @param paraUser
+	 *            The given user.
+	 ************************ 
+	 */
+	public void setUserAllTraining(int paraUser) {
+		for (int i = 0; i < trainingIndicationMatrix[paraUser].length; i++) {
+			trainingIndicationMatrix[paraUser][i] = true;
+		} // Of for i
+	}// Of setUserAllTraining
+
+	/**
+	 ************************ 
+	 * Set some data of the given user for training.
+	 * 
+	 * @param paraUser
+	 *            The given user.
+	 * @param paraTrainingIndices
+	 *            The item indices for the given user as training.
+	 ************************ 
+	 */
+	public void setUserTraining(int paraUser, int[] paraTrainingItems) {
+		int tempItemIndex = 0;
+		int i;
+		for (i = 0; i < trainingIndicationMatrix[paraUser].length; i++) {
+			if (data[paraUser][i].item == paraTrainingItems[tempItemIndex]) {
+				trainingIndicationMatrix[paraUser][i] = true;
+				tempItemIndex++;
+				if (tempItemIndex == paraTrainingItems.length) {
+					break;
+				} // Of if
+			} else {
+				trainingIndicationMatrix[paraUser][i] = false;
+			} // Of if
+		} // Of for j
+
+		// The remaining parts are all testing.
+		// Attention: i should not be re-initialized!
+		for (; i < trainingIndicationMatrix[paraUser].length; i++) {
+			trainingIndicationMatrix[paraUser][i] = false;
+		} // Of for i
+	}// Of setUserTraining
+	
+	/**
+	 ************************ 
 	 * Getter.
 	 ************************ 
 	 */
@@ -279,6 +321,87 @@ public class RatingSystem2DBoolean {
 	public int getNumRatings() {
 		return numRatings;
 	}// Of getNumRatings
+
+	/**
+	 ************************ 
+	 * Getter. Get the number of ratings of the user.
+	 ************************ 
+	 */
+	public int getUserNumRatings(int paraUser) {
+		return data[paraUser].length;
+	}// Of getUserNumRatings
+
+	/**
+	 ************************ 
+	 * Getter.
+	 ************************ 
+	 */
+	public double getRatingLowerBound() {
+		return ratingLowerBound;
+	}// Of getRatingsLowerBound
+
+	/**
+	 ************************ 
+	 * Getter.
+	 ************************ 
+	 */
+	public double getRatingUpperBound() {
+		return ratingUpperBound;
+	}// Of getRatingsUpperBound
+
+	/**
+	 ************************ 
+	 * Getter.
+	 * 
+	 * @param paraUser
+	 *            The index of the user.
+	 * @param paraIndex
+	 *            The jth item rated by the user, instead of the jth item of the
+	 *            dataset.
+	 ************************ 
+	 */
+	public boolean getTrainIndication(int paraUser, int paraIndex) {
+		return trainingIndicationMatrix[paraUser][paraIndex];
+	}// Of getTrainIndication
+
+	/**
+	 ************************ 
+	 * Setter.
+	 * 
+	 * @param paraUser
+	 *            The index of the user.
+	 * @param paraIndex
+	 *            The jth item rated by the user, instead of the jth item of the
+	 *            dataset.
+	 ************************ 
+	 */
+	public void setTrainIndication(int paraUser, int paraIndex, boolean paraValue) {
+		trainingIndicationMatrix[paraUser][paraIndex] = paraValue;
+	}// Of setTrainIndication
+
+	/**
+	 ************************ 
+	 * Getter.
+	 * 
+	 * @param paraUser
+	 *            The index of the user.
+	 * @param paraIndex
+	 *            The jth item rated by the user, instead of the jth item of the
+	 *            dataset.
+	 ************************ 
+	 */
+	public Triple getTriple(int paraUser, int paraIndex) {
+		return data[paraUser][paraIndex];
+	}// Of getTriple
+
+	/**
+	 ************************ 
+	 * Getter.
+	 ************************ 
+	 */
+	public int getItemPopularity(int paraItem) {
+		return itemPopularityArray[paraItem];
+	}// Of getItemPopularity
 
 	/**
 	 *********************************** 

@@ -94,6 +94,37 @@ public class SimpleTools extends Object {
 	}// Of consoleOutput
 
 	/**
+	 *********************************** 
+	 * Randomly select some elements from the given array.
+	 * 
+	 * @param paraArray
+	 *            The given array.
+	 * @param paraValidLength
+	 *            Valid length of the array.
+	 * @param paraNumSelection
+	 *            The number of selected elements.
+	 *********************************** 
+	 */
+	public static int[] randomSelectFromArray(int[] paraArray, int paraValidLength,
+			int paraNumSelection) {
+
+		int[] tempArray = null;
+		try {
+			tempArray = generateRandomIndices(paraValidLength, paraNumSelection);
+		} catch (Exception ee) {
+			System.out.println("Internal error occurred in TCR.randomSelectFromArray(): \r\n" + ee);
+			System.exit(0);
+		} // Of try
+
+		int[] resultArray = new int[paraNumSelection];
+		for (int i = 0; i < resultArray.length; i++) {
+			resultArray[i] = paraArray[tempArray[i]];
+		} // Of for i
+
+		return resultArray;
+	}// Of randomSelectFromArray
+
+	/**
 	 ************************* 
 	 * An instance converted to a double array, where the class label is not
 	 * considered.

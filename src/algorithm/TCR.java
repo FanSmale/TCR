@@ -484,6 +484,7 @@ public class TCR extends MF2DBooleanIncremental {
 	public double leaveUserOutRecommend() {
 		double resultTotalCost = 0;
 		recommendationStatistics = new int[3][2];
+		System.out.println("leaveUserOutRecommend(), numUsers = " + numUsers);
 		for (int i = 0; i < numUsers; i++) {
 			if (i % 100 == 0) {
 				SimpleTools.processTrackingOutput("Recommending for user #" + i + ":");
@@ -703,6 +704,7 @@ public class TCR extends MF2DBooleanIncremental {
 
 			// Step 2. Predict for the current user.
 			setUserTraining(paraUser, tempCompressedItems);
+			trainUser(paraUser);
 			double[] tempPredicts = predictForUser(paraUser);
 
 			// Step 3. Generate recommendation/promotion candidates list
@@ -884,7 +886,7 @@ public class TCR extends MF2DBooleanIncremental {
 		TCR tcr = new TCR("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10);
 		System.out.println(tcr);
 
-		tcr.setPopularityThresholds(new double[] { 0.3, 0.7 });
+		tcr.setPopularityThresholds(new double[] { 0.5, 0.9 });
 
 		double tempTotalCost = tcr.leaveUserOutRecommend();
 

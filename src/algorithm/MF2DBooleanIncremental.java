@@ -1,5 +1,7 @@
 package algorithm;
 
+import common.Common;
+
 /**
  * Incremental learning for matrix factorization. <br>
  * Project: Three-way conversational recommendation.<br>
@@ -112,7 +114,7 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 	public void trainUser(int paraUser) {
 		// Step 1. Reset the user subspace of the given user.
 		for (int i = 0; i < rank; i++) {
-			userSubspace[paraUser][i] += (rand.nextDouble() - 0.5) * 2 * subspaceValueRange;
+			userSubspace[paraUser][i] += (Common.random.nextDouble() - 0.5) * 2 * subspaceValueRange;
 		} // Of for i
 			// System.out.println("initialize userSubspace[" + paraUser + "] = "
 			// + Arrays.toString(userSubspace[paraUser]));
