@@ -64,6 +64,12 @@ public class MF2DBoolean extends RatingSystem2DBoolean {
 	public static final int PQ_REGULAR = 1;
 
 	/**
+	 * Add the variation to the boundaries during data transferring to avoid
+	 * NaN.
+	 */
+	public static final double BOUNDARY_VARIATION = 0.0001;
+
+	/**
 	 * How many rounds for training.
 	 */
 	int trainRounds = 200;

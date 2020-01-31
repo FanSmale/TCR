@@ -56,7 +56,7 @@ public class RatingSystem2DBoolean {
 	/**
 	 * The popularity of items. The ith user's popularity is data[i].length.
 	 */
-	protected int[] itemPopArray;
+	protected int[] itemPopularityArray;
 
 	/**
 	 * The sum of ratings of each item.
@@ -149,7 +149,7 @@ public class RatingSystem2DBoolean {
 		data = new Triple[paraNumUsers][];
 		trainingIndicationMatrix = new boolean[numUsers][];
 
-		itemPopArray = new int[numItems];
+		itemPopularityArray = new int[numItems];
 		itemRatingSumArray = new double[numItems];
 		itemAverageRatingArray = new double[numItems];
 
@@ -171,7 +171,7 @@ public class RatingSystem2DBoolean {
 					tempTripleArrayForUser[tempCurrentUserRatings] = new Triple(tempUserIndex,
 							tempItemIndex, tempRating);
 					tempCurrentUserRatings++;
-					itemPopArray[tempItemIndex]++;
+					itemPopularityArray[tempItemIndex]++;
 					itemRatingSumArray[tempItemIndex] += tempRating;
 				} // Of if
 			} // Of for i
@@ -188,7 +188,7 @@ public class RatingSystem2DBoolean {
 
 		for (int i = 0; i < numItems; i++) {
 			// 0.01 to avoid NaN due to unrated items.
-			itemAverageRatingArray[i] = itemRatingSumArray[i] / (itemPopArray[i] + 0.01);
+			itemAverageRatingArray[i] = itemRatingSumArray[i] / (itemPopularityArray[i] + 0.01);
 		} // Of for i
 
 		return data;

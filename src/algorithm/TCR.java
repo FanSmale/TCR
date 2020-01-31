@@ -2,6 +2,7 @@ package algorithm;
 
 import algorithm.MF2DBooleanIncremental;
 import common.SimpleTools;
+import gui.others.DoubleField;
 
 import java.io.*;
 import java.util.Arrays;
@@ -46,14 +47,14 @@ public class TCR extends MF2DBooleanIncremental {
 	int recommendationLength;
 
 	/**
-	 * Some items are recommended, while others are promoted.
-	 */
-	double recommendationRatio;
-
-	/**
 	 * The default recommendation ratio.
 	 */
 	public static final double DEFAULT_RECOMMENDATION_RATIO = 0.3;
+
+	/**
+	 * Some items are recommended, while others are promoted.
+	 */
+	double recommendationRatio;
 
 	/**
 	 * Non-recommend.
@@ -74,12 +75,6 @@ public class TCR extends MF2DBooleanIncremental {
 	 * The default like threshold.
 	 */
 	public static final int DEFAULT_LIKE_THRESHOLD = 3;
-
-	/**
-	 * Add the variation to the boundaries during data transferring to avoid
-	 * NaN.
-	 */
-	public static final double BOUNDARY_VARIATION = 0.0001;
 
 	/**
 	 * The like threshold.
@@ -119,7 +114,7 @@ public class TCR extends MF2DBooleanIncremental {
 	/**
 	 * The maximum of item pop.
 	 */
-	int maxItemPop;
+	int maxItemPopularity;
 
 	/**
 	 * Item popularity no less than the second value may be recommended, no less
@@ -136,17 +131,17 @@ public class TCR extends MF2DBooleanIncremental {
 	/**
 	 * The popular items (for recommend).
 	 */
-	int[] popItems;
+	int[] popularItems;
 
 	/**
 	 * The semi-popular items (for recommend).
 	 */
-	int[] semiPopItems;
+	int[] semiPopopularItems;
 
 	/**
-	 * Neighborhood radius.
+	 * Neighborhood radius. For M-Distance based recommendation. double
+	 * neighborhoodRadius;
 	 */
-	double neighborhoodRadius;
 
 	/**
 	 * The statistics information (NN, NP, BN, ...) for current user.
@@ -202,12 +197,12 @@ public class TCR extends MF2DBooleanIncremental {
 		maturityThreshold = DEFAULT_MATURITY_THRESHOLD;
 		maturityForEachItem = DEFAULT_MATURITY_FOR_EACH_ITEM;
 
-		maxItemPop = computeMaxItemPop();
+		maxItemPopularity = computeMaxItemPopularity();
 
-		popItems = null;
-		semiPopItems = null;
+		popularItems = null;
+		semiPopopularItems = null;
 
-		neighborhoodRadius = 1.3;
+		// neighborhoodRadius = 1.3;
 
 		currentUserRecommendations = new boolean[numItems];
 		currentUserPromotions = new boolean[numItems];
@@ -215,7 +210,7 @@ public class TCR extends MF2DBooleanIncremental {
 
 	/**
 	 *********************************** 
-	 * Set the maturity value array.
+	 * Setter.
 	 * 
 	 * @param paraArray
 	 *            The maturity value array with four values.
@@ -254,60 +249,7 @@ public class TCR extends MF2DBooleanIncremental {
 
 	/**
 	 *********************************** 
-	 * Compute both popular items, which may be recommended, and semi-popular
-	 * items, which may be promoted.
-	 * 
-	 *********************************** 
-	 */
-	public void computePopAndSemipopItems(double paraPopThreshold, double paraSemiPopThreshold) {
-		// Step 1. Compute popular items.
-		int tempNumPopItems = 0;
-		// Step 1.1 Compute the length
-		for (int i = 0; i < itemPopArray.length; i++) {
-			if (itemPopArray[i] > maxItemPop * paraPopThreshold) {
-				tempNumPopItems++;
-			} // Of if
-		} // Of for i
-
-		// Step 1.2 Compute the array
-		popItems = new int[tempNumPopItems];
-		tempNumPopItems = 0;
-		for (int i = 0; i < itemPopArray.length; i++) {
-			if (itemPopArray[i] > maxItemPop * paraPopThreshold) {
-				popItems[tempNumPopItems] = i;
-				tempNumPopItems++;
-			} // Of if
-		} // Of for i
-
-		// Step 2. Compute semi-popular items.
-		int tempNumSemiPopItems = 0;
-		// Step 2.1 Compute the length
-		for (int i = 0; i < itemPopArray.length; i++) {
-			if ((itemPopArray[i] > maxItemPop * paraSemiPopThreshold)
-					&& (itemPopArray[i] <= maxItemPop * paraPopThreshold)) {
-				tempNumSemiPopItems++;
-			} // Of if
-		} // Of for i
-
-		// Step 1.2 Compute the array
-		semiPopItems = new int[tempNumSemiPopItems];
-		tempNumSemiPopItems = 0;
-		for (int i = 0; i < itemPopArray.length; i++) {
-			if ((itemPopArray[i] > maxItemPop * paraSemiPopThreshold)
-					&& (itemPopArray[i] <= maxItemPop * paraPopThreshold)) {
-				semiPopItems[tempNumSemiPopItems] = i;
-				tempNumSemiPopItems++;
-			} // Of if
-		} // Of for i
-
-		// System.out.println("Pop items: " + Arrays.toString(popItems));
-		// System.out.println("Semi-popular items: " +
-		// Arrays.toString(semiPopItems));
-	}// Of computePopAndSemipopItems
-
-	/**
-	 *********************************** 
-	 * Set thresholds for popularity-based recommendation.
+	 * Setter.
 	 * 
 	 * @param paraThresholds
 	 *            Should have exactly two elements.
@@ -319,7 +261,7 @@ public class TCR extends MF2DBooleanIncremental {
 
 	/**
 	 *********************************** 
-	 * Set thresholds for prediction-based recommendation.
+	 * Setter.
 	 * 
 	 * @param paraThresholds
 	 *            Should have exactly two elements.
@@ -328,21 +270,6 @@ public class TCR extends MF2DBooleanIncremental {
 	public void setFavoriteThresholds(double[] paraThreshold) {
 		favoriteThresholds = paraThreshold;
 	}// Of setFavoriteThresholds
-
-	/**
-	 *********************************** 
-	 * Compute the maximum of item pop.
-	 *********************************** 
-	 */
-	public int computeMaxItemPop() {
-		int resuleMaxPop = itemPopArray[0];
-		for (int i = 1; i < itemPopArray.length; i++) {
-			if (resuleMaxPop < itemPopArray[i]) {
-				resuleMaxPop = itemPopArray[i];
-			} // Of if
-		} // Of for i
-		return resuleMaxPop;
-	}// Of computeMaxItemPop
 
 	/**
 	 *********************************** 
@@ -363,8 +290,17 @@ public class TCR extends MF2DBooleanIncremental {
 	}// Of setRecommendationRatio
 
 	/**
+	 *************************** 
+	 * Setter.
+	 *************************** 
+	 */
+	public void setCostMatrix(double[][] paraCostMatrix) {
+		costMatrix = paraCostMatrix;
+	}// Of setCostMatrix
+
+	/**
 	 *********************************** 
-	 * Set the cost matrix.
+	 * Setter.
 	 *********************************** 
 	 */
 	public void setCostMatrix(int paraNN, int paraNP, int paraBN, int paraBP, int paraPN,
@@ -377,6 +313,74 @@ public class TCR extends MF2DBooleanIncremental {
 		costMatrix[2][1] = paraPP;
 		// Q.
 	}// Of setCostMatrix
+
+	/**
+	 *********************************** 
+	 * Compute both popular items, which may be recommended, and semi-popular
+	 * items, which may be promoted.
+	 * 
+	 *********************************** 
+	 */
+	public void computePopAndSemipopItems(double paraPopThreshold, double paraSemiPopThreshold) {
+		// Step 1. Compute popular items.
+		int tempNumPopItems = 0;
+		// Step 1.1 Compute the length
+		for (int i = 0; i < itemPopularityArray.length; i++) {
+			if (itemPopularityArray[i] > maxItemPopularity * paraPopThreshold) {
+				tempNumPopItems++;
+			} // Of if
+		} // Of for i
+
+		// Step 1.2 Compute the array
+		popularItems = new int[tempNumPopItems];
+		tempNumPopItems = 0;
+		for (int i = 0; i < itemPopularityArray.length; i++) {
+			if (itemPopularityArray[i] > maxItemPopularity * paraPopThreshold) {
+				popularItems[tempNumPopItems] = i;
+				tempNumPopItems++;
+			} // Of if
+		} // Of for i
+
+		// Step 2. Compute semi-popular items.
+		int tempNumSemiPopItems = 0;
+		// Step 2.1 Compute the length
+		for (int i = 0; i < itemPopularityArray.length; i++) {
+			if ((itemPopularityArray[i] > maxItemPopularity * paraSemiPopThreshold)
+					&& (itemPopularityArray[i] <= maxItemPopularity * paraPopThreshold)) {
+				tempNumSemiPopItems++;
+			} // Of if
+		} // Of for i
+
+		// Step 1.2 Compute the array
+		semiPopopularItems = new int[tempNumSemiPopItems];
+		tempNumSemiPopItems = 0;
+		for (int i = 0; i < itemPopularityArray.length; i++) {
+			if ((itemPopularityArray[i] > maxItemPopularity * paraSemiPopThreshold)
+					&& (itemPopularityArray[i] <= maxItemPopularity * paraPopThreshold)) {
+				semiPopopularItems[tempNumSemiPopItems] = i;
+				tempNumSemiPopItems++;
+			} // Of if
+		} // Of for i
+
+		// System.out.println("Pop items: " + Arrays.toString(popularItems));
+		// System.out.println("Semi-popular items: " +
+		// Arrays.toString(semiPopopularItems));
+	}// Of computePopAndSemipopItems
+
+	/**
+	 *********************************** 
+	 * Compute the maximum of item pop.
+	 *********************************** 
+	 */
+	public int computeMaxItemPopularity() {
+		int resultMaxPop = itemPopularityArray[0];
+		for (int i = 1; i < itemPopularityArray.length; i++) {
+			if (resultMaxPop < itemPopularityArray[i]) {
+				resultMaxPop = itemPopularityArray[i];
+			} // Of if
+		} // Of for i
+		return resultMaxPop;
+	}// Of computeMaxItemPopularity
 
 	/**
 	 *********************************** 
@@ -507,14 +511,14 @@ public class TCR extends MF2DBooleanIncremental {
 	 *********************************** 
 	 */
 	public double recommendForUser(int paraUser) {
-		System.out.println("User " + paraUser);
+		SimpleTools.processTrackingOutput("\r\nUser " + paraUser);
 		// Step 1. Initialize
 		double resultTotalCost;
 		Arrays.fill(currentUserRecommendations, false);
 		Arrays.fill(currentUserPromotions, false);
 
 		// Step 2. Popularity-based recommendation.
-		popBasedRecommend(paraUser);
+		popularityBasedRecommend(paraUser);
 		resultTotalCost = computeTotalCostForUser(paraUser, currentUserRecommendations,
 				currentUserPromotions);
 		SimpleTools.variableTrackingOutput("User " + paraUser
@@ -554,11 +558,11 @@ public class TCR extends MF2DBooleanIncremental {
 	 *            The given user.
 	 *********************************** 
 	 */
-	public void popBasedRecommend(int paraUser) {
+	public void popularityBasedRecommend(int paraUser) {
 		// Step 1. Initialize the total/average score of each item.
 		int[] tempItemPopArray = new int[numItems];
 		for (int i = 0; i < numItems; i++) {
-			tempItemPopArray[i] = itemPopArray[i];
+			tempItemPopArray[i] = itemPopularityArray[i];
 		} // Of for i
 
 		// Remove those for the current user since the data is unknown.
@@ -572,7 +576,7 @@ public class TCR extends MF2DBooleanIncremental {
 		int tempNumPopItems = 0;
 		// System.out.print("Popular items: ");
 		for (int i = 0; i < numItems; i++) {
-			if (tempItemPopArray[i] >= popularityThresholds[1] * maxItemPop) {
+			if (tempItemPopArray[i] >= popularityThresholds[1] * maxItemPopularity) {
 				tempPopItems[tempNumPopItems] = i;
 				// System.out.print(", " + i);
 				tempNumPopItems++;
@@ -584,8 +588,8 @@ public class TCR extends MF2DBooleanIncremental {
 		int tempNumSemiPopItems = 0;
 		// System.out.print("\r\nSemi-popular items: ");
 		for (int i = 0; i < numItems; i++) {
-			if ((tempItemPopArray[i] < popularityThresholds[1] * maxItemPop)
-					&& (tempItemPopArray[i] >= popularityThresholds[0] * maxItemPop)) {
+			if ((tempItemPopArray[i] < popularityThresholds[1] * maxItemPopularity)
+					&& (tempItemPopArray[i] >= popularityThresholds[0] * maxItemPopularity)) {
 				tempSemiPopItems[tempNumSemiPopItems] = i;
 				// System.out.print("; " + i);
 				tempNumSemiPopItems++;
@@ -650,13 +654,14 @@ public class TCR extends MF2DBooleanIncremental {
 					currentUserPromotions);
 		} // Of while
 
-		/*
-		 * if (tempMaturity >= maturityThreshold) {
-		 * System.out.println("Matured."); } else {
-		 * System.out.println("The maturity " + tempMaturity +
-		 * " is smaller than the threshold " + maturityThreshold); } // Of if
-		 */
-	}// Of popBasedRecommend
+		if (tempMaturity >= maturityThreshold) {
+			SimpleTools.processTrackingOutput("Matured.");
+		} else {
+			SimpleTools.processTrackingOutput("The maturity " + tempMaturity
+					+ " is smaller than the threshold " + maturityThreshold);
+		} // Of if
+
+	}// Of popularityBasedRecommend
 
 	/**
 	 *********************************** 
@@ -772,21 +777,14 @@ public class TCR extends MF2DBooleanIncremental {
 	 */
 	public static int[] randomSelectFromArray(int[] paraArray, int paraValidLength,
 			int paraNumSelection) {
-		int[] tempArray = new int[paraValidLength];
-		for (int i = 0; i < tempArray.length; i++) {
-			tempArray[i] = i;
-		} // Of for i
-		Random tempRandom = new Random();
-		int tempFirstIndex;
-		int tempSecondIndex;
-		int tempValue;
-		for (int i = 0; i < 1000; i++) {
-			tempFirstIndex = tempRandom.nextInt(paraValidLength);
-			tempSecondIndex = tempRandom.nextInt(paraValidLength);
-			tempValue = tempArray[tempFirstIndex];
-			tempArray[tempFirstIndex] = tempArray[tempSecondIndex];
-			tempArray[tempSecondIndex] = tempValue;
-		} // Of for i
+
+		int[] tempArray = null;
+		try {
+			tempArray = SimpleTools.generateRandomIndices(paraValidLength, paraNumSelection);
+		} catch (Exception ee) {
+			System.out.println("Internal error occurred in TCR.randomSelectFromArray(): \r\n" + ee);
+			System.exit(0);
+		} // Of try
 
 		int[] resultArray = new int[paraNumSelection];
 		for (int i = 0; i < resultArray.length; i++) {
@@ -880,38 +878,15 @@ public class TCR extends MF2DBooleanIncremental {
 	 * @throws NumberFormatException
 	 *********************************** 
 	 */
-	public void run() {
-
-	}// Of run
-
-	/**
-	 *********************************** 
-	 * The main entrance.
-	 * 
-	 * @throws IOException
-	 * @throws NumberFormatException
-	 *********************************** 
-	 */
 	public static void main(String args[]) {
 		// TIR2 tir = new TIR2("data/movielens100k.data", 943, 1682, 100000,
 		// -10, 10);
-		TCR tir = new TCR("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10);
-		System.out.println(tir);
+		TCR tcr = new TCR("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10);
+		System.out.println(tcr);
 
-		// tir.computePopAndSemipopItems(0.8, 0.6);
-		tir.setPopularityThresholds(new double[] { 0.3, 0.7 });
-		// double tempTotalCost = tir.leaveUserOutRecommend();
+		tcr.setPopularityThresholds(new double[] { 0.3, 0.7 });
 
-		tir.pretrain();
-		double tempCost;
-		double tempTotalCost = 0;
-		for (int i = 0; i < tir.numUsers; i++) {
-			tempCost = tir.recommendForUser(i);
-
-			// double tempTotalCost = tir.computeTotalCost();
-			System.out.println("The total cost for user " + i + " is: " + tempCost);
-			tempTotalCost += tempCost;
-		} // Of for i
+		double tempTotalCost = tcr.leaveUserOutRecommend();
 
 		System.out.println("The total cost for all users is: " + tempTotalCost);
 	}// Of main
