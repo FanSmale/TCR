@@ -19,7 +19,7 @@ import java.util.Arrays;
  * @version 1.0
  */
 
-public class PopularityBasedRecommendationAlone extends UserBasedThreeWayRecommender {
+public class PopularityBasedRecommendation extends UserBasedThreeWayRecommender {
 
 	/**
 	 * The maturity value array. For each recommendation to existing rating, the
@@ -100,7 +100,7 @@ public class PopularityBasedRecommendationAlone extends UserBasedThreeWayRecomme
 	 *            The upper bound of ratings.
 	 *********************************** 
 	 */
-	public PopularityBasedRecommendationAlone(String paraFilename, int paraNumUsers,
+	public PopularityBasedRecommendation(String paraFilename, int paraNumUsers,
 			int paraNumItems, int paraNumRatings, double paraRatingLowerBound,
 			double paraRatingUpperBound) {
 		// Step 1. Read data.
@@ -119,7 +119,7 @@ public class PopularityBasedRecommendationAlone extends UserBasedThreeWayRecomme
 	 *            The given dataset.
 	 ************************ 
 	 */
-	public PopularityBasedRecommendationAlone(RatingSystem2DBoolean paraDataset) {
+	public PopularityBasedRecommendation(RatingSystem2DBoolean paraDataset) {
 		super(paraDataset);
 
 		initialize();
@@ -499,7 +499,7 @@ public class PopularityBasedRecommendationAlone extends UserBasedThreeWayRecomme
 		SimpleTools.variableTracking = true;
 		// TIR2 tir = new TIR2("data/movielens100k.data", 943, 1682, 100000,
 		// -10, 10);
-		PopularityBasedRecommendationAlone tempPbr = new PopularityBasedRecommendationAlone(
+		PopularityBasedRecommendation tempPbr = new PopularityBasedRecommendation(
 				"data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10);
 		System.out.println(tempPbr);
 

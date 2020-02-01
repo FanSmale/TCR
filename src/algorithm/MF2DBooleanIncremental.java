@@ -1,9 +1,11 @@
 package algorithm;
 
-import common.Common;
+import common.*;
+import datamodel.*;
 
 /**
- * Incremental learning for matrix factorization. <br>
+ * Incremental learning for matrix factorization, where data is stand alone.
+ * <br>
  * Project: Three-way conversational recommendation.<br>
  * 
  * @author Fan Min<br>
@@ -19,6 +21,12 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 	 * Incremental training rounds.
 	 */
 	int incrementalTrainRounds = 20;
+
+	/**
+	 * Item predicted rating no less than the second value may be recommended,
+	 * no less than the first value may be promoted.
+	 */
+	double[] favoriteThresholds = { -2.0, 0.5 };
 
 	/**
 	 ************************ 
@@ -48,6 +56,18 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 
 	/**
 	 ************************ 
+	 * The second constructor.
+	 * 
+	 * @param paraDataset
+	 *            The given dataset.
+	 ************************ 
+	 */
+	public MF2DBooleanIncremental(RatingSystem2DBoolean paraDataset) {
+		super(paraDataset);
+	}// Of the second constructor
+
+	/**
+	 ************************ 
 	 * Setter.
 	 ************************ 
 	 */
@@ -56,50 +76,16 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 	}// Of setIncrementalTrainRounds
 
 	/**
-	 ************************ 
-	 * Set all data of the given user for training.
+	 *********************************** 
+	 * Setter.
 	 * 
-	 * @param paraUser
-	 *            The given user.
-	 ************************ 
+	 * @param paraThresholds
+	 *            Should have exactly two elements.
+	 *********************************** 
 	 */
-	public void setUserAllTraining(int paraUser) {
-		for (int i = 0; i < trainingIndicationMatrix[paraUser].length; i++) {
-			trainingIndicationMatrix[paraUser][i] = true;
-		} // Of for j
-	}// Of setUserAllTraining
-
-	/**
-	 ************************ 
-	 * Set some data of the given user for training.
-	 * 
-	 * @param paraUser
-	 *            The given user.
-	 * @param paraTrainingIndices
-	 *            The item indices for the given user as training.
-	 ************************ 
-	 */
-	public void setUserTraining(int paraUser, int[] paraTrainingItems) {
-		int tempItemIndex = 0;
-		int i;
-		for (i = 0; i < trainingIndicationMatrix[paraUser].length; i++) {
-			if (data[paraUser][i].item == paraTrainingItems[tempItemIndex]) {
-				trainingIndicationMatrix[paraUser][i] = true;
-				tempItemIndex++;
-				if (tempItemIndex == paraTrainingItems.length) {
-					break;
-				} // Of if
-			} else {
-				trainingIndicationMatrix[paraUser][i] = false;
-			} // Of if
-		} // Of for j
-
-		// The remaining parts are all testing.
-		// Attention: i should not be re-initialized!
-		for (; i < trainingIndicationMatrix[paraUser].length; i++) {
-			trainingIndicationMatrix[paraUser][i] = false;
-		} // Of for i
-	}// Of setUserTraining
+	public void setFavoriteThresholds(double[] paraThresholds) {
+		favoriteThresholds = paraThresholds;
+	}// Of setFavoriteThresholds
 
 	/**
 	 ************************ 
@@ -114,7 +100,8 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 	public void trainUser(int paraUser) {
 		// Step 1. Reset the user subspace of the given user.
 		for (int i = 0; i < rank; i++) {
-			userSubspace[paraUser][i] += (Common.random.nextDouble() - 0.5) * 2 * subspaceValueRange;
+			userSubspace[paraUser][i] += (Common.random.nextDouble() - 0.5) * 2
+					* subspaceValueRange;
 		} // Of for i
 			// System.out.println("initialize userSubspace[" + paraUser + "] = "
 			// + Arrays.toString(userSubspace[paraUser]));
@@ -153,16 +140,17 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 	 ************************ 
 	 */
 	public void updateUserSubspaceNoRegular(int paraUser) {
-		for (int i = 0; i < data[paraUser].length; i++) {
+		for (int i = 0; i < dataset.getUserNumRatings(paraUser); i++) {
 			// Ignore the testing set.
-			if (!trainingIndicationMatrix[paraUser][i]) {
+			if (!dataset.getTrainIndication(paraUser, i)) {
 				continue;
 			} // Of if
 
-			int tempItemId = data[paraUser][i].item;
-			double tempRate = data[paraUser][i].rating;
+			Triple tempTriple = dataset.getTriple(paraUser, i);
+			int tempItemId = tempTriple.item;
+			double tempRating = tempTriple.rating;
 
-			double tempResidual = tempRate - predict(paraUser, tempItemId); // Residual
+			double tempResidual = tempRating - predict(paraUser, tempItemId); // Residual
 			// tempResidual = Math.abs(tempResidual);
 
 			// Update user subspace
@@ -185,16 +173,17 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 	 ************************ 
 	 */
 	public void updateUserSubspacePQRegular(int paraUser) {
-		for (int i = 0; i < data[paraUser].length; i++) {
+		for (int i = 0; i < dataset.getUserNumRatings(paraUser); i++) {
 			// Ignore the testing set.
-			if (!trainingIndicationMatrix[paraUser][i]) {
+			if (!dataset.getTrainIndication(paraUser, i)) {
 				continue;
 			} // Of if
 
-			int tempItemId = data[paraUser][i].item;
-			double tempRate = data[paraUser][i].rating;
+			Triple tempTriple = dataset.getTriple(paraUser, i);
+			int tempItemId = tempTriple.item;
+			double tempRating = tempTriple.rating;
 
-			double tempResidual = tempRate - predict(paraUser, tempItemId); // Residual
+			double tempResidual = tempRating - predict(paraUser, tempItemId); // Residual
 			// tempResidual = Math.abs(tempResidual);
 
 			// Update user subspace
@@ -205,8 +194,9 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 				userSubspace[paraUser][j] += alpha * tempValue;
 			} // Of for j
 		} // Of for i
-			// System.out.println("PQ regular: " +
-			// Arrays.toString(userSubspace[paraUser]));
+
+		// System.out.println("PQ regular: " +
+		// Arrays.toString(userSubspace[paraUser]));
 	}// Of updateUserSubspacePQRegular
 
 	/**
@@ -216,14 +206,163 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 	 */
 	public void pretrain() {
 		// setParameters(10, 0.0001, 0.005, NO_REGULAR, paraRounds);
-		setAllTraining();
-		adjustUsingMeanRating();
+		dataset.setAllTraining();
+		dataset.adjustUsingMeanRating();
 
 		// Step 2. Pre-train
 		initializeSubspaces(0.5);
 		// System.out.println("Pre-training " + paraRounds + " rounds ...");
 		train();
 	}// Of pretrain
+
+	/**
+	 *************************
+	 * One round three-way recommend according to existing recommendation
+	 * information. These information will be changed in this method.
+	 * 
+	 * @param paraUser
+	 *            The user.
+	 * @param paraRecommendations
+	 *            Indicate which items have already been recommended.
+	 * @param paraPromotions
+	 *            Indicate which items have already been promoted.
+	 * @return An integer matrix, where the first row indicates recommended
+	 *         items, while the second indicates promoted ones.
+	 *************************
+	 */
+	public boolean[][] recommendForUser(int paraUser, boolean[] paraRecommendations,
+			boolean[] paraPromotions) {
+		while (true) {
+			int[][] tempRecommendationsPromotions = threeWayRecommend(paraUser, paraRecommendations,
+					paraPromotions);
+			if (tempRecommendationsPromotions == null) {
+				break;
+			} // Of if
+		} // Of while
+
+		boolean[][] resultRecommendationPromotions = new boolean[2][];
+		resultRecommendationPromotions[0] = paraRecommendations;
+		resultRecommendationPromotions[1] = paraPromotions;
+		return resultRecommendationPromotions;
+	}// Of recommendForUser
+
+	/**
+	 *************************
+	 * One round three-way recommend according to existing recommendation
+	 * information. These information will be changed in this method.
+	 * 
+	 * @param paraUser
+	 *            The user.
+	 * @param paraRecommendations
+	 *            Indicate which items have already been recommended.
+	 * @param paraPromotions
+	 *            Indicate which items have already been promoted.
+	 * @return An integer matrix, where the first row indicates recommended
+	 *         items, while the second indicates promoted ones.
+	 *************************
+	 */
+	public int[][] threeWayRecommend(int paraUser, boolean[] paraRecommendations,
+			boolean[] paraPromotions) {
+
+		int tempUserNumRates = dataset.getUserNumRatings(paraUser);
+		int[] tempAcquiredItems = new int[tempUserNumRates];
+		int tempCounter = 0;
+		int[] tempRecommendationCandidates = new int[numItems];
+		int[] tempPromotionCandidates = new int[numItems];
+
+		// Step 1. Which items have rating information available.
+		tempCounter = 0;
+		for (int i = 0; i < tempUserNumRates; i++) {
+			int tempItem = dataset.getTriple(paraUser, i).item;
+			if (paraRecommendations[tempItem] || paraPromotions[tempItem]) {
+				tempAcquiredItems[tempCounter] = tempItem;
+				tempCounter++;
+			} // Of if
+		} // Of for i
+
+		// Compress
+		int[] tempCompressedItems = new int[tempCounter];
+		for (int i = 0; i < tempCounter; i++) {
+			tempCompressedItems[i] = tempAcquiredItems[i];
+		} // Of for i
+
+		if (tempCounter == 0) {
+			System.out.println(
+					"Error occurred in MF2DBooleanIncrementalAlone.threeWayRecommend().\r\n"
+							+ "No known ratings for the current user.\r\n"
+							+ "This may be caused by inappropriate popularity parameters for popularity-based recommendation.");
+			System.exit(0);
+		} // Of if
+
+		// Step 2. Predict for the current user.
+		dataset.setUserTraining(paraUser, tempCompressedItems);
+		double[] tempPredicts = predictForUser(paraUser);
+
+		// Step 3. Generate recommendation/promotion candidates list
+		int tempRecommendationCandidatesLength = 0;
+		int tempPromotionCandidatesLength = 0;
+
+		for (int i = 0; i < numItems; i++) {
+			// Already recommended/promoted before
+			if (paraRecommendations[i] || paraPromotions[i]) {
+				continue;
+			} // Of if
+
+			// System.out.println("tempPredicts[" + i + "]= " +
+			// tempPredicts[i]);
+			if (tempPredicts[i] >= favoriteThresholds[1]) {
+				tempRecommendationCandidates[tempRecommendationCandidatesLength] = i;
+				tempRecommendationCandidatesLength++;
+			} else if (tempPredicts[i] >= favoriteThresholds[0]) {
+				tempPromotionCandidates[tempPromotionCandidatesLength] = i;
+				tempPromotionCandidatesLength++;
+			} // Of if
+		} // Of for i
+
+		// Step 4. Handle the situation where no enough to
+		// recommend/promote.
+		if (tempRecommendationCandidatesLength < numRecommend) {
+			// System.out.println("User " + paraUser + " has no enough to
+			// recommend: "
+			// + tempRecommendationCandidatesLength);
+			return null;
+		} else if (tempPromotionCandidatesLength < numPromote) {
+			// System.out.println("User " + paraUser + " has no enough to
+			// promote: "
+			// + tempPromotionCandidatesLength);
+			return null;
+		} // Of if
+
+		// Step 5. Randomly select some to recommend/promote.
+		int[] tempRecommendations = null;
+		int[] tempPromotions = null;
+		try {
+			// Recommend
+			tempRecommendations = SimpleTools.randomSelectFromArray(tempRecommendationCandidates,
+					tempRecommendationCandidatesLength, numRecommend);
+			for (int i = 0; i < tempRecommendations.length; i++) {
+				paraPromotions[tempRecommendations[i]] = true;
+			} // Of for i
+
+			// Promote
+			tempPromotions = SimpleTools.randomSelectFromArray(tempPromotionCandidates,
+					tempPromotionCandidatesLength, numPromote);
+			for (int i = 0; i < tempPromotions.length; i++) {
+				paraPromotions[tempPromotions[i]] = true;
+			} // Of for i
+		} catch (Exception ee) {
+			System.out.println(
+					"Error occurred in MF2DBooleanIncrementalAlone.threeWayRecommend(int)\r\n"
+							+ ee);
+		} // Of try
+
+		// Step 5. Construct the lists.
+		int[][] resultArrays = new int[2][];
+		resultArrays[0] = tempRecommendations;
+		resultArrays[1] = tempPromotions;
+
+		return resultArrays;
+	}// Of threeWayRecommend
 
 	/**
 	 ************************ 
@@ -234,54 +373,57 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 			int paraNumRatings, double paraRatingLowerBound, double paraRatingUpperBound,
 			int paraRounds, int paraIncrementalRounds) {
 		// Step 1. Read data and set parameters.
-		MF2DBooleanIncremental tempMF = null;
+
+		RatingSystem2DBoolean tempDataset = null;
 		try {
-			tempMF = new MF2DBooleanIncremental(paraFilename, paraNumUsers, paraNumItems,
+			tempDataset = new RatingSystem2DBoolean(paraFilename, paraNumUsers, paraNumItems,
 					paraNumRatings, paraRatingLowerBound, paraRatingUpperBound);
 		} catch (Exception e) {
 			e.printStackTrace();
 		} // Of try
+		tempDataset.setAllTraining();
+		tempDataset.adjustUsingMeanRating();
 
-		tempMF.setParameters(10, 0.0001, 0.005, NO_REGULAR, 200);
-		tempMF.setAllTraining();
-		tempMF.adjustUsingMeanRating();
+		MF2DBooleanIncremental tempLearner = new MF2DBooleanIncremental(tempDataset);
+
+		tempLearner.setParameters(10, 0.0001, 0.005, NO_REGULAR, 200);
 
 		// Step 2. Pre-train
-		tempMF.initializeSubspaces(0.5);
+		tempLearner.initializeSubspaces(0.5);
 		System.out.println("Pre-training " + paraRounds + " rounds ...");
-		tempMF.train(paraRounds);
+		tempLearner.train(paraRounds);
 
 		// Step 3. Train for each user
 		double tempMAE;
 		int tempNumItemsForTrain = 0;
 		int tempNumPredictions = 0;
 		double tempErrorSum = 0;
-		for (int i = 0; i < tempMF.numUsers; i++) {
+		for (int i = 0; i < tempDataset.getNumUsers(); i++) {
 			// System.out.println("User " + i);
 
 			// Step 3.1 One half items, e.g., {0, 2, 4, ...} for training.
-			tempNumItemsForTrain = tempMF.data[i].length / 2;
+			tempNumItemsForTrain = tempDataset.getUserNumRatings(i) / 2;
 			int[] tempIndices = new int[tempNumItemsForTrain];
 			for (int j = 0; j < tempNumItemsForTrain; j++) {
-				tempIndices[j] = tempMF.data[i][j * 2].item;
+				tempIndices[j] = tempDataset.getTriple(i, j * 2).item;
 			} // Of for j
-			tempMF.setUserTraining(i, tempIndices);
+			tempDataset.setUserTraining(i, tempIndices);
 
 			// Step 3.2 Incremental training.
-			tempMF.trainUser(i);
+			tempLearner.trainUser(i);
 
 			// Step 3.3 Prediction and compute error.
 			int tempItem;
 			double tempPrediction;
-			for (int j = tempNumItemsForTrain; j < tempMF.data[i].length; j++) {
-				tempItem = tempMF.data[i][j].item;
-				tempPrediction = tempMF.predict(i, tempItem);
-				tempErrorSum += Math.abs(tempPrediction - tempMF.data[i][j].rating);
+			for (int j = tempNumItemsForTrain; j < tempDataset.getUserNumRatings(i); j++) {
+				tempItem = tempDataset.getTriple(i, j).item;
+				tempPrediction = tempLearner.predict(i, tempItem);
+				tempErrorSum += Math.abs(tempPrediction - tempDataset.getTriple(i, j).rating);
 				tempNumPredictions++;
 			} // Of for j
 
 			// Step 3.4 Restore data of this user.
-			tempMF.setUserAllTraining(i);
+			tempDataset.setUserAllTraining(i);
 
 			// Step 3.5 Show message.
 			tempMAE = tempErrorSum / tempNumPredictions;

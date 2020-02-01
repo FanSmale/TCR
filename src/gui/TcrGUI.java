@@ -2,31 +2,37 @@ package gui;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.*;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Properties;
 
 import javax.swing.JComboBox;
 
 import algorithm.*;
-import common.Common;
-import common.SimpleTools;
+import common.*;
 import gui.guicommon.*;
 import gui.guidialog.common.HelpDialog;
 import gui.others.*;
 
 /**
- * The GUI of TCR. <br>
+ * The GUI of TCRAlone. <br>
  * Project: Three-way conversational recommendation.<br>
  * 
  * @author Fan Min<br>
- *         www.fansmale.com, github.com/fansmale/TCR.<br>
+ *         www.fansmale.com, github.com/fansmale/TCRAlone.<br>
  *         Email: minfan@swpu.edu.cn, minfanphd@163.com.<br>
  * @date Created: January 28, 2020. <br>
- *       Last modified: January 30, 2020.
+ *       Last modified: February 1, 2020.
  * @version 1.0
  */
 
-public class TcrGUI implements ActionListener, ItemListener {
+public class TcrGUI implements ActionListener, ItemListener, TextListener {
+	/**
+	 * The properties for setting.
+	 */
+	private Properties settings = new Properties();
+	
 	/**
 	 * Select the arff file.
 	 */
@@ -183,6 +189,8 @@ public class TcrGUI implements ActionListener, ItemListener {
 		sourceFilePanel.setLayout(new GridLayout(2, 6));
 		filenameField = new FilenameField(30);
 		filenameField.setText("data/jester-data-1/jester-data-1.txt");
+		filenameField.addTextListener(this);
+		
 		sourceFilePanel.add(new Label("The .arff file:"));
 		sourceFilePanel.add(filenameField);
 
@@ -400,16 +408,22 @@ public class TcrGUI implements ActionListener, ItemListener {
 		// Read the data here.
 		TCR tempTcr = new TCR(tempFilename, tempNumUsers, tempNumItems, tempNumRatings,
 				ratingBounds[0], ratingBounds[1]);
-		tempTcr.setParameters(tempRank, tempAlpha, tempLambda, tempAlgorithm, tempPretrainRounds);
-		tempTcr.setPopularityThresholds(popularityThresholds);
-		tempTcr.setFavoriteThresholds(favoriteThresholds);
 		tempTcr.setLikeThreshold(tempLikeThreshold);
-		tempTcr.setMaturityThreshold(tempMaturityThreshold);
-		tempTcr.setRecommendationLength(tempRecommendationLength);
-		tempTcr.setRecommendationRatio(tempRecommendationRatio);
-		tempTcr.setIncrementalTrainRounds(tempIncrementalTrainRounds);
+
+		tempTcr.stage1Recommender.setPopularityThresholds(popularityThresholds);
+		tempTcr.stage1Recommender.setMaturityThreshold(tempMaturityThreshold);
+		tempTcr.stage1Recommender.setRecommendationLength(tempRecommendationLength);
+		tempTcr.stage1Recommender.setRecommendationRatio(tempRecommendationRatio);
+
+		tempTcr.stage2Recommender.setParameters(tempRank, tempAlpha, tempLambda, tempAlgorithm,
+				tempPretrainRounds);
+		tempTcr.stage2Recommender.setFavoriteThresholds(favoriteThresholds);
+		tempTcr.stage2Recommender.setRecommendationLength(tempRecommendationLength);
+		tempTcr.stage2Recommender.setRecommendationRatio(tempRecommendationRatio);
+		tempTcr.stage2Recommender.setIncrementalTrainRounds(tempIncrementalTrainRounds);
+
 		System.out.println("Before pretrain");
-		tempTcr.pretrain();
+		tempTcr.stage2Recommender.pretrain();
 		System.out.println("After pretrain");
 
 		double tempMinCost = Double.MAX_VALUE;
@@ -468,7 +482,6 @@ public class TcrGUI implements ActionListener, ItemListener {
 	 *************************** 
 	 * Set the cost matrix.
 	 *************************** 
-	 */
 	public void setCostMatrix(double[][] paraCostMatrix) {
 		costMatrix = paraCostMatrix;
 		for (int i = 0; i < costMatrixFields.length; i++) {
@@ -477,6 +490,72 @@ public class TcrGUI implements ActionListener, ItemListener {
 			} // Of for j
 		} // Of for i
 	}// Of setCostMatrix
+	 */
+
+	/**
+	 *************************** 
+	 * Read properties to settings.
+	 *************************** 
+	 */
+	public void textValueChanged(TextEvent paraEvent) {
+		String tempPropertyFilename = "";
+		String tempFilename = filenameField.getText().trim();
+		if (tempFilename.indexOf("jester") > 0) {
+			tempPropertyFilename = "src/properties/jester.properties";
+		} else if (tempFilename.toLowerCase().indexOf("movielens100k") > 0) {
+			tempPropertyFilename = "src/properties/MovieLens100k.properties";
+		} else {
+			System.out.println("Unknown dataset.");
+			return;
+		}//Of if
+		
+		try {
+			InputStream tempInputStream = new BufferedInputStream(
+					new FileInputStream(tempPropertyFilename));
+			settings.load(tempInputStream);
+
+			compressedFormatCheckbox.setState(Boolean.getBoolean(settings.getProperty("compressed")));
+			
+			numUsersField.setText(settings.getProperty("numUsers"));
+			numItemsField.setText(settings.getProperty("numItems"));
+			numRatingsField.setText(settings.getProperty("numRatings"));
+			
+			costMatrixFields[0][0].setText(settings.getProperty("NN"));
+			costMatrixFields[0][1].setText(settings.getProperty("NP"));
+			costMatrixFields[1][0].setText(settings.getProperty("BN"));
+			costMatrixFields[1][1].setText(settings.getProperty("BP"));
+			costMatrixFields[2][0].setText(settings.getProperty("PN"));
+			costMatrixFields[2][1].setText(settings.getProperty("PP"));
+			
+			ratingBoundFields[0].setText(settings.getProperty("ratingLowerBound"));
+			ratingBoundFields[1].setText(settings.getProperty("ratingUpperBound"));
+
+			recommendationLengthField.setText(settings.getProperty("recommendationLength"));
+			recommendationRatioField.setText(settings.getProperty("recommendationRatio"));
+
+			likeThresholdField.setText(settings.getProperty("likeThreshold"));
+
+			maturityThresholdField.setText(settings.getProperty("maturityThreshold"));
+			
+			popularityThresholdFields[0].setText(settings.getProperty("semiPopularThreshold"));
+			popularityThresholdFields[1].setText(settings.getProperty("popularThreshold"));
+
+			favoriteThresholdFields[0].setText(settings.getProperty("semiFavoriteThreshold"));
+			favoriteThresholdFields[1].setText(settings.getProperty("favoriteThreshold"));
+			
+			mfAlgorithmJComboBox.setSelectedIndex(Integer.parseInt(settings.getProperty("mfAlgorithm")));
+			
+			pretrainRoundsField.setText(settings.getProperty("pretrainRounds"));
+			incrementalTrainRoundsField.setText(settings.getProperty("incrementalTrainRounds"));
+			
+			rankField.setText(settings.getProperty("rank"));
+
+			alphaField.setText(settings.getProperty("alpha"));
+			lambdaField.setText(settings.getProperty("lambda"));
+		} catch (Exception ee) {
+			System.out.println("Error occurred while reading properties: " + ee);
+		} // Of try
+	}// Of textValueChanged
 
 	/**
 	 *************************** 
@@ -489,4 +568,4 @@ public class TcrGUI implements ActionListener, ItemListener {
 	public static void main(String args[]) {
 		new TcrGUI();
 	}// Of main
-}// Of class Crop
+}// Of class TcrGUI

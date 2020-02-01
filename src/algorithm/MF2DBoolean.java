@@ -3,10 +3,11 @@ package algorithm;
 import java.io.*;
 
 import common.Common;
-import datamodel.RatingSystem2DBoolean;
+import datamodel.*;
 
 /**
- * Implement two matrix factorization algorithms. <br>
+ * Implement two matrix factorization algorithms, where data is stand alone.
+ * <br>
  * Project: Three-way conversational recommendation.<br>
  * 
  * @author Fan Min<br>
@@ -17,7 +18,7 @@ import datamodel.RatingSystem2DBoolean;
  * @version 1.0
  */
 
-public class MF2DBoolean extends RatingSystem2DBoolean {
+public class MF2DBoolean extends UserBasedThreeWayRecommender {
 
 	/**
 	 * A parameter for controlling learning regular.
@@ -93,13 +94,28 @@ public class MF2DBoolean extends RatingSystem2DBoolean {
 	 *            The upper bound of ratings.
 	 ************************ 
 	 */
-	public MF2DBoolean(String paraFilename, int paraNumUsers, int paraNumItems, int paraNumRatings,
-			double paraRatingLowerBound, double paraRatingUpperBound) {
+	public MF2DBoolean(String paraFilename, int paraNumUsers, int paraNumItems,
+			int paraNumRatings, double paraRatingLowerBound, double paraRatingUpperBound) {
 		super(paraFilename, paraNumUsers, paraNumItems, paraNumRatings, paraRatingLowerBound,
 				paraRatingUpperBound);
 
 		initialize();
 	}// Of the first constructor
+
+	/**
+	 ************************ 
+	 * The second constructor.
+	 * 
+	 * @param paraDataset
+	 *            The given dataset.
+	 ************************ 
+	 */
+	public MF2DBoolean(RatingSystem2DBoolean paraDataset) {
+		super(paraDataset);
+		dataset = paraDataset;
+
+		initialize();
+	}// Of the second constructor
 
 	/**
 	 ************************ 
@@ -143,6 +159,25 @@ public class MF2DBoolean extends RatingSystem2DBoolean {
 	}// Of initialize
 
 	/**
+	 *************************
+	 * Not implemented here.
+	 * 
+	 * @param paraUser
+	 *            The user.
+	 * @param paraRecommended
+	 *            Indicate which items have already been recommended.
+	 * @param paraPromoted
+	 *            Indicate which items have already been promoted.
+	 * @return An integer matrix, where the first row indicates recommended
+	 *         items, while the second indicates promoted ones.
+	 *************************
+	 */
+	public int[][] threeWayRecommend(int paraUser, boolean[] paraRecommended,
+			boolean[] paraPromoted) {
+		return null;
+	}// Of threeWayRecommend
+
+	/**
 	 ************************ 
 	 * Initialize subspaces. Each value is in [-paraRange, +paraRange].
 	 * 
@@ -151,17 +186,17 @@ public class MF2DBoolean extends RatingSystem2DBoolean {
 	 */
 	void initializeSubspaces(double paraRange) {
 		subspaceValueRange = paraRange;
-		userSubspace = new double[numUsers][rank];
+		userSubspace = new double[dataset.getNumUsers()][rank];
 
-		for (int i = 0; i < numUsers; i++) {
+		for (int i = 0; i < dataset.getNumUsers(); i++) {
 			for (int j = 0; j < rank; j++) {
 				userSubspace[i][j] = (Common.random.nextDouble() - 0.5) * 2 * subspaceValueRange;
 			} // of for j
 		} // Of for i
 
 		// SimpleTool.printMatrix(DataInfo.userFeature);
-		itemSubspace = new double[numItems][rank];
-		for (int i = 0; i < numItems; i++) {
+		itemSubspace = new double[dataset.getNumItems()][rank];
+		for (int i = 0; i < dataset.getNumItems(); i++) {
 			for (int j = 0; j < rank; j++) {
 				itemSubspace[i][j] = (Common.random.nextDouble() - 0.5) * 2 * subspaceValueRange;
 			} // Of for j
@@ -194,8 +229,8 @@ public class MF2DBoolean extends RatingSystem2DBoolean {
 	 */
 	public double[] predictForUser(int paraUser) {
 		// System.out.println("predictForUser(" + paraUser + ")");
-		double[] resultPredictions = new double[numItems];
-		for (int i = 0; i < numItems; i++) {
+		double[] resultPredictions = new double[dataset.getNumItems()];
+		for (int i = 0; i < dataset.getNumItems(); i++) {
 			resultPredictions[i] = predict(paraUser, i);
 		} // Of for i
 		return resultPredictions;
@@ -257,16 +292,17 @@ public class MF2DBoolean extends RatingSystem2DBoolean {
 	 ************************ 
 	 */
 	public void updateNoRegular() {
-		for (int i = 0; i < numUsers; i++) {
-			for (int j = 0; j < data[i].length; j++) {
+		for (int i = 0; i < dataset.getNumUsers(); i++) {
+			for (int j = 0; j < dataset.getUserNumRatings(i); j++) {
 				// Ignore the testing set.
-				if (!trainingIndicationMatrix[i][j]) {
+				if (!dataset.getTrainIndication(i, j)) {
 					continue;
 				} // Of if
 
-				int tempUserId = data[i][j].user;
-				int tempItemId = data[i][j].item;
-				double tempRate = data[i][j].rating;
+				Triple tempTriple = dataset.getTriple(i, j);
+				int tempUserId = tempTriple.user;
+				int tempItemId = tempTriple.item;
+				double tempRate = tempTriple.rating;
 
 				double tempResidual = tempRate - predict(tempUserId, tempItemId); // Residual
 				// tempResidual = Math.abs(tempResidual);
@@ -294,16 +330,17 @@ public class MF2DBoolean extends RatingSystem2DBoolean {
 	 ************************ 
 	 */
 	public void updatePQRegular() {
-		for (int i = 0; i < numUsers; i++) {
-			for (int j = 0; j < data[i].length; j++) {
+		for (int i = 0; i < dataset.getNumUsers(); i++) {
+			for (int j = 0; j < dataset.getUserNumRatings(i); j++) {
 				// Ignore the testing set.
-				if (!trainingIndicationMatrix[i][j]) {
+				if (!dataset.getTrainIndication(i, j)) {
 					continue;
 				} // Of if
 
-				int tempUserId = data[i][j].user;
-				int tempItemId = data[i][j].item;
-				double tempRate = data[i][j].rating;
+				Triple tempTriple = dataset.getTriple(i, j);
+				int tempUserId = tempTriple.user;
+				int tempItemId = tempTriple.item;
+				double tempRate = tempTriple.rating;
 
 				double tempResidual = tempRate - predict(tempUserId, tempItemId); // Residual
 				// tempResidual = Math.abs(tempResidual);
@@ -338,24 +375,25 @@ public class MF2DBoolean extends RatingSystem2DBoolean {
 		double resultRsme = 0;
 		int tempTestCount = 0;
 
-		for (int i = 0; i < numUsers; i++) {
-			for (int j = 0; j < data[i].length; j++) {
+		for (int i = 0; i < dataset.getNumUsers(); i++) {
+			for (int j = 0; j < dataset.getUserNumRatings(i); j++) {
 				// Ignore the training set.
-				if (trainingIndicationMatrix[i][j]) {
+				if (dataset.getTrainIndication(i, j)) {
 					continue;
 				} // Of if
 
-				int tempUserIndex = data[i][j].user;
-				int tempItemIndex = data[i][j].item;
-				double tempRate = data[i][j].rating;
+				Triple tempTriple = dataset.getTriple(i, j);
+				int tempUserId = tempTriple.user;
+				int tempItemId = tempTriple.item;
+				double tempRate = tempTriple.rating;
 
-				double tempPrediction = predict(tempUserIndex, tempItemIndex);// +
-																				// DataInfo.mean_rating;
+				double tempPrediction = predict(tempUserId, tempItemId);// +
+																		// DataInfo.mean_rating;
 
-				if (tempPrediction < ratingLowerBound) {
-					tempPrediction = ratingLowerBound;
-				} else if (tempPrediction > ratingUpperBound) {
-					tempPrediction = ratingUpperBound;
+				if (tempPrediction < dataset.getRatingLowerBound()) {
+					tempPrediction = dataset.getRatingLowerBound();
+				} else if (tempPrediction > dataset.getRatingUpperBound()) {
+					tempPrediction = dataset.getRatingUpperBound();
 				} // Of if
 
 				double tempError = tempRate - tempPrediction;
@@ -378,25 +416,25 @@ public class MF2DBoolean extends RatingSystem2DBoolean {
 		double resultMae = 0;
 		int tempTestCount = 0;
 
-		for (int i = 0; i < numUsers; i++) {
-			for (int j = 0; j < data[i].length; j++) {
+		for (int i = 0; i < dataset.getNumUsers(); i++) {
+			for (int j = 0; j < dataset.getUserNumRatings(i); j++) {
 				// Ignore the training set.
-				if (trainingIndicationMatrix[i][j]) {
+				if (dataset.getTrainIndication(i, j)) {
 					continue;
 				} // Of if
 
-				int tempUserIndex = data[i][j].user;
-				int tempItemIndex = data[i][j].item;
-				double tempRate = data[i][j].rating;
+				Triple tempTriple = dataset.getTriple(i, j);
+				int tempUserId = tempTriple.user;
+				int tempItemId = tempTriple.item;
+				double tempRate = tempTriple.rating;
 
-				double tempPrediction = predict(tempUserIndex, tempItemIndex);
+				double tempPrediction = predict(tempUserId, tempItemId);
 
-				if (tempPrediction < ratingLowerBound) {
-					tempPrediction = ratingLowerBound;
+				if (tempPrediction < dataset.getRatingLowerBound()) {
+					tempPrediction = dataset.getRatingLowerBound();
+				} else if (tempPrediction > dataset.getRatingUpperBound()) {
+					tempPrediction = dataset.getRatingUpperBound();
 				} // Of if
-				if (tempPrediction > ratingUpperBound) {
-					tempPrediction = ratingUpperBound;
-				} // of if
 
 				double tempError = tempRate - tempPrediction;
 
@@ -419,24 +457,27 @@ public class MF2DBoolean extends RatingSystem2DBoolean {
 			int paraRounds) {
 		try {
 			// Step 1. read the training and testing data
-			MF2DBoolean tempMF = new MF2DBoolean(paraFilename, paraNumUsers, paraNumItems,
-					paraNumRatings, paraRatingLowerBound, paraRatingUpperBound);
+			RatingSystem2DBoolean tempDataset = new RatingSystem2DBoolean(paraFilename,
+					paraNumUsers, paraNumItems, paraNumRatings, paraRatingLowerBound,
+					paraRatingUpperBound);
 
-			tempMF.setParameters(10, 0.0001, 0.005, PQ_REGULAR, 200);
-			tempMF.initializeTraining(0.8);
-			tempMF.adjustUsingMeanRating();
+			tempDataset.initializeTraining(0.8);
+			tempDataset.adjustUsingMeanRating();
 
+			MF2DBoolean tempLearner = new MF2DBoolean(tempDataset);
+
+			tempLearner.setParameters(10, 0.0001, 0.005, PQ_REGULAR, 200);
 			// tempMF.setTestingSetRemainder(2);
 			// Step 2. Initialize the feature matrices U and V
-			tempMF.initializeSubspaces(0.5);
+			tempLearner.initializeSubspaces(0.5);
 
 			// Step 3. update and predict
 			System.out.println("Begin Training ! ! !");
 
-			tempMF.train(paraRounds);
+			tempLearner.train(paraRounds);
 
-			double tempMAE = tempMF.mae();
-			double tempRSME = tempMF.rsme();
+			double tempMAE = tempLearner.mae();
+			double tempRSME = tempLearner.rsme();
 			System.out.println("Finally, MAE = " + tempMAE + ", RSME = " + tempRSME);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -453,25 +494,27 @@ public class MF2DBoolean extends RatingSystem2DBoolean {
 			double paraRatingUpperBound, int paraRounds) {
 		try {
 			// Step 1. read the training and testing data
-			MF2DBoolean tempMF = new MF2DBoolean(paraFilename, paraNumUsers, paraNumItems,
-					paraNumRatings, paraRatingLowerBound, paraRatingUpperBound);
+			RatingSystem2DBoolean tempDataset = new RatingSystem2DBoolean(paraFilename,
+					paraNumUsers, paraNumItems, paraNumRatings, paraRatingLowerBound,
+					paraRatingUpperBound);
 
-			tempMF.setParameters(10, 0.0001, 0.005, NO_REGULAR, 200);
-			tempMF.initializeTraining(1.0);
-			tempMF.adjustUsingMeanRating();
+			tempDataset.initializeTraining(1.0);
+			tempDataset.adjustUsingMeanRating();
 
+			MF2DBoolean tempLearner = new MF2DBoolean(tempDataset);
 			// tempMF.setTestingSetRemainder(2);
 			// Step 2. Initialize the feature matrices U and V
-			tempMF.initializeSubspaces(0.5);
+			tempLearner.setParameters(10, 0.0001, 0.005, NO_REGULAR, 200);
+			tempLearner.initializeSubspaces(0.5);
 
 			// Step 3. update and predict
 			System.out.println("Begin Training ! ! !");
 
-			tempMF.train(paraRounds);
+			tempLearner.train(paraRounds);
 
-			tempMF.initializeTraining(0);
-			double tempMAE = tempMF.mae();
-			double tempRSME = tempMF.rsme();
+			tempDataset.initializeTraining(0);
+			double tempMAE = tempLearner.mae();
+			double tempRSME = tempLearner.rsme();
 			System.out.println("Finally, MAE = " + tempMAE + ", RSME = " + tempRSME);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -489,4 +532,4 @@ public class MF2DBoolean extends RatingSystem2DBoolean {
 		// testSameTrainingTesting("data/jester-data-1/jester-data-1.txt",
 		// 24983, 101, 1810455, -10, 10, 500);
 	}// Of main
-}// Of class MatrixFactorization2DBooleanIndication
+}// Of class MF2DBoolean

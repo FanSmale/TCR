@@ -13,9 +13,12 @@ This is the help document of our paper "three-way conversational recommendation"
 Here are the explanation of settings.
 
 --Data set information
-The .arff file: The data filename. Please use Browse to select.
+The .arff file: The data filename. Please use Browse to select. While selecting
+  a new file, respective settings for our experimentation will be filled. 
+  You can adjust them further.
 Data in compressed format: No for uncompressed format, where missing value is 
-  indicated by 99. Yes for compressed format, where triples are stored. Attention: it has not been implemented yet!
+  indicated by 99. Yes for compressed format, where triples are stored. 
+  Attention: it has not been implemented yet!
 Users: Number of users.
 Items: Number of items.
 Ratings: Number of ratings.
