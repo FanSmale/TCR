@@ -98,14 +98,16 @@ public class PopularityBasedRecommendation extends UserBasedThreeWayRecommender 
 	 *            The lower bound of ratings.
 	 * @param paraRatingUpperBound
 	 *            The upper bound of ratings.
+	 * @param paraCompress
+	 *            Is the data in compress format?
 	 *********************************** 
 	 */
-	public PopularityBasedRecommendation(String paraFilename, int paraNumUsers,
-			int paraNumItems, int paraNumRatings, double paraRatingLowerBound,
-			double paraRatingUpperBound) {
+	public PopularityBasedRecommendation(String paraFilename, int paraNumUsers, int paraNumItems,
+			int paraNumRatings, double paraRatingLowerBound, double paraRatingUpperBound,
+			boolean paraCompress) {
 		// Step 1. Read data.
 		super(paraFilename, paraNumUsers, paraNumItems, paraNumRatings, paraRatingLowerBound,
-				paraRatingUpperBound);
+				paraRatingUpperBound, paraCompress);
 
 		// Step 3. Initialize.
 		initialize();
@@ -134,7 +136,7 @@ public class PopularityBasedRecommendation extends UserBasedThreeWayRecommender 
 		maturityThreshold = DEFAULT_MATURITY_THRESHOLD;
 
 		maxItemPopularity = computeMaxItemPopularity();
-		
+
 		computePopAndSemipopItems();
 	}// Of initialize
 
@@ -178,7 +180,6 @@ public class PopularityBasedRecommendation extends UserBasedThreeWayRecommender 
 	public void setPopularityThresholds(double[] paraThresholds) {
 		popularityThresholds = paraThresholds;
 	}// Of setPopularityThresholds
-
 
 	/**
 	 *********************************** 
@@ -263,7 +264,7 @@ public class PopularityBasedRecommendation extends UserBasedThreeWayRecommender 
 	 * 
 	 * @param paraUser
 	 *            The user index.
-	 * @return The total cost of the current user.
+	 * @return Recommendations and promotions.
 	 *********************************** 
 	 */
 	public boolean[][] recommendForUser(int paraUser) {
@@ -309,7 +310,6 @@ public class PopularityBasedRecommendation extends UserBasedThreeWayRecommender 
 		// Step 4. Initialize
 		boolean[] tempCurrentUserRecommendations = new boolean[numItems];
 		boolean[] tempCurrentUserPromotions = new boolean[numItems];
-		System.out.println("numItems = " + numItems);
 
 		int[][] tempRecommendPromote = null;
 
@@ -500,7 +500,7 @@ public class PopularityBasedRecommendation extends UserBasedThreeWayRecommender 
 		// TIR2 tir = new TIR2("data/movielens100k.data", 943, 1682, 100000,
 		// -10, 10);
 		PopularityBasedRecommendation tempPbr = new PopularityBasedRecommendation(
-				"data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10);
+				"data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10, false);
 		System.out.println(tempPbr);
 
 		tempPbr.setPopularityThresholds(new double[] { 0.6, 0.7 });

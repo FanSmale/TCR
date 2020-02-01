@@ -407,9 +407,10 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 
 		// Read the data here.
 		TCR tempTcr = new TCR(tempFilename, tempNumUsers, tempNumItems, tempNumRatings,
-				ratingBounds[0], ratingBounds[1]);
+				ratingBounds[0], ratingBounds[1], tempCompressed);
 		tempTcr.setLikeThreshold(tempLikeThreshold);
-
+		tempTcr.setCostMatrix(costMatrix);
+	
 		tempTcr.stage1Recommender.setPopularityThresholds(popularityThresholds);
 		tempTcr.stage1Recommender.setMaturityThreshold(tempMaturityThreshold);
 		tempTcr.stage1Recommender.setRecommendationLength(tempRecommendationLength);
@@ -421,6 +422,7 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 		tempTcr.stage2Recommender.setRecommendationLength(tempRecommendationLength);
 		tempTcr.stage2Recommender.setRecommendationRatio(tempRecommendationRatio);
 		tempTcr.stage2Recommender.setIncrementalTrainRounds(tempIncrementalTrainRounds);
+		tempTcr.stage2Recommender.setLikeThreshold(tempLikeThreshold);
 
 		System.out.println("Before pretrain");
 		tempTcr.stage2Recommender.pretrain();
@@ -434,7 +436,8 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 			// tir.computePopAndSemipopItems(0.8, 0.6);
 			// double tempTotalCost = tir.leaveUserOutRecommend();
 
-			tempCostArray[i] = tempTcr.leaveUserOutRecommend();
+			tempTcr.leaveUserOutRecommend();
+			tempCostArray[i] = tempTcr.computeTotalCost();
 
 			messageTextArea.append("\r\n" + i + ": cost = " + tempCostArray[i] + "\r\n"
 					+ Arrays.deepToString(tempTcr.getRecommendationStatistics()));
@@ -502,8 +505,10 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 		String tempFilename = filenameField.getText().trim();
 		if (tempFilename.indexOf("jester") > 0) {
 			tempPropertyFilename = "src/properties/jester.properties";
-		} else if (tempFilename.toLowerCase().indexOf("movielens100k") > 0) {
-			tempPropertyFilename = "src/properties/MovieLens100k.properties";
+		} else if (tempFilename.toLowerCase().indexOf("movielens943u1682m") > 0) {
+			tempPropertyFilename = "src/properties/MovieLens943u1682m.properties";
+		} else if (tempFilename.toLowerCase().indexOf("movielens706u8570m") > 0) {
+			tempPropertyFilename = "src/properties/MovieLens706u8570m.properties";
 		} else {
 			System.out.println("Unknown dataset.");
 			return;
@@ -514,7 +519,7 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 					new FileInputStream(tempPropertyFilename));
 			settings.load(tempInputStream);
 
-			compressedFormatCheckbox.setState(Boolean.getBoolean(settings.getProperty("compressed")));
+			compressedFormatCheckbox.setState(Boolean.parseBoolean(settings.getProperty("compressed")));
 			
 			numUsersField.setText(settings.getProperty("numUsers"));
 			numItemsField.setText(settings.getProperty("numItems"));

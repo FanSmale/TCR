@@ -71,6 +71,11 @@ public class TCR {
 	int[][] recommendationStatistics = new int[3][2];
 
 	/**
+	 * The total cost.
+	 */
+	double totalCost;
+
+	/**
 	 * Stage 1 recommender.
 	 */
 	public PopularityBasedRecommendation stage1Recommender;
@@ -96,12 +101,14 @@ public class TCR {
 	 *            The lower bound of ratings.
 	 * @param paraRatingUpperBound
 	 *            The upper bound of ratings.
+	 * @param paraCompress
+	 *            Is the data in compress format?
 	 *********************************** 
 	 */
 	public TCR(String paraFilename, int paraNumUsers, int paraNumItems, int paraNumRatings,
-			double paraRatingLowerBound, double paraRatingUpperBound) {
+			double paraRatingLowerBound, double paraRatingUpperBound, boolean paraCompress) {
 		dataset = new RatingSystem2DBoolean(paraFilename, paraNumUsers, paraNumItems,
-				paraNumRatings, paraRatingLowerBound, paraRatingUpperBound);
+				paraNumRatings, paraRatingLowerBound, paraRatingUpperBound, paraCompress);
 
 		stage1Recommender = new PopularityBasedRecommendation(dataset);
 		stage2Recommender = new MF2DBooleanIncremental(dataset);
@@ -119,7 +126,7 @@ public class TCR {
 		numUsers = dataset.getNumUsers();
 		numItems = dataset.getNumItems();
 		numRatings = dataset.getNumRatings();
-		
+
 		costMatrix = new double[3][2];
 		costMatrix[0][0] = 2; // NN
 		costMatrix[0][1] = 40; // NP
@@ -160,6 +167,15 @@ public class TCR {
 	public void setCostMatrix(double[][] paraCostMatrix) {
 		costMatrix = paraCostMatrix;
 	}// Of setCostMatrix
+
+	/**
+	 *********************************** 
+	 * Getter.
+	 *********************************** 
+	 */
+	public double getTotalCost() {
+		return totalCost;
+	}// Of getTotalCost
 
 	/**
 	 *********************************** 
@@ -210,6 +226,8 @@ public class TCR {
 	public double computeTotalCostForUser(int paraUser, boolean[] paraRecommendations,
 			boolean[] paraPromotions) {
 
+		// Adjust here.
+		double tempActualThreshold = likeThreshold - dataset.getMeanRating();
 		// Step 1. Check them.
 		int tempUserNumRatings = dataset.getUserNumRatings(paraUser);
 		double resultTotalCost = 0;
@@ -225,9 +243,12 @@ public class TCR {
 			} // Of if
 
 			tempLike = 0;// 0 means "dislike".
-			if (dataset.getTriple(paraUser, i).rating > likeThreshold) {
+			if (dataset.getTriple(paraUser, i).rating > tempActualThreshold) {
 				tempLike = 1;// 1 means "like".
 			} // Of if
+				// System.out.println(
+				// "" + dataset.getTriple(paraUser, i) + " vs. likeThreshold " +
+				// tempActualThreshold);
 
 			resultTotalCost += costMatrix[tempBehavior][tempLike];
 		} // Of for i
@@ -243,10 +264,57 @@ public class TCR {
 	 *            The index of the given user.
 	 * @return The recommendation statistics for the user.
 	 *********************************** 
+	 *         public int[][] computeRecommendationStatitics() { // Initialize.
+	 *         for (int i = 0; i < recommendationStatistics.length; i++) { for
+	 *         (int j = 0; j < recommendationStatistics[0].length; j++) {
+	 *         recommendationStatistics[i][j] = 0; } // Of for j } // Of for i
+	 * 
+	 *         // Add. for (int i = 0; i < numUsers; i++) { int[][]
+	 *         tempUserRecommendationStatistics =
+	 *         computeUserRecommendationStatistics(i); for (int j = 0; j <
+	 *         recommendationStatistics.length; j++) { for (int k = 0; k <
+	 *         recommendationStatistics[0].length; k++) {
+	 *         recommendationStatistics[j][k] +=
+	 *         tempUserRecommendationStatistics[j][k]; } // Of for k } // Of for
+	 *         j } // Of for i
+	 * 
+	 *         return recommendationStatistics; }// Of
+	 *         computeRecommendationStatitics
 	 */
-	public int[][] computeUserRecommendationStatitics(int paraUser) {
+
+	/**
+	 *********************************** 
+	 * Compute recommendation statistics for a user.
+	 * 
+	 * @param paraUser
+	 *            The index of the given user.
+	 * @return The recommendation statistics for the user.
+	 *********************************** 
+	 */
+	public double computeTotalCost() {
+		totalCost = 0;
+		for (int i = 0; i < recommendationStatistics.length; i++) {
+			for (int j = 0; j < recommendationStatistics[0].length; j++) {
+				totalCost += costMatrix[i][j] * recommendationStatistics[i][j];
+			} // Of for j
+		} // Of for i
+
+		return totalCost;
+	}// Of computeTotalCost
+
+	/**
+	 *********************************** 
+	 * Compute recommendation statistics for a user.
+	 * 
+	 * @param paraUser
+	 *            The index of the given user.
+	 * @return The recommendation statistics for the user.
+	 *********************************** 
+	 */
+	public int[][] computeUserRecommendationStatistics(int paraUser) {
 		int[][] resultUserRecommendationStatistics = new int[3][2];
 
+		double tempActualThreshold = likeThreshold - dataset.getMeanRating();
 		// Step 1. Check them.
 		int tempUserNumRatings = dataset.getUserNumRatings(paraUser);
 		int tempBehavior;
@@ -261,7 +329,7 @@ public class TCR {
 			} // Of if
 
 			tempLike = 0;// 0 means "dislike".
-			if (dataset.getTriple(paraUser, i).rating > likeThreshold) {
+			if (dataset.getTriple(paraUser, i).rating > tempActualThreshold) {
 				tempLike = 1;// 1 means "like".
 			} // Of if
 
@@ -269,7 +337,7 @@ public class TCR {
 		} // Of for i
 
 		return resultUserRecommendationStatistics;
-	}// Of computeUserRecommendationStatitics
+	}// Of computeUserRecommendationStatistics
 
 	/**
 	 *********************************** 
@@ -280,20 +348,16 @@ public class TCR {
 	 */
 	public double leaveUserOutRecommend() {
 		double resultTotalCost = 0;
-		recommendationStatistics = new int[3][2];
 		for (int i = 0; i < numUsers; i++) {
 			if (i % 100 == 0) {
 				SimpleTools.processTrackingOutput("Recommending for user #" + i + ":");
 			} // Of if
-			recommendForUser(i);
+
 			resultTotalCost += recommendForUser(i);
-			int[][] tempUserStatistics = computeUserRecommendationStatitics(i);
-			for (int j = 0; j < tempUserStatistics.length; j++) {
-				for (int k = 0; k < tempUserStatistics[0].length; k++) {
-					recommendationStatistics[j][k] += tempUserStatistics[j][k];
-				} // Of for k
-			} // Of for j
 		} // Of for i
+
+		// computeRecommendationStatitics();
+		// computeTotalCost();
 
 		return resultTotalCost;
 	}// Of leaveUserOutRecommend
@@ -311,20 +375,25 @@ public class TCR {
 		SimpleTools.processTrackingOutput("\r\nUser " + paraUser);
 		// Step 1. Initialize
 		double resultTotalCost;
-		
-		Arrays.fill(currentUserRecommendations, false);
-		Arrays.fill(currentUserPromotions, false);
+
+		// Arrays.fill(currentUserRecommendations, false);
+		// Arrays.fill(currentUserPromotions, false);
 
 		// Step 2. Popularity-based recommendation.
-		stage1Recommender.threeWayRecommend(paraUser, currentUserRecommendations,
-				currentUserPromotions);
+		boolean[][] tempRecommendationMatrix = stage1Recommender.recommendForUser(paraUser);
+		currentUserRecommendations = tempRecommendationMatrix[0];
+		currentUserPromotions = tempRecommendationMatrix[1];
+
+		// stage1Recommender.threeWayRecommend(paraUser,
+		// currentUserRecommendations,
+		// currentUserPromotions);
 		resultTotalCost = computeTotalCostForUser(paraUser, currentUserRecommendations,
 				currentUserPromotions);
 		SimpleTools.variableTrackingOutput("User " + paraUser
 				+ ", after popularity based recommendation, total cost = " + resultTotalCost);
 
 		// Step 3. MF based recommendation.
-		stage2Recommender.threeWayRecommend(paraUser, currentUserRecommendations,
+		stage2Recommender.recommendForUser(paraUser, currentUserRecommendations,
 				currentUserPromotions);
 
 		resultTotalCost = computeTotalCostForUser(paraUser, currentUserRecommendations,
@@ -334,6 +403,28 @@ public class TCR {
 		// System.out.print("Finally, the cost of user " + paraUser + " is: " +
 		// resultTotalCost);
 		// System.out.println();
+
+		// Step 4. Update statistics
+		double tempActualThreshold = likeThreshold - dataset.getMeanRating();
+		int tempUserNumRatings = dataset.getUserNumRatings(paraUser);
+		int tempBehavior;
+		int tempLike;
+		for (int i = 0; i < tempUserNumRatings; i++) {
+			if (currentUserRecommendations[dataset.getTriple(paraUser, i).item]) {
+				tempBehavior = UserBasedThreeWayRecommender.RECOMMEND;
+			} else if (currentUserPromotions[dataset.getTriple(paraUser, i).item]) {
+				tempBehavior = UserBasedThreeWayRecommender.PROMOTE;
+			} else {
+				tempBehavior = UserBasedThreeWayRecommender.NON_RECOMMEND;
+			} // Of if
+
+			tempLike = 0;// 0 means "dislike".
+			if (dataset.getTriple(paraUser, i).rating > tempActualThreshold) {
+				tempLike = 1;// 1 means "like".
+			} // Of if
+
+			recommendationStatistics[tempBehavior][tempLike]++;
+		} // Of for i
 
 		return resultTotalCost;
 	}// Of recommendForUser
@@ -351,8 +442,8 @@ public class TCR {
 		// -10, 10);
 		SimpleTools.processTracking = true;
 
-		TCR tcr = new TCR("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455,
-				-10, 10);
+		TCR tcr = new TCR("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10,
+				false);
 		System.out.println(tcr);
 		tcr.stage2Recommender.pretrain();
 

@@ -82,16 +82,29 @@ public abstract class UserBasedThreeWayRecommender {
 
 	/**
 	 ************************ 
-	 * The second constructor.
+	 * The first constructor.
 	 * 
-	 * @param paraDataset
-	 *            The given dataset.
+	 * @param paraFilename
+	 *            The data filename.
+	 * @param paraNumUsers
+	 *            The number of users.
+	 * @param paraNumItems
+	 *            The number of items.
+	 * @param paraNumRatings
+	 *            The number of ratings.
+	 * @param paraRatingLowerBound
+	 *            The lower bound of ratings.
+	 * @param paraRatingUpperBound
+	 *            The upper bound of ratings.
+	 * @param paraCompress
+	 *            Is the data in compress format?
 	 ************************ 
 	 */
 	public UserBasedThreeWayRecommender(String paraFilename, int paraNumUsers, int paraNumItems,
-			int paraNumRatings, double paraRatingLowerBound, double paraRatingUpperBound) {
+			int paraNumRatings, double paraRatingLowerBound, double paraRatingUpperBound,
+			boolean paraCompress) {
 		dataset = new RatingSystem2DBoolean(paraFilename, paraNumUsers, paraNumItems,
-				paraNumRatings, paraRatingLowerBound, paraRatingUpperBound);
+				paraNumRatings, paraRatingLowerBound, paraRatingUpperBound, paraCompress);
 
 		initializeData();
 	}// Of the second constructor

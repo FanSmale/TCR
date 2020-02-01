@@ -124,7 +124,6 @@ public class FilenameField extends TextField implements ActionListener,
 		}//Of if
 		
 		String directoryName = fileDialog.getDirectory();
-		System.out.println("directoryName = " + directoryName);
 		// Use relative path if in the same area, Fan loves this one.
 		if (directoryName.indexOf(Common.rootDirectory) == 0) {
 			directoryName = directoryName.substring(Common.rootDirectory
@@ -132,7 +131,6 @@ public class FilenameField extends TextField implements ActionListener,
 		}//Of if
 		
 		String tempFilename = directoryName + fileDialog.getFile(); 
-		System.out.println("tempFilename = " + tempFilename);
 
 		setText(tempFilename);
 	}// Of actionPerformed

@@ -16,4 +16,14 @@ public class Triple {
 		item = paraItem;
 		rating = paraRating;
 	}//Of the first constructor
+
+	/**
+	 *********************
+	 * Show me.
+	 *********************
+	 */
+	public String toString() {
+		return "" + user + ", " + item + ", " + rating;
+	}//Of toString
+
 }// of class Triple
