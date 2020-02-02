@@ -53,7 +53,7 @@ public class RatingSystem2DBoolean {
 	/**
 	 * The whole data.
 	 */
-	protected Triple[][] data;
+	public Triple[][] data;
 
 	/**
 	 * The popularity of items. The ith user's popularity is data[i].length.
@@ -125,6 +125,7 @@ public class RatingSystem2DBoolean {
 	public RatingSystem2DBoolean(String paraFilename, int paraNumUsers, int paraNumItems,
 			int paraNumRatings, double paraRatingLowerBound, double paraRatingUpperBound,
 			double paraLikeThreshold, boolean paraCompress) {
+		// Step 1. Accept basic settings.
 		numUsers = paraNumUsers;
 		numItems = paraNumItems;
 		numRatings = paraNumRatings;
@@ -132,7 +133,7 @@ public class RatingSystem2DBoolean {
 		ratingUpperBound = paraRatingUpperBound;
 		likeThreshold = paraLikeThreshold;
 
-		// Allocate space.
+		// Step 2. Allocate space.
 		data = new Triple[numUsers][];
 		trainingIndicationMatrix = new boolean[numUsers][];
 
@@ -140,6 +141,7 @@ public class RatingSystem2DBoolean {
 		itemRatingSumArray = new double[numItems];
 		itemAverageRatingArray = new double[numItems];
 
+		// Step 3. Read data with two the support of two formats.
 		try {
 			if (!paraCompress) {
 				readData(paraFilename, paraNumUsers, paraNumItems, paraNumRatings);
@@ -151,12 +153,58 @@ public class RatingSystem2DBoolean {
 			System.exit(0);
 		} // Of try
 
-		for (int i = 0; i < numItems; i++) {
-			// 0.0001 to avoid NaN due to unrated items.
-			itemAverageRatingArray[i] = (itemRatingSumArray[i] + 0.0001)
-					/ (itemPopularityArray[i] + 0.0001);
-		} // Of for i
+		// Step 4. Adjust ratings for matrix factorization.
+		centralize();
+
+		// Step 5. Compute average rating for each item.
+		computeAverage();
 	}// Of the first constructor
+
+	/**
+	 ************************ 
+	 * The second constructor. Deep clone.
+	 * 
+	 * @param paraDataset
+	 *            The given dataset.
+	 ************************ 
+	 */
+	public RatingSystem2DBoolean(RatingSystem2DBoolean paraDataset) {
+		numUsers = paraDataset.numUsers;
+		numItems = paraDataset.numItems;
+		numRatings = paraDataset.numRatings;
+
+		data = new Triple[numUsers][];
+		for (int i = 0; i < numUsers; i++) {
+			data[i] = new Triple[paraDataset.data[i].length];
+			for (int j = 0; j < data[i].length; j++) {
+				Triple tempTriple = new Triple(paraDataset.data[i][j].user,
+						paraDataset.data[i][j].item, paraDataset.data[i][j].rating);
+				data[i][j] = tempTriple;
+			} // Of for j
+		} // Of for i
+
+		itemPopularityArray = new int[numItems];
+		itemRatingSumArray = new double[numItems];
+		itemAverageRatingArray = new double[numItems];
+		for (int i = 0; i < numItems; i++) {
+			itemPopularityArray[i] = paraDataset.itemPopularityArray[i];
+			itemRatingSumArray[i] = paraDataset.itemRatingSumArray[i];
+			itemAverageRatingArray[i] = paraDataset.itemAverageRatingArray[i];
+		} // Of for i
+
+		trainingIndicationMatrix = new boolean[numUsers][];
+		for (int i = 0; i < numUsers; i++) {
+			trainingIndicationMatrix[i] = new boolean[paraDataset.trainingIndicationMatrix[i].length];
+			for (int j = 0; j < trainingIndicationMatrix[i].length; j++) {
+				trainingIndicationMatrix[i][j] = paraDataset.trainingIndicationMatrix[i][j];
+			} // Of for j
+		} // Of for i
+
+		meanRating = paraDataset.meanRating;
+		ratingLowerBound = paraDataset.ratingLowerBound;
+		ratingUpperBound = paraDataset.ratingUpperBound;
+		likeThreshold = paraDataset.likeThreshold;
+	}// Of the second constructor
 
 	/**
 	 ************************ 
@@ -199,8 +247,6 @@ public class RatingSystem2DBoolean {
 					tempTripleArrayForUser[tempCurrentUserRatings] = new Triple(tempUserIndex,
 							tempItemIndex, tempRating);
 					tempCurrentUserRatings++;
-					itemPopularityArray[tempItemIndex]++;
-					itemRatingSumArray[tempItemIndex] += tempRating;
 				} // Of if
 			} // Of for i
 
@@ -269,9 +315,6 @@ public class RatingSystem2DBoolean {
 
 			tempTripleArrayForUser[tempUserNumRatings] = tempNewTriple;
 			tempUserNumRatings++;
-
-			itemPopularityArray[tempItem]++;
-			itemRatingSumArray[tempItem] += tempRating;
 
 			tempLastUser = tempUser;
 		} // Of for i
@@ -574,7 +617,36 @@ public class RatingSystem2DBoolean {
 		ratingUpperBound -= meanRating;
 
 		// Step 4. Update the like threshold.
-	}// Of adjustUsingMeanRating
+		likeThreshold -= meanRating;
+	}// Of centralize
+
+	/**
+	 ************************ 
+	 * Compute average rating of each item. It may be useful in M-distance based
+	 * prediction.
+	 ************************ 
+	 */
+	public void computeAverage() {
+		Arrays.fill(itemPopularityArray, 0);
+		Arrays.fill(itemRatingSumArray, 0);
+
+		int tempItem;
+		double tempRating;
+		for (int i = 0; i < data.length; i++) {
+			for (int j = 0; j < data[i].length; j++) {
+				tempItem = data[i][j].item;
+				tempRating = data[i][j].rating;
+				itemPopularityArray[tempItem]++;
+				itemRatingSumArray[tempItem] += tempRating;
+			} // Of for j
+		} // Of for i
+
+		for (int i = 0; i < numItems; i++) {
+			// 0.0001 to avoid NaN due to unrated items.
+			itemAverageRatingArray[i] = (itemRatingSumArray[i] + 0.0001)
+					/ (itemPopularityArray[i] + 0.0001);
+		} // Of for i
+	}// Of computeAverage
 
 	/**
 	 *********************************** 

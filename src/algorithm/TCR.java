@@ -92,21 +92,29 @@ public class TCR {
 	 * @param paraRatingUpperBound
 	 *            The upper bound of ratings.
 	 * @param paraLikeThrehold
-	 * The threshold for like.
+	 *            The threshold for like.
 	 * @param paraCompress
 	 *            Is the data in compress format?
+	 * @param paraDataTransformAlgorithm
+	 *            The data transform algorithm.
 	 *********************************** 
 	 */
 	public TCR(String paraFilename, int paraNumUsers, int paraNumItems, int paraNumRatings,
 			double paraRatingLowerBound, double paraRatingUpperBound, double paraLikeThreshold,
-			boolean paraCompress) {
+			boolean paraCompress, int paraDataTransformAlgorithm) {
 		dataset = new RatingSystem2DBoolean(paraFilename, paraNumUsers, paraNumItems,
-				paraNumRatings, paraRatingLowerBound, paraRatingUpperBound, paraLikeThreshold, paraCompress);
+				paraNumRatings, paraRatingLowerBound, paraRatingUpperBound, paraLikeThreshold,
+				paraCompress);
 
 		stage1Recommender = new PopularityBasedRecommendation(dataset);
 		stage1Recommender.setPopularityThresholds(new double[] { 0.3, 0.7 });
 
-		stage2Recommender = new MF2DBooleanIncremental(dataset);
+		if (paraDataTransformAlgorithm == 0) {
+			stage2Recommender = new MF2DBooleanIncremental(dataset);
+		} else {
+			stage2Recommender = new MF2DBooleanIncrementalGLG(dataset,
+					paraDataTransformAlgorithm - 1);
+		} // Of if
 
 		// Step 3. Initialize.
 		initialize();
@@ -145,7 +153,7 @@ public class TCR {
 				recommendationStatistics[i][j] = 0;
 			} // Of for j
 		} // Of for i
-	}//Of reset
+	}// Of reset
 
 	/**
 	 *********************************** 
@@ -241,10 +249,10 @@ public class TCR {
 			if (dataset.getTriple(paraUser, i).rating > dataset.getLikeThreshold()) {
 				tempLike = 1;// 1 means "like".
 			} // Of if
-			
-				// System.out.println(
-				// "" + dataset.getTriple(paraUser, i) + " vs. likeThreshold " +
-				// tempActualThreshold);
+
+			// System.out.println(
+			// "" + dataset.getTriple(paraUser, i) + " vs. likeThreshold " +
+			// tempActualThreshold);
 
 			resultTotalCost += costMatrix[tempBehavior][tempLike];
 		} // Of for i
@@ -407,8 +415,8 @@ public class TCR {
 		// -10, 10);
 		SimpleTools.processTracking = true;
 
-		TCR tcr = new TCR("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10,
-				0.5, false);
+		TCR tcr = new TCR("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10, 0.5,
+				false, 2);
 		System.out.println(tcr);
 		tcr.stage2Recommender.pretrain();
 

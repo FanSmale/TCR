@@ -119,6 +119,11 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 	private DoubleField[] favoriteThresholdFields;
 
 	/**
+	 * Matrix factorization algorithm.
+	 */
+	private JComboBox<String> mfAlgorithmJComboBox;
+
+	/**
 	 * For rank.
 	 */
 	private IntegerField rankField;
@@ -144,9 +149,9 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 	private IntegerField incrementalTrainRoundsField;
 
 	/**
-	 * Matrix factorization algorithm
+	 * Data transform algorithm.
 	 */
-	private JComboBox<String> mfAlgorithmJComboBox;
+	private JComboBox<String> dataTransformJComboBox;
 
 	/**
 	 * Checkbox for variable tracking.
@@ -269,12 +274,12 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 		} // Of for i
 
 		Panel mfParametersPanel = new Panel();
-		mfParametersPanel.setLayout(new GridLayout(2, 6));
+		mfParametersPanel.setLayout(new GridLayout(3, 6));
 
 		mfParametersPanel.add(new Label("MF algorithm: "));
-		String[] algorithms = { "Plain MF", "PQ-MF", "GL-MF" };
-		mfAlgorithmJComboBox = new JComboBox<String>(algorithms);
-		mfAlgorithmJComboBox.setSelectedIndex(0);
+		String[] tempMFAlgorithms = { "Plain MF", "PQ-MF" };
+		mfAlgorithmJComboBox = new JComboBox<String>(tempMFAlgorithms);
+		mfAlgorithmJComboBox.setSelectedIndex(1);
 		mfParametersPanel.add(mfAlgorithmJComboBox);
 
 		mfParametersPanel.add(new Label("Pretrain rounds: "));
@@ -296,6 +301,17 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 		mfParametersPanel.add(new Label("Convergence control (lambda): "));
 		lambdaField = new DoubleField("0.005");
 		mfParametersPanel.add(lambdaField);
+
+		mfParametersPanel.add(new Label("Data transform: "));
+		String[] tempDataTransformAlgorithms = { "No", "Journal", "Conference" };
+		dataTransformJComboBox = new JComboBox<String>(tempDataTransformAlgorithms);
+		dataTransformJComboBox.setSelectedIndex(1);
+		mfParametersPanel.add(dataTransformJComboBox);
+
+		mfParametersPanel.add(new Label(" "));
+		mfParametersPanel.add(new Label(" "));
+		mfParametersPanel.add(new Label(" "));
+		mfParametersPanel.add(new Label(" "));
 
 		processTrackingCheckbox = new Checkbox(" Process tracking ", false);
 		variableTrackingCheckbox = new Checkbox(" Variable tracking ", false);
@@ -386,7 +402,8 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 		double tempLambda = lambdaField.getValue();
 		int tempPretrainRounds = pretrainRoundsField.getValue();
 		int tempIncrementalTrainRounds = incrementalTrainRoundsField.getValue();
-		int tempAlgorithm = mfAlgorithmJComboBox.getSelectedIndex();
+		int tempMfAlgorithm = mfAlgorithmJComboBox.getSelectedIndex();
+		int tempDataTransformAlgorithm = dataTransformJComboBox.getSelectedIndex();
 
 		int tempRepeatTimes = repeatTimesField.getValue();
 
@@ -401,13 +418,14 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 				+ "\r\n  " + tempNumUsers + " users, " + tempNumItems + " items, " + tempNumRatings
 				+ " ratings\r\n  " + "ratings bounds = " + Arrays.toString(ratingBounds) + ", "
 				+ "rank = " + tempRank + ", alpha = " + tempAlpha + ", lambda = " + tempLambda
-				+ "\r\n  algorithm = " + tempAlgorithm + ", pretrain rounds = "
-				+ tempPretrainRounds;
+				+ "\r\n  MF algorithm = " + tempMfAlgorithm + ", data transform algorithm = "
+				+ tempDataTransformAlgorithm + ", pretrain rounds = " + tempPretrainRounds;
 		messageTextArea.append(tempParametersInformation);
 
 		// Read the data here.
 		TCR tempTcr = new TCR(tempFilename, tempNumUsers, tempNumItems, tempNumRatings,
-				ratingBounds[0], ratingBounds[1], tempLikeThreshold, tempCompressed);
+				ratingBounds[0], ratingBounds[1], tempLikeThreshold, tempCompressed,
+				tempDataTransformAlgorithm);
 		tempTcr.setCostMatrix(getCostMatrix());
 
 		tempTcr.stage1Recommender.setMaturityThreshold(tempMaturityThreshold);
@@ -415,10 +433,10 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 				tempRecommendationRatio);
 		tempTcr.stage1Recommender.setPopularityThresholds(popularityThresholds);
 
-		tempTcr.stage2Recommender.setParameters(tempRank, tempAlpha, tempLambda, tempAlgorithm,
+		tempTcr.stage2Recommender.setParameters(tempRank, tempAlpha, tempLambda, tempMfAlgorithm,
 				tempPretrainRounds);
 		tempTcr.stage2Recommender.setFavoriteThresholds(favoriteThresholds);
-		tempTcr.stage1Recommender.setRecommendationLengthRatio(tempRecommendationLength,
+		tempTcr.stage2Recommender.setRecommendationLengthRatio(tempRecommendationLength,
 				tempRecommendationRatio);
 		tempTcr.stage2Recommender.setIncrementalTrainRounds(tempIncrementalTrainRounds);
 
@@ -566,6 +584,8 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 
 			mfAlgorithmJComboBox
 					.setSelectedIndex(Integer.parseInt(settings.getProperty("mfAlgorithm")));
+			dataTransformJComboBox
+			.setSelectedIndex(Integer.parseInt(settings.getProperty("dataTransform")));
 
 			pretrainRoundsField.setText(settings.getProperty("pretrainRounds"));
 			incrementalTrainRoundsField.setText(settings.getProperty("incrementalTrainRounds"));
