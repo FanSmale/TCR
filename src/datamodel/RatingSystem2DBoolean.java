@@ -590,40 +590,6 @@ public class RatingSystem2DBoolean {
 
 	/**
 	 ************************ 
-	 * Adjust the training data with the mean rating. The ratings are subtracted
-	 * with the mean rating. So do the rating bounds.
-	 ************************ 
-	 */
-	public void adjustUsingMeanRating_deprecated() {
-		// Step 1. Calculate the mean rating.
-		double tempRatingSum = 0;
-		int tempTrainingSize = 0;
-		for (int i = 0; i < numUsers; i++) {
-			for (int j = 0; j < trainingIndicationMatrix[i].length; j++) {
-				if (trainingIndicationMatrix[i][j]) {
-					tempRatingSum += data[i][j].rating;
-					tempTrainingSize++;
-				} // Of if
-			} // Of for j
-		} // Of for i
-		meanRating = tempRatingSum / tempTrainingSize;
-
-		// Step 2. Update the ratings in the training set.
-		for (int i = 0; i < numUsers; i++) {
-			for (int j = 0; j < trainingIndicationMatrix[i].length; j++) {
-				if (trainingIndicationMatrix[i][j]) {
-					data[i][j].rating -= meanRating;
-				} // Of if
-			} // Of for j
-		} // Of for i
-
-		// Step 3. Also update the bounds.
-		ratingLowerBound -= meanRating;
-		ratingUpperBound -= meanRating;
-	}// Of adjustUsingMeanRating
-
-	/**
-	 ************************ 
 	 * Training and testing using the same data.
 	 ************************ 
 	 */
