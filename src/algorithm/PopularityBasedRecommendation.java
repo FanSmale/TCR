@@ -46,15 +46,6 @@ public class PopularityBasedRecommendation extends UserBasedThreeWayRecommender 
 	public static final double DEFAULT_MATURITY_FOR_EACH_ITEM = 3;
 
 	/**
-	 * The recommendation list for the current user. boolean[]
-	 * currentUserRecommendations;
-	 */
-
-	/**
-	 * The promotion list for the current user. boolean[] currentUserPromotions;
-	 */
-
-	/**
 	 * The maximum of item pop.
 	 */
 	int maxItemPopularity;
@@ -78,42 +69,6 @@ public class PopularityBasedRecommendation extends UserBasedThreeWayRecommender 
 	private int[] semiPopularItems;
 
 	/**
-	 * The statistics information (NN, NP, BN, ...) for current user. int[][]
-	 * recommendationStatistics = new int[3][2];
-	 */
-
-	/**
-	 *********************************** 
-	 * The constructor.
-	 * 
-	 * @param paraFilename
-	 *            The rating filename.
-	 * @param paraNumUsers
-	 *            The number of users.
-	 * @param paraNumItems
-	 *            The number of items.
-	 * @param paraNumRatings
-	 *            The number of ratings.
-	 * @param paraRatingLowerBound
-	 *            The lower bound of ratings.
-	 * @param paraRatingUpperBound
-	 *            The upper bound of ratings.
-	 * @param paraCompress
-	 *            Is the data in compress format?
-	 *********************************** 
-	 */
-	public PopularityBasedRecommendation(String paraFilename, int paraNumUsers, int paraNumItems,
-			int paraNumRatings, double paraRatingLowerBound, double paraRatingUpperBound,
-			boolean paraCompress) {
-		// Step 1. Read data.
-		super(paraFilename, paraNumUsers, paraNumItems, paraNumRatings, paraRatingLowerBound,
-				paraRatingUpperBound, paraCompress);
-
-		// Step 3. Initialize.
-		initialize();
-	}// Of the constructor
-
-	/**
 	 ************************ 
 	 * The second constructor.
 	 * 
@@ -124,21 +79,10 @@ public class PopularityBasedRecommendation extends UserBasedThreeWayRecommender 
 	public PopularityBasedRecommendation(RatingSystem2DBoolean paraDataset) {
 		super(paraDataset);
 
-		initialize();
-	}// Of the second constructor
-
-	/**
-	 *********************************** 
-	 * Initialize.
-	 *********************************** 
-	 */
-	public void initialize() {
 		maturityThreshold = DEFAULT_MATURITY_THRESHOLD;
 
 		maxItemPopularity = computeMaxItemPopularity();
-
-		computePopAndSemipopItems();
-	}// Of initialize
+	}// Of the second constructor
 
 	/**
 	 *********************************** 
@@ -154,14 +98,6 @@ public class PopularityBasedRecommendation extends UserBasedThreeWayRecommender 
 
 	/**
 	 *********************************** 
-	 * Getter.
-	 *********************************** 
-	 * public int[][] getRecommendationStatistics() { return
-	 * recommendationStatistics; }// Of getRecommendationStatistics
-	 */
-
-	/**
-	 *********************************** 
 	 * Setter.
 	 *********************************** 
 	 */
@@ -171,7 +107,7 @@ public class PopularityBasedRecommendation extends UserBasedThreeWayRecommender 
 
 	/**
 	 *********************************** 
-	 * Setter.
+	 * Setter. At the same time, compute popular and semi-popular items.
 	 * 
 	 * @param paraThresholds
 	 *            Should have exactly two elements.
@@ -179,30 +115,12 @@ public class PopularityBasedRecommendation extends UserBasedThreeWayRecommender 
 	 */
 	public void setPopularityThresholds(double[] paraThresholds) {
 		popularityThresholds = paraThresholds;
-	}// Of setPopularityThresholds
 
-	/**
-	 *********************************** 
-	 * Compute both popular items, which may be recommended, and semi-popular
-	 * items, which may be promoted.
-	 *********************************** 
-	 */
-	public void computePopAndSemipopItems() {
-		computePopAndSemipopItems(popularityThresholds[1], popularityThresholds[0]);
-	}// Of computePopAndSemipopItems
-
-	/**
-	 *********************************** 
-	 * Compute both popular items, which may be recommended, and semi-popular
-	 * items, which may be promoted.
-	 *********************************** 
-	 */
-	public void computePopAndSemipopItems(double paraPopThreshold, double paraSemiPopThreshold) {
 		// Step 1. Compute popular items.
 		int tempNumPopItems = 0;
 		// Step 1.1 Compute the length
 		for (int i = 0; i < numItems; i++) {
-			if (dataset.getItemPopularity(i) > maxItemPopularity * paraPopThreshold) {
+			if (dataset.getItemPopularity(i) > maxItemPopularity * paraThresholds[1]) {
 				tempNumPopItems++;
 			} // Of if
 		} // Of for i
@@ -211,7 +129,7 @@ public class PopularityBasedRecommendation extends UserBasedThreeWayRecommender 
 		popularItems = new int[tempNumPopItems];
 		tempNumPopItems = 0;
 		for (int i = 0; i < numItems; i++) {
-			if (dataset.getItemPopularity(i) > maxItemPopularity * paraPopThreshold) {
+			if (dataset.getItemPopularity(i) > maxItemPopularity * paraThresholds[1]) {
 				popularItems[tempNumPopItems] = i;
 				tempNumPopItems++;
 			} // Of if
@@ -221,8 +139,8 @@ public class PopularityBasedRecommendation extends UserBasedThreeWayRecommender 
 		int tempNumSemiPopItems = 0;
 		// Step 2.1 Compute the length
 		for (int i = 0; i < numItems; i++) {
-			if ((dataset.getItemPopularity(i) > maxItemPopularity * paraSemiPopThreshold)
-					&& (dataset.getItemPopularity(i) <= maxItemPopularity * paraPopThreshold)) {
+			if ((dataset.getItemPopularity(i) > maxItemPopularity * paraThresholds[0])
+					&& (dataset.getItemPopularity(i) <= maxItemPopularity * paraThresholds[1])) {
 				tempNumSemiPopItems++;
 			} // Of if
 		} // Of for i
@@ -231,8 +149,8 @@ public class PopularityBasedRecommendation extends UserBasedThreeWayRecommender 
 		semiPopularItems = new int[tempNumSemiPopItems];
 		tempNumSemiPopItems = 0;
 		for (int i = 0; i < numItems; i++) {
-			if ((dataset.getItemPopularity(i) > maxItemPopularity * paraSemiPopThreshold)
-					&& (dataset.getItemPopularity(i) <= maxItemPopularity * paraPopThreshold)) {
+			if ((dataset.getItemPopularity(i) > maxItemPopularity * paraThresholds[0])
+					&& (dataset.getItemPopularity(i) <= maxItemPopularity * paraThresholds[1])) {
 				semiPopularItems[tempNumSemiPopItems] = i;
 				tempNumSemiPopItems++;
 			} // Of if
@@ -241,7 +159,7 @@ public class PopularityBasedRecommendation extends UserBasedThreeWayRecommender 
 		SimpleTools.variableTrackingOutput("Pop items: " + Arrays.toString(popularItems));
 		SimpleTools
 				.variableTrackingOutput("Semi-popular items: " + Arrays.toString(semiPopularItems));
-	}// Of computePopAndSemipopItems
+	}// Of setPopularityThresholds
 
 	/**
 	 *********************************** 
@@ -268,44 +186,7 @@ public class PopularityBasedRecommendation extends UserBasedThreeWayRecommender 
 	 *********************************** 
 	 */
 	public boolean[][] recommendForUser(int paraUser) {
-		SimpleTools.processTrackingOutput("\r\nUser " + paraUser);
-
-		// Step 1. Initialize the total/average score of each item.
-		int[] tempItemPopArray = new int[numItems];
-		for (int i = 0; i < numItems; i++) {
-			tempItemPopArray[i] = dataset.getItemPopularity(i);
-		} // Of for i
-
-		// Remove those for the current user since the data is unknown.
-		for (int i = 0; i < dataset.getUserNumRatings(paraUser); i++) {
-			tempItemPopArray[dataset.getTriple(paraUser, i).item]--;
-		} // Of for i
-
-		// Step 2. Compute popular items.
-		double tempMaturity = 0;
-		int[] tempPopItems = new int[numItems];
-		int tempNumPopItems = 0;
-		// System.out.print("Popular items: ");
-		for (int i = 0; i < numItems; i++) {
-			if (tempItemPopArray[i] >= popularityThresholds[1] * maxItemPopularity) {
-				tempPopItems[tempNumPopItems] = i;
-				// System.out.print(", " + i);
-				tempNumPopItems++;
-			} // Of for i
-		} // Of for i
-
-		// Step 3. Compute semi-popular items.
-		int[] tempSemiPopItems = new int[numItems];
-		int tempNumSemiPopItems = 0;
-		// System.out.print("\r\nSemi-popular items: ");
-		for (int i = 0; i < numItems; i++) {
-			if ((tempItemPopArray[i] < popularityThresholds[1] * maxItemPopularity)
-					&& (tempItemPopArray[i] >= popularityThresholds[0] * maxItemPopularity)) {
-				tempSemiPopItems[tempNumSemiPopItems] = i;
-				// System.out.print("; " + i);
-				tempNumSemiPopItems++;
-			} // Of for i
-		} // Of for i
+		SimpleTools.processTrackingOutput("\r\nPopularity-based recommendation to user " + paraUser);
 
 		// Step 4. Initialize
 		boolean[] tempCurrentUserRecommendations = new boolean[numItems];
@@ -313,6 +194,7 @@ public class PopularityBasedRecommendation extends UserBasedThreeWayRecommender 
 
 		int[][] tempRecommendPromote = null;
 
+		double tempMaturity = 0;
 		while ((tempMaturity < maturityThreshold)) {
 			tempRecommendPromote = threeWayRecommend(paraUser, tempCurrentUserRecommendations,
 					tempCurrentUserPromotions);
@@ -320,8 +202,8 @@ public class PopularityBasedRecommendation extends UserBasedThreeWayRecommender 
 			if (tempRecommendPromote == null) {
 				break;
 			} else {
-				SimpleTools.variableTrackingOutput("recommendation/promotion for user " + paraUser
-						+ ": " + Arrays.deepToString(tempRecommendPromote));
+				SimpleTools.processTrackingOutput("popularity recommendation/promotion for user " + paraUser + ": "
+						+ Arrays.deepToString(tempRecommendPromote));
 			} // Of if
 
 			// Step 3 Update the maturity
@@ -499,12 +381,13 @@ public class PopularityBasedRecommendation extends UserBasedThreeWayRecommender 
 		SimpleTools.variableTracking = true;
 		// TIR2 tir = new TIR2("data/movielens100k.data", 943, 1682, 100000,
 		// -10, 10);
-		PopularityBasedRecommendation tempPbr = new PopularityBasedRecommendation(
-				"data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10, false);
+		RatingSystem2DBoolean tempData = new RatingSystem2DBoolean(
+				"data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10, 0.5, false);
+		PopularityBasedRecommendation tempPbr = new PopularityBasedRecommendation(tempData);
 		System.out.println(tempPbr);
 
 		tempPbr.setPopularityThresholds(new double[] { 0.6, 0.7 });
-		tempPbr.computePopAndSemipopItems();
+		// tempPbr.computePopAndSemipopItems();
 
 		tempPbr.recommendForUser(2);
 	}// Of testPopularityBasedRecommendation

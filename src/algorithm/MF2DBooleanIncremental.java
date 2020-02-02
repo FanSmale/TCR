@@ -34,42 +34,13 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 	 ************************ 
 	 * The first constructor.
 	 * 
-	 * @param paraFilename
-	 *            The data filename.
-	 * @param paraNumUsers
-	 *            The number of users.
-	 * @param paraNumItems
-	 *            The number of items.
-	 * @param paraNumRatings
-	 *            The number of ratings.
-	 * @param paraNumRatings
-	 *            The number of ratings.
-	 * @param paraRatingLowerBound
-	 *            The lower bound of ratings.
-	 * @param paraRatingUpperBound
-	 *            The upper bound of ratings.
-	 * @param paraCompress
-	 *            Is the data in compress format?
-	 ************************ 
-	 */
-	public MF2DBooleanIncremental(String paraFilename, int paraNumUsers, int paraNumItems,
-			int paraNumRatings, double paraRatingLowerBound, double paraRatingUpperBound,
-			boolean paraCompress) {
-		super(paraFilename, paraNumUsers, paraNumItems, paraNumRatings, paraRatingLowerBound,
-				paraRatingUpperBound, paraCompress);
-	}// Of the first constructor
-
-	/**
-	 ************************ 
-	 * The second constructor.
-	 * 
 	 * @param paraDataset
 	 *            The given dataset.
 	 ************************ 
 	 */
 	public MF2DBooleanIncremental(RatingSystem2DBoolean paraDataset) {
 		super(paraDataset);
-	}// Of the second constructor
+	}// Of the first constructor
 
 	/**
 	 ************************ 
@@ -212,7 +183,6 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 	public void pretrain() {
 		// setParameters(10, 0.0001, 0.005, NO_REGULAR, paraRounds);
 		dataset.setAllTraining();
-		dataset.adjustUsingMeanRating();
 
 		// Step 2. Pre-train
 		initializeSubspaces(0.5);
@@ -237,7 +207,6 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 	 */
 	public boolean[][] recommendForUser(int paraUser, boolean[] paraRecommendations,
 			boolean[] paraPromotions) {
-		double tempActualThreshold = likeThreshold - dataset.getMeanRating();
 		while (true) {
 			int[][] tempRecommendationsPromotions = threeWayRecommend(paraUser, paraRecommendations,
 					paraPromotions);
@@ -252,7 +221,7 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 					tempRating = dataset.getUserItemRating(paraUser,
 							tempRecommendationsPromotions[i][j]);
 					if ((tempRating != RatingSystem2DBoolean.DEFAULT_MISSING_RATING)
-							&& (tempRating > tempActualThreshold)) {
+							&& (tempRating > dataset.getLikeThreshold())) {
 						SimpleTools.processTrackingOutput(
 								"" + tempRecommendationsPromotions[i][j] + " successful.");
 						tempOneSuccess = true;
@@ -320,9 +289,9 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 		} // Of for i
 
 		if (tempCounter == 0) {
-			System.out.println("Warning in MF2DBooleanIncremental.threeWayRecommend().\r\n"
-					+ "No known ratings for  user #" + paraUser + "\r\n"
-					+ "This may be caused by inappropriate popularity parameters for popularity-based recommendation.");
+			System.out.println("No known ratings for  user #" + paraUser
+					+ " -- Warning in MF2DBooleanIncremental.threeWayRecommend(). "
+					+ "This may be caused by inappropriate popularity parameters for popularity-based recommendation, or too few ratings of the current user.");
 			// System.exit(0);
 		} // Of if
 
@@ -413,18 +382,17 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 	 */
 	public static void testIncremental(String paraFilename, int paraNumUsers, int paraNumItems,
 			int paraNumRatings, double paraRatingLowerBound, double paraRatingUpperBound,
-			boolean paraCompress, int paraRounds, int paraIncrementalRounds) {
+			double paraLikeTreshold, boolean paraCompress, int paraRounds, int paraIncrementalRounds) {
 		// Step 1. Read data and set parameters.
 
 		RatingSystem2DBoolean tempDataset = null;
 		try {
 			tempDataset = new RatingSystem2DBoolean(paraFilename, paraNumUsers, paraNumItems,
-					paraNumRatings, paraRatingLowerBound, paraRatingUpperBound, paraCompress);
+					paraNumRatings, paraRatingLowerBound, paraRatingUpperBound, paraLikeTreshold, paraCompress);
 		} catch (Exception e) {
 			e.printStackTrace();
 		} // Of try
 		tempDataset.setAllTraining();
-		tempDataset.adjustUsingMeanRating();
 
 		MF2DBooleanIncremental tempLearner = new MF2DBooleanIncremental(tempDataset);
 
@@ -483,7 +451,7 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 	 ************************ 
 	 */
 	public static void main(String args[]) {
-		testIncremental("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10, false,
+		testIncremental("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10, 0.5, false,
 				200, 100);
 	}// Of main
 }// Of class MF2DBooleanIncremental

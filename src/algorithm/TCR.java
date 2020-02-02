@@ -46,16 +46,6 @@ public class TCR {
 	double[][] costMatrix;
 
 	/**
-	 * The default like threshold.
-	 */
-	public static final int DEFAULT_LIKE_THRESHOLD = 3;
-
-	/**
-	 * The like threshold.
-	 */
-	double likeThreshold;
-
-	/**
 	 * The recommendation list for the current user.
 	 */
 	boolean[] currentUserRecommendations;
@@ -101,16 +91,21 @@ public class TCR {
 	 *            The lower bound of ratings.
 	 * @param paraRatingUpperBound
 	 *            The upper bound of ratings.
+	 * @param paraLikeThrehold
+	 * The threshold for like.
 	 * @param paraCompress
 	 *            Is the data in compress format?
 	 *********************************** 
 	 */
 	public TCR(String paraFilename, int paraNumUsers, int paraNumItems, int paraNumRatings,
-			double paraRatingLowerBound, double paraRatingUpperBound, boolean paraCompress) {
+			double paraRatingLowerBound, double paraRatingUpperBound, double paraLikeThreshold,
+			boolean paraCompress) {
 		dataset = new RatingSystem2DBoolean(paraFilename, paraNumUsers, paraNumItems,
-				paraNumRatings, paraRatingLowerBound, paraRatingUpperBound, paraCompress);
+				paraNumRatings, paraRatingLowerBound, paraRatingUpperBound, paraLikeThreshold, paraCompress);
 
 		stage1Recommender = new PopularityBasedRecommendation(dataset);
+		stage1Recommender.setPopularityThresholds(new double[] { 0.3, 0.7 });
+
 		stage2Recommender = new MF2DBooleanIncremental(dataset);
 
 		// Step 3. Initialize.
@@ -137,18 +132,20 @@ public class TCR {
 
 		currentUserRecommendations = new boolean[numItems];
 		currentUserPromotions = new boolean[numItems];
-
-		stage1Recommender.setPopularityThresholds(new double[] { 0.3, 0.7 });
 	}// Of initialize
 
 	/**
 	 *********************************** 
-	 * Setter.
+	 * Initialize.
 	 *********************************** 
 	 */
-	public void setLikeThreshold(double paraValue) {
-		likeThreshold = paraValue;
-	}// Of setLikeThreshold
+	public void reset() {
+		for (int i = 0; i < recommendationStatistics.length; i++) {
+			for (int j = 0; j < recommendationStatistics[i].length; j++) {
+				recommendationStatistics[i][j] = 0;
+			} // Of for j
+		} // Of for i
+	}//Of reset
 
 	/**
 	 *********************************** 
@@ -226,8 +223,6 @@ public class TCR {
 	public double computeTotalCostForUser(int paraUser, boolean[] paraRecommendations,
 			boolean[] paraPromotions) {
 
-		// Adjust here.
-		double tempActualThreshold = likeThreshold - dataset.getMeanRating();
 		// Step 1. Check them.
 		int tempUserNumRatings = dataset.getUserNumRatings(paraUser);
 		double resultTotalCost = 0;
@@ -243,9 +238,10 @@ public class TCR {
 			} // Of if
 
 			tempLike = 0;// 0 means "dislike".
-			if (dataset.getTriple(paraUser, i).rating > tempActualThreshold) {
+			if (dataset.getTriple(paraUser, i).rating > dataset.getLikeThreshold()) {
 				tempLike = 1;// 1 means "like".
 			} // Of if
+			
 				// System.out.println(
 				// "" + dataset.getTriple(paraUser, i) + " vs. likeThreshold " +
 				// tempActualThreshold);
@@ -255,32 +251,6 @@ public class TCR {
 
 		return resultTotalCost;
 	}// Of computeTotalCostForUser
-
-	/**
-	 *********************************** 
-	 * Compute recommendation statistics for a user.
-	 * 
-	 * @param paraUser
-	 *            The index of the given user.
-	 * @return The recommendation statistics for the user.
-	 *********************************** 
-	 *         public int[][] computeRecommendationStatitics() { // Initialize.
-	 *         for (int i = 0; i < recommendationStatistics.length; i++) { for
-	 *         (int j = 0; j < recommendationStatistics[0].length; j++) {
-	 *         recommendationStatistics[i][j] = 0; } // Of for j } // Of for i
-	 * 
-	 *         // Add. for (int i = 0; i < numUsers; i++) { int[][]
-	 *         tempUserRecommendationStatistics =
-	 *         computeUserRecommendationStatistics(i); for (int j = 0; j <
-	 *         recommendationStatistics.length; j++) { for (int k = 0; k <
-	 *         recommendationStatistics[0].length; k++) {
-	 *         recommendationStatistics[j][k] +=
-	 *         tempUserRecommendationStatistics[j][k]; } // Of for k } // Of for
-	 *         j } // Of for i
-	 * 
-	 *         return recommendationStatistics; }// Of
-	 *         computeRecommendationStatitics
-	 */
 
 	/**
 	 *********************************** 
@@ -314,7 +284,6 @@ public class TCR {
 	public int[][] computeUserRecommendationStatistics(int paraUser) {
 		int[][] resultUserRecommendationStatistics = new int[3][2];
 
-		double tempActualThreshold = likeThreshold - dataset.getMeanRating();
 		// Step 1. Check them.
 		int tempUserNumRatings = dataset.getUserNumRatings(paraUser);
 		int tempBehavior;
@@ -329,7 +298,7 @@ public class TCR {
 			} // Of if
 
 			tempLike = 0;// 0 means "dislike".
-			if (dataset.getTriple(paraUser, i).rating > tempActualThreshold) {
+			if (dataset.getTriple(paraUser, i).rating > dataset.getLikeThreshold()) {
 				tempLike = 1;// 1 means "like".
 			} // Of if
 
@@ -376,9 +345,6 @@ public class TCR {
 		// Step 1. Initialize
 		double resultTotalCost;
 
-		// Arrays.fill(currentUserRecommendations, false);
-		// Arrays.fill(currentUserPromotions, false);
-
 		// Step 2. Popularity-based recommendation.
 		boolean[][] tempRecommendationMatrix = stage1Recommender.recommendForUser(paraUser);
 		currentUserRecommendations = tempRecommendationMatrix[0];
@@ -405,7 +371,6 @@ public class TCR {
 		// System.out.println();
 
 		// Step 4. Update statistics
-		double tempActualThreshold = likeThreshold - dataset.getMeanRating();
 		int tempUserNumRatings = dataset.getUserNumRatings(paraUser);
 		int tempBehavior;
 		int tempLike;
@@ -419,7 +384,7 @@ public class TCR {
 			} // Of if
 
 			tempLike = 0;// 0 means "dislike".
-			if (dataset.getTriple(paraUser, i).rating > tempActualThreshold) {
+			if (dataset.getTriple(paraUser, i).rating > dataset.getLikeThreshold()) {
 				tempLike = 1;// 1 means "like".
 			} // Of if
 
@@ -443,7 +408,7 @@ public class TCR {
 		SimpleTools.processTracking = true;
 
 		TCR tcr = new TCR("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10,
-				false);
+				0.5, false);
 		System.out.println(tcr);
 		tcr.stage2Recommender.pretrain();
 

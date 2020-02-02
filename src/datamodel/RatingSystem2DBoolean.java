@@ -1,11 +1,9 @@
 package datamodel;
 
 import java.io.*;
-import java.util.Arrays;
-import java.util.Random;
+import java.util.*;
 
-import common.Common;
-import datamodel.Triple;
+import common.*;
 
 /**
  * The basic data model. The data is organized in 2D of triples. Boolean means
@@ -31,12 +29,11 @@ public class RatingSystem2DBoolean {
 	 * A sign to help reading the data file.
 	 */
 	public static final String SPLIT_SIGN_COMMA = new String(",");
-	
+
 	/**
 	 * The default missing rating.
 	 */
 	public static final int DEFAULT_MISSING_RATING = 99;
-	
 
 	/**
 	 * Number of users.
@@ -94,6 +91,16 @@ public class RatingSystem2DBoolean {
 	protected double ratingUpperBound;
 
 	/**
+	 * The default like threshold.
+	 */
+	public static final int DEFAULT_LIKE_THRESHOLD = 3;
+
+	/**
+	 * The like threshold.
+	 */
+	double likeThreshold;
+
+	/**
 	 ************************ 
 	 * The first constructor.
 	 * 
@@ -109,18 +116,21 @@ public class RatingSystem2DBoolean {
 	 *            The lower bound of ratings.
 	 * @param paraRatingUpperBound
 	 *            The upper bound of ratings.
+	 * @param paraLikeThrehold
+	 *            The threshold for like.
 	 * @param paraCompress
 	 *            Is the data in compress format?
 	 ************************ 
 	 */
 	public RatingSystem2DBoolean(String paraFilename, int paraNumUsers, int paraNumItems,
 			int paraNumRatings, double paraRatingLowerBound, double paraRatingUpperBound,
-			boolean paraCompress) {
+			double paraLikeThreshold, boolean paraCompress) {
 		numUsers = paraNumUsers;
 		numItems = paraNumItems;
 		numRatings = paraNumRatings;
 		ratingLowerBound = paraRatingLowerBound;
 		ratingUpperBound = paraRatingUpperBound;
+		likeThreshold = paraLikeThreshold;
 
 		// Allocate space.
 		data = new Triple[numUsers][];
@@ -140,7 +150,7 @@ public class RatingSystem2DBoolean {
 			System.out.println("File " + paraFilename + " cannot be read! " + ee);
 			System.exit(0);
 		} // Of try
-		
+
 		for (int i = 0; i < numItems; i++) {
 			// 0.0001 to avoid NaN due to unrated items.
 			itemAverageRatingArray[i] = (itemRatingSumArray[i] + 0.0001)
@@ -361,8 +371,9 @@ public class RatingSystem2DBoolean {
 	 */
 	public void setUserTraining(int paraUser, int[] paraTrainingItems) {
 		if ((paraTrainingItems == null) || (paraTrainingItems.length == 0)) {
-			//System.out.println("Warning in RatingSystem2DBoolean(int, int[]):\r\n  user #"
-			//		+ paraUser + " contains no training item.");
+			// System.out.println("Warning in RatingSystem2DBoolean(int,
+			// int[]):\r\n user #"
+			// + paraUser + " contains no training item.");
 			return;
 		} // Of if
 
@@ -442,6 +453,15 @@ public class RatingSystem2DBoolean {
 	}// Of getRatingsUpperBound
 
 	/**
+	 *********************************** 
+	 * Getter.
+	 *********************************** 
+	 */
+	public double getLikeThreshold() {
+		return likeThreshold;
+	}// Of getLikeThreshold
+
+	/**
 	 ************************ 
 	 * Getter.
 	 ************************ 
@@ -511,9 +531,9 @@ public class RatingSystem2DBoolean {
 				return data[paraUser][i].rating;
 			} else if (data[paraUser][i].item == paraItem) {
 				break;
-			}//Of if
-		}//Of for i
-		
+			} // Of if
+		} // Of for i
+
 		return DEFAULT_MISSING_RATING;
 	}// Of getUserItemRating
 
@@ -525,6 +545,36 @@ public class RatingSystem2DBoolean {
 	public int getItemPopularity(int paraItem) {
 		return itemPopularityArray[paraItem];
 	}// Of getItemPopularity
+
+	/**
+	 ************************ 
+	 * Adjust the whole dataset with mean rating. The ratings are subtracted
+	 * with the mean rating. So do the rating bounds and the like threshold.
+	 ************************ 
+	 */
+	public void centralize() {
+		// Step 1. Calculate the mean rating.
+		double tempRatingSum = 0;
+		for (int i = 0; i < data.length; i++) {
+			for (int j = 0; j < data[i].length; j++) {
+				tempRatingSum += data[i][j].rating;
+			} // Of for j
+		} // Of for i
+		meanRating = tempRatingSum / numRatings;
+
+		// Step 2. Update the ratings in the training set.
+		for (int i = 0; i < data.length; i++) {
+			for (int j = 0; j < data[i].length; j++) {
+				data[i][j].rating -= meanRating;
+			} // Of for j
+		} // Of for i
+
+		// Step 3. Update the bounds.
+		ratingLowerBound -= meanRating;
+		ratingUpperBound -= meanRating;
+
+		// Step 4. Update the like threshold.
+	}// Of adjustUsingMeanRating
 
 	/**
 	 *********************************** 
@@ -544,7 +594,7 @@ public class RatingSystem2DBoolean {
 	 * with the mean rating. So do the rating bounds.
 	 ************************ 
 	 */
-	public void adjustUsingMeanRating() {
+	public void adjustUsingMeanRating_deprecated() {
 		// Step 1. Calculate the mean rating.
 		double tempRatingSum = 0;
 		int tempTrainingSize = 0;
@@ -579,12 +629,13 @@ public class RatingSystem2DBoolean {
 	 */
 	public static void testReadingData(String paraFilename, int paraNumUsers, int paraNumItems,
 			int paraNumRatings, double paraRatingLowerBound, double paraRatingUpperBound,
-			boolean paraCompress) {
+			double paraLikeThreshold, boolean paraCompress) {
 		RatingSystem2DBoolean tempRS = null;
 		try {
 			// Step 1. read the training and testing data
 			tempRS = new RatingSystem2DBoolean(paraFilename, paraNumUsers, paraNumItems,
-					paraNumRatings, paraRatingLowerBound, paraRatingUpperBound, paraCompress);
+					paraNumRatings, paraRatingLowerBound, paraRatingUpperBound, paraLikeThreshold,
+					paraCompress);
 			System.out.println("" + tempRS.numUsers + " user, " + tempRS.numItems + " items, "
 					+ tempRS.numRatings + " ratings. " + "\r\nAvearge ratings: "
 					+ Arrays.toString(tempRS.itemAverageRatingArray));
@@ -614,8 +665,8 @@ public class RatingSystem2DBoolean {
 	 ************************ 
 	 */
 	public static void main(String args[]) {
-		testReadingData("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10,
+		testReadingData("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10, 3.5,
 				false);
-		testReadingData("data/movielens943u1682m.txt", 943, 1682, 100000, 1, 5, true);
+		testReadingData("data/movielens943u1682m.txt", 943, 1682, 100000, 1, 5, 3.5, true);
 	}// Of main
 }// Of class RatingSystem2DBoolean

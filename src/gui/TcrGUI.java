@@ -32,7 +32,7 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 	 * The properties for setting.
 	 */
 	private Properties settings = new Properties();
-	
+
 	/**
 	 * Select the arff file.
 	 */
@@ -190,7 +190,7 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 		filenameField = new FilenameField(30);
 		filenameField.setText("data/jester-data-1/jester-data-1.txt");
 		filenameField.addTextListener(this);
-		
+
 		sourceFilePanel.add(new Label("The .arff file:"));
 		sourceFilePanel.add(filenameField);
 
@@ -407,22 +407,20 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 
 		// Read the data here.
 		TCR tempTcr = new TCR(tempFilename, tempNumUsers, tempNumItems, tempNumRatings,
-				ratingBounds[0], ratingBounds[1], tempCompressed);
-		tempTcr.setLikeThreshold(tempLikeThreshold);
-		tempTcr.setCostMatrix(costMatrix);
-	
-		tempTcr.stage1Recommender.setPopularityThresholds(popularityThresholds);
+				ratingBounds[0], ratingBounds[1], tempLikeThreshold, tempCompressed);
+		tempTcr.setCostMatrix(getCostMatrix());
+
 		tempTcr.stage1Recommender.setMaturityThreshold(tempMaturityThreshold);
-		tempTcr.stage1Recommender.setRecommendationLength(tempRecommendationLength);
-		tempTcr.stage1Recommender.setRecommendationRatio(tempRecommendationRatio);
+		tempTcr.stage1Recommender.setRecommendationLengthRatio(tempRecommendationLength,
+				tempRecommendationRatio);
+		tempTcr.stage1Recommender.setPopularityThresholds(popularityThresholds);
 
 		tempTcr.stage2Recommender.setParameters(tempRank, tempAlpha, tempLambda, tempAlgorithm,
 				tempPretrainRounds);
 		tempTcr.stage2Recommender.setFavoriteThresholds(favoriteThresholds);
-		tempTcr.stage2Recommender.setRecommendationLength(tempRecommendationLength);
-		tempTcr.stage2Recommender.setRecommendationRatio(tempRecommendationRatio);
+		tempTcr.stage1Recommender.setRecommendationLengthRatio(tempRecommendationLength,
+				tempRecommendationRatio);
 		tempTcr.stage2Recommender.setIncrementalTrainRounds(tempIncrementalTrainRounds);
-		tempTcr.stage2Recommender.setLikeThreshold(tempLikeThreshold);
 
 		System.out.println("Before pretrain");
 		tempTcr.stage2Recommender.pretrain();
@@ -433,11 +431,13 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 		double tempCostSum = 0;
 
 		for (int i = 0; i < tempRepeatTimes; i++) {
+			tempTcr.reset();
 			// tir.computePopAndSemipopItems(0.8, 0.6);
 			// double tempTotalCost = tir.leaveUserOutRecommend();
 
 			tempTcr.leaveUserOutRecommend();
 			tempCostArray[i] = tempTcr.computeTotalCost();
+			tempCostSum += tempCostArray[i];
 
 			messageTextArea.append("\r\n" + i + ": cost = " + tempCostArray[i] + "\r\n"
 					+ Arrays.deepToString(tempTcr.getRecommendationStatistics()));
@@ -485,15 +485,30 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 	 *************************** 
 	 * Set the cost matrix.
 	 *************************** 
+	 */
 	public void setCostMatrix(double[][] paraCostMatrix) {
 		costMatrix = paraCostMatrix;
 		for (int i = 0; i < costMatrixFields.length; i++) {
 			for (int j = 0; j < costMatrixFields[0].length; j++) {
-				costMatrixFields[i][j] = new DoubleField("" + costMatrix[i][j]);
+				costMatrixFields[i][j].setText("" + costMatrix[i][j]);
 			} // Of for j
 		} // Of for i
 	}// Of setCostMatrix
+
+	/**
+	 *************************** 
+	 * Get the cost matrix.
+	 *************************** 
 	 */
+	public double[][] getCostMatrix() {
+		for (int i = 0; i < costMatrixFields.length; i++) {
+			for (int j = 0; j < costMatrixFields[0].length; j++) {
+				costMatrix[i][j] = Double.parseDouble(costMatrixFields[i][j].getText());
+			} // Of for j
+		} // Of for i
+
+		return costMatrix;
+	}// Of getCostMatrix
 
 	/**
 	 *************************** 
@@ -512,26 +527,27 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 		} else {
 			System.out.println("Unknown dataset.");
 			return;
-		}//Of if
-		
+		} // Of if
+
 		try {
 			InputStream tempInputStream = new BufferedInputStream(
 					new FileInputStream(tempPropertyFilename));
 			settings.load(tempInputStream);
 
-			compressedFormatCheckbox.setState(Boolean.parseBoolean(settings.getProperty("compressed")));
-			
+			compressedFormatCheckbox
+					.setState(Boolean.parseBoolean(settings.getProperty("compressed")));
+
 			numUsersField.setText(settings.getProperty("numUsers"));
 			numItemsField.setText(settings.getProperty("numItems"));
 			numRatingsField.setText(settings.getProperty("numRatings"));
-			
+
 			costMatrixFields[0][0].setText(settings.getProperty("NN"));
 			costMatrixFields[0][1].setText(settings.getProperty("NP"));
 			costMatrixFields[1][0].setText(settings.getProperty("BN"));
 			costMatrixFields[1][1].setText(settings.getProperty("BP"));
 			costMatrixFields[2][0].setText(settings.getProperty("PN"));
 			costMatrixFields[2][1].setText(settings.getProperty("PP"));
-			
+
 			ratingBoundFields[0].setText(settings.getProperty("ratingLowerBound"));
 			ratingBoundFields[1].setText(settings.getProperty("ratingUpperBound"));
 
@@ -541,18 +557,19 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 			likeThresholdField.setText(settings.getProperty("likeThreshold"));
 
 			maturityThresholdField.setText(settings.getProperty("maturityThreshold"));
-			
+
 			popularityThresholdFields[0].setText(settings.getProperty("semiPopularThreshold"));
 			popularityThresholdFields[1].setText(settings.getProperty("popularThreshold"));
 
 			favoriteThresholdFields[0].setText(settings.getProperty("semiFavoriteThreshold"));
 			favoriteThresholdFields[1].setText(settings.getProperty("favoriteThreshold"));
-			
-			mfAlgorithmJComboBox.setSelectedIndex(Integer.parseInt(settings.getProperty("mfAlgorithm")));
-			
+
+			mfAlgorithmJComboBox
+					.setSelectedIndex(Integer.parseInt(settings.getProperty("mfAlgorithm")));
+
 			pretrainRoundsField.setText(settings.getProperty("pretrainRounds"));
 			incrementalTrainRoundsField.setText(settings.getProperty("incrementalTrainRounds"));
-			
+
 			rankField.setText(settings.getProperty("rank"));
 
 			alphaField.setText(settings.getProperty("alpha"));

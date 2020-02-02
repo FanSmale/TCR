@@ -84,35 +84,6 @@ public abstract class UserBasedThreeWayRecommender {
 	 ************************ 
 	 * The first constructor.
 	 * 
-	 * @param paraFilename
-	 *            The data filename.
-	 * @param paraNumUsers
-	 *            The number of users.
-	 * @param paraNumItems
-	 *            The number of items.
-	 * @param paraNumRatings
-	 *            The number of ratings.
-	 * @param paraRatingLowerBound
-	 *            The lower bound of ratings.
-	 * @param paraRatingUpperBound
-	 *            The upper bound of ratings.
-	 * @param paraCompress
-	 *            Is the data in compress format?
-	 ************************ 
-	 */
-	public UserBasedThreeWayRecommender(String paraFilename, int paraNumUsers, int paraNumItems,
-			int paraNumRatings, double paraRatingLowerBound, double paraRatingUpperBound,
-			boolean paraCompress) {
-		dataset = new RatingSystem2DBoolean(paraFilename, paraNumUsers, paraNumItems,
-				paraNumRatings, paraRatingLowerBound, paraRatingUpperBound, paraCompress);
-
-		initializeData();
-	}// Of the second constructor
-
-	/**
-	 ************************ 
-	 * The second constructor.
-	 * 
 	 * @param paraDataset
 	 *            The given dataset.
 	 ************************ 
@@ -121,7 +92,7 @@ public abstract class UserBasedThreeWayRecommender {
 		dataset = paraDataset;
 
 		initializeData();
-	}// Of the second constructor
+	}// Of the first constructor
 
 	/**
 	 ************************ 
@@ -142,27 +113,16 @@ public abstract class UserBasedThreeWayRecommender {
 
 	/**
 	 *********************************** 
-	 * Setter
+	 * Setter. Recommendation length and ratio should be set simultaneously.
 	 *********************************** 
 	 */
-	public void setRecommendationLength(int paraLength) {
+	public void setRecommendationLengthRatio(int paraLength, double paraRatio) {
 		recommendationLength = paraLength;
-
-		numRecommend = (int) (recommendationRatio * recommendationLength);
-		numPromote = recommendationLength - numRecommend;
-	}// Of setRecommendationLength
-
-	/**
-	 *********************************** 
-	 * Setter
-	 *********************************** 
-	 */
-	public void setRecommendationRatio(double paraRatio) {
 		recommendationRatio = paraRatio;
 
 		numRecommend = (int) (recommendationRatio * recommendationLength);
 		numPromote = recommendationLength - numRecommend;
-	}// Of setRecommendationRatio
+	}// Of setRecommendationLength
 
 	/**
 	 *************************
@@ -188,9 +148,7 @@ public abstract class UserBasedThreeWayRecommender {
 	 *********************************** 
 	 */
 	public String toString() {
-		String resultString = "UserBasedThreeWayRecommender.\r\n";
-		resultString += "I have " + numUsers + " users, " + numItems + " items, and " + numRatings
-				+ " ratings.";
+		String resultString = "UserBasedThreeWayRecommender on dataset:\r\n" + dataset;
 		return resultString;
 	}// Of toString
 }// Of class UserBasedThreeWayRecommender

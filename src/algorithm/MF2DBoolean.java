@@ -77,39 +77,6 @@ public class MF2DBoolean extends UserBasedThreeWayRecommender {
 	int trainRounds = 200;
 
 	/**
-	 * The like threshold.
-	 */
-	double likeThreshold;
-
-	/**
-	 ************************ 
-	 * The first constructor.
-	 * 
-	 * @param paraFilename
-	 *            The data filename.
-	 * @param paraNumUsers
-	 *            The number of users.
-	 * @param paraNumItems
-	 *            The number of items.
-	 * @param paraNumRatings
-	 *            The number of ratings.
-	 * @param paraRatingLowerBound
-	 *            The lower bound of ratings.
-	 * @param paraRatingUpperBound
-	 *            The upper bound of ratings.
-	 * @param paraCompress
-	 *            Is the data in compress format?
-	 ************************ 
-	 */
-	public MF2DBoolean(String paraFilename, int paraNumUsers, int paraNumItems, int paraNumRatings,
-			double paraRatingLowerBound, double paraRatingUpperBound, boolean paraCompress) {
-		super(paraFilename, paraNumUsers, paraNumItems, paraNumRatings, paraRatingLowerBound,
-				paraRatingUpperBound, paraCompress);
-
-		initialize();
-	}// Of the first constructor
-
-	/**
 	 ************************ 
 	 * The second constructor.
 	 * 
@@ -121,7 +88,11 @@ public class MF2DBoolean extends UserBasedThreeWayRecommender {
 		super(paraDataset);
 		dataset = paraDataset;
 
-		initialize();
+		// Initialize some parameters.
+		rank = 5;
+		alpha = 0.0001;
+		lambda = 0.005;
+		regularScheme = 0;
 	}// Of the second constructor
 
 	/**
@@ -143,15 +114,6 @@ public class MF2DBoolean extends UserBasedThreeWayRecommender {
 	}// Of setParameters
 
 	/**
-	 *********************************** 
-	 * Setter.
-	 *********************************** 
-	 */
-	public void setLikeThreshold(double paraValue) {
-		likeThreshold = paraValue;
-	}// Of setLikeThreshold
-
-	/**
 	 ************************ 
 	 * Get parameters.
 	 ************************ 
@@ -161,18 +123,6 @@ public class MF2DBoolean extends UserBasedThreeWayRecommender {
 				+ trainRounds;
 		return resultString;
 	}// Of setParameters
-
-	/**
-	 ************************ 
-	 * Initialize some variables.
-	 ************************ 
-	 */
-	void initialize() {
-		rank = 5;
-		alpha = 0.0001;
-		lambda = 0.005;
-		regularScheme = 0;
-	}// Of initialize
 
 	/**
 	 *************************
@@ -470,19 +420,18 @@ public class MF2DBoolean extends UserBasedThreeWayRecommender {
 	 */
 	public static void testTrainingTesting(String paraFilename, int paraNumUsers, int paraNumItems,
 			int paraNumRatings, double paraRatingLowerBound, double paraRatingUpperBound,
-			boolean paraCompress, int paraRounds) {
+			double paraLikeThreshold, boolean paraCompress, int paraRounds) {
 		try {
 			// Step 1. read the training and testing data
 			RatingSystem2DBoolean tempDataset = new RatingSystem2DBoolean(paraFilename,
 					paraNumUsers, paraNumItems, paraNumRatings, paraRatingLowerBound,
-					paraRatingUpperBound, paraCompress);
+					paraRatingUpperBound, paraLikeThreshold, paraCompress);
 
 			tempDataset.initializeTraining(0.8);
-			tempDataset.adjustUsingMeanRating();
 
 			MF2DBoolean tempLearner = new MF2DBoolean(tempDataset);
 
-			tempLearner.setParameters(10, 0.0001, 0.005, PQ_REGULAR, 200);
+			tempLearner.setParameters(10, 0.0001, 0.005, PQ_REGULAR, paraRounds);
 			// tempMF.setTestingSetRemainder(2);
 			// Step 2. Initialize the feature matrices U and V
 			tempLearner.initializeSubspaces(0.5);
@@ -490,7 +439,7 @@ public class MF2DBoolean extends UserBasedThreeWayRecommender {
 			// Step 3. update and predict
 			System.out.println("Begin Training ! ! !");
 
-			tempLearner.train(paraRounds);
+			tempLearner.train();
 
 			double tempMAE = tempLearner.mae();
 			double tempRSME = tempLearner.rsme();
@@ -507,26 +456,27 @@ public class MF2DBoolean extends UserBasedThreeWayRecommender {
 	 */
 	public static void testAllTrainingTesting(String paraFilename, int paraNumUsers,
 			int paraNumItems, int paraNumRatings, double paraRatingLowerBound,
-			double paraRatingUpperBound, boolean paraCompress, int paraRounds) {
+			double paraRatingUpperBound, double paraLikeThreshold, boolean paraCompress,
+			int paraRounds) {
 		try {
 			// Step 1. read the training and testing data
 			RatingSystem2DBoolean tempDataset = new RatingSystem2DBoolean(paraFilename,
 					paraNumUsers, paraNumItems, paraNumRatings, paraRatingLowerBound,
-					paraRatingUpperBound, paraCompress);
+					paraRatingUpperBound, paraLikeThreshold, paraCompress);
 
 			tempDataset.initializeTraining(1.0);
-			tempDataset.adjustUsingMeanRating();
 
 			MF2DBoolean tempLearner = new MF2DBoolean(tempDataset);
 			// tempMF.setTestingSetRemainder(2);
 			// Step 2. Initialize the feature matrices U and V
-			tempLearner.setParameters(10, 0.0001, 0.005, NO_REGULAR, 200);
+			
+			tempLearner.setParameters(10, 0.0001, 0.005, NO_REGULAR, paraRounds);
 			tempLearner.initializeSubspaces(0.5);
 
 			// Step 3. update and predict
 			System.out.println("Begin Training ! ! !");
 
-			tempLearner.train(paraRounds);
+			tempLearner.train();
 
 			tempDataset.initializeTraining(0);
 			double tempMAE = tempLearner.mae();
@@ -544,7 +494,7 @@ public class MF2DBoolean extends UserBasedThreeWayRecommender {
 	 */
 	public static void main(String args[]) {
 		testAllTrainingTesting("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10,
-				false, 200);
+				0.5, false, 150);
 		// testSameTrainingTesting("data/jester-data-1/jester-data-1.txt",
 		// 24983, 101, 1810455, -10, 10, 500);
 	}// Of main
