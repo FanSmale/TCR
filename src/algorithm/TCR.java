@@ -101,7 +101,7 @@ public class TCR {
 	 */
 	public TCR(String paraFilename, int paraNumUsers, int paraNumItems, int paraNumRatings,
 			double paraRatingLowerBound, double paraRatingUpperBound, double paraLikeThreshold,
-			boolean paraCompress, int paraDataTransformAlgorithm) {
+			boolean paraCompress, int paraDataTransformAlgorithm, double paraGLTranformV) {
 		dataset = new RatingSystem2DBoolean(paraFilename, paraNumUsers, paraNumItems,
 				paraNumRatings, paraRatingLowerBound, paraRatingUpperBound, paraLikeThreshold,
 				paraCompress);
@@ -113,7 +113,7 @@ public class TCR {
 			stage2Recommender = new MF2DBooleanIncremental(dataset);
 		} else {
 			stage2Recommender = new MF2DBooleanIncrementalGLG(dataset,
-					paraDataTransformAlgorithm - 1);
+					paraDataTransformAlgorithm - 1, paraGLTranformV);
 		} // Of if
 
 		// Step 3. Initialize.
@@ -416,7 +416,7 @@ public class TCR {
 		SimpleTools.processTracking = true;
 
 		TCR tcr = new TCR("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10, 0.5,
-				false, 2);
+				false, 2, 1.0);
 		System.out.println(tcr);
 		tcr.stage2Recommender.pretrain();
 

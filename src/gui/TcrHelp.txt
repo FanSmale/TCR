@@ -62,6 +62,7 @@ Data transform:
   No stands for no transform.
   Journal stands for the journal version.
   Conference stands for the conference version. These versions will be discussed later.
+GL parameter V: One parameter for GL data transform.
 
 --Tracking and output
 Process tracking: Track the process in the console.

@@ -154,6 +154,11 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 	private JComboBox<String> dataTransformJComboBox;
 
 	/**
+	 * For Generalized Guassian transform: V.
+	 */
+	private DoubleField glTransformVField;
+
+	/**
 	 * Checkbox for variable tracking.
 	 */
 	private Checkbox variableTrackingCheckbox;
@@ -308,8 +313,10 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 		dataTransformJComboBox.setSelectedIndex(1);
 		mfParametersPanel.add(dataTransformJComboBox);
 
-		mfParametersPanel.add(new Label(" "));
-		mfParametersPanel.add(new Label(" "));
+		mfParametersPanel.add(new Label("GL parameter V: "));
+		glTransformVField = new DoubleField("1.0");
+		mfParametersPanel.add(glTransformVField);
+
 		mfParametersPanel.add(new Label(" "));
 		mfParametersPanel.add(new Label(" "));
 
@@ -404,6 +411,7 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 		int tempIncrementalTrainRounds = incrementalTrainRoundsField.getValue();
 		int tempMfAlgorithm = mfAlgorithmJComboBox.getSelectedIndex();
 		int tempDataTransformAlgorithm = dataTransformJComboBox.getSelectedIndex();
+		double tempGLTranformV = glTransformVField.getValue();
 
 		int tempRepeatTimes = repeatTimesField.getValue();
 
@@ -425,7 +433,7 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 		// Read the data here.
 		TCR tempTcr = new TCR(tempFilename, tempNumUsers, tempNumItems, tempNumRatings,
 				ratingBounds[0], ratingBounds[1], tempLikeThreshold, tempCompressed,
-				tempDataTransformAlgorithm);
+				tempDataTransformAlgorithm, tempGLTranformV);
 		tempTcr.setCostMatrix(getCostMatrix());
 
 		tempTcr.stage1Recommender.setMaturityThreshold(tempMaturityThreshold);
@@ -584,8 +592,6 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 
 			mfAlgorithmJComboBox
 					.setSelectedIndex(Integer.parseInt(settings.getProperty("mfAlgorithm")));
-			dataTransformJComboBox
-			.setSelectedIndex(Integer.parseInt(settings.getProperty("dataTransform")));
 
 			pretrainRoundsField.setText(settings.getProperty("pretrainRounds"));
 			incrementalTrainRoundsField.setText(settings.getProperty("incrementalTrainRounds"));
@@ -594,6 +600,10 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 
 			alphaField.setText(settings.getProperty("alpha"));
 			lambdaField.setText(settings.getProperty("lambda"));
+
+			dataTransformJComboBox
+					.setSelectedIndex(Integer.parseInt(settings.getProperty("dataTransform")));
+			glTransformVField.setText(settings.getProperty("glv"));
 		} catch (Exception ee) {
 			System.out.println("Error occurred while reading properties: " + ee);
 		} // Of try

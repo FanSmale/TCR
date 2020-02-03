@@ -429,6 +429,7 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 				tempItem = tempDataset.getTriple(i, j).item;
 				tempPrediction = tempLearner.predict(i, tempItem);
 				tempErrorSum += Math.abs(tempPrediction - tempDataset.getTriple(i, j).rating);
+				//System.out.println("prediction " + tempPrediction + " vs. " + tempDataset.getTriple(i, j).rating);
 				tempNumPredictions++;
 			} // Of for j
 

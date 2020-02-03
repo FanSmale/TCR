@@ -85,7 +85,7 @@ public class MF2DBooleanIncrementalGLG extends MF2DBooleanIncremental {
 	 ************************ 
 	 */
 	public MF2DBooleanIncrementalGLG(RatingSystem2DBoolean paraDataset,
-			int paraDataTransformAlgorithm) {
+			int paraDataTransformAlgorithm, double paraV) {
 		super(paraDataset);
 
 		originalDataset = paraDataset;
@@ -98,7 +98,7 @@ public class MF2DBooleanIncrementalGLG extends MF2DBooleanIncremental {
 		dataset = new RatingSystem2DBoolean(originalDataset);
 
 		algorithm = paraDataTransformAlgorithm;
-		parameterV = 1.5;
+		parameterV = paraV;
 		// algorithm = GL_CONFERENCE;
 
 		// Now convert ratings of the dataset.
@@ -207,30 +207,57 @@ public class MF2DBooleanIncrementalGLG extends MF2DBooleanIncremental {
 
 	/**
 	 ************************ 
-	 * Predict the rating of the user to the item
+	 * Getter. For debugging only.
+	 ************************ 
+	 */
+	public RatingSystem2DBoolean getTransformedDataset() {
+		return dataset;
+	}// Of RatingSystem2DBoolean
+
+	/**
+	 ************************ 
+	 * Predict the rating of the user to the item. Attention: SHOULD NOT
+	 * overwrite MF2DBoolean.predict(int, int).
 	 * 
 	 * @param paraUser
 	 *            The user index.
 	 ************************ 
 	 */
-	public double predict(int paraUser, int paraItem) {
+	public double glPredict(int paraUser, int paraItem) {
 		double resultValue = 0;
 		for (int i = 0; i < rank; i++) {
 			resultValue += userSubspace[paraUser][i] * itemSubspace[paraItem][i];
 		} // Of for i
 
 		// Convert the prediction back.
-		//System.out.print("converting back from " + resultValue);
+		// System.out.print("converting back from " + resultValue);
 		if (algorithm == GL_JOURNAL) {
 			resultValue = glInverseTransformJournal(resultValue);
 		} else {
 			resultValue = glInverseTransformConference(resultValue);
 		} // Of if
-		//System.out.println(" to " + resultValue);
 
+		// System.out.println(" to " + resultValue);
 		return resultValue;
-	}// Of predict
+	}// Of glPredict
 
+	/**
+	 ************************ 
+	 * Predict the ratings of the user to each item.
+	 * Attention: ONLY this method should be overwritten to enable GL transform.
+	 * 
+	 * @param paraUser
+	 *            The user index.
+	 ************************ 
+	 */
+	public double[] predictForUser(int paraUser) {
+		//System.out.println("glpredictForUser(" + paraUser + ")");
+		double[] resultPredictions = new double[dataset.getNumItems()];
+		for (int i = 0; i < dataset.getNumItems(); i++) {
+			resultPredictions[i] = glPredict(paraUser, i);
+		} // Of for i
+		return resultPredictions;
+	}// Of predictForUser	
 	/**
 	 ************************ 
 	 * Test the class.
@@ -250,7 +277,7 @@ public class MF2DBooleanIncrementalGLG extends MF2DBooleanIncremental {
 		} // Of try
 		tempDataset.setAllTraining();
 
-		MF2DBooleanIncrementalGLG tempLearner = new MF2DBooleanIncrementalGLG(tempDataset, 0);
+		MF2DBooleanIncrementalGLG tempLearner = new MF2DBooleanIncrementalGLG(tempDataset, 0, 1.0);
 
 		for (double tempValue = -10; tempValue <= 10; tempValue++) {
 			double tempTransferedValue = tempLearner.glTransformJournal(tempValue);
@@ -285,9 +312,10 @@ public class MF2DBooleanIncrementalGLG extends MF2DBooleanIncremental {
 		} // Of try
 		tempDataset.setAllTraining();
 
-		MF2DBooleanIncrementalGLG tempLearner = new MF2DBooleanIncrementalGLG(tempDataset, 0);
+		MF2DBooleanIncrementalGLG tempLearner = new MF2DBooleanIncrementalGLG(tempDataset, 0, 1.5);
+		//RatingSystem2DBoolean tempTransformedDataset = tempLearner.getTransformedDataset();
 
-		tempLearner.setParameters(10, 0.0001, 0.005, NO_REGULAR, paraIncrementalRounds);
+		tempLearner.setParameters(5, 0.0001, 0.005, NO_REGULAR, paraIncrementalRounds);
 
 		// Step 2. Pre-train
 		tempLearner.initializeSubspaces(0.5);
@@ -318,8 +346,10 @@ public class MF2DBooleanIncrementalGLG extends MF2DBooleanIncremental {
 			double tempPrediction;
 			for (int j = tempNumItemsForTrain; j < tempDataset.getUserNumRatings(i); j++) {
 				tempItem = tempDataset.getTriple(i, j).item;
-				tempPrediction = tempLearner.predict(i, tempItem);
+				tempPrediction = tempLearner.glPredict(i, tempItem);
 				tempErrorSum += Math.abs(tempPrediction - tempDataset.getTriple(i, j).rating);
+				// System.out.println("prediction " + tempPrediction + " vs. "
+				// + tempTransformedDataset.getTriple(i, j).rating);
 				tempNumPredictions++;
 			} // Of for j
 
@@ -328,8 +358,9 @@ public class MF2DBooleanIncrementalGLG extends MF2DBooleanIncremental {
 
 			// Step 3.5 Show message.
 			tempMAE = tempErrorSum / tempNumPredictions;
-			System.out.println(
-					"MAE = " + tempErrorSum + " / " + tempNumPredictions + " = " + tempMAE);
+			// System.out.println(
+			// "MAE = " + tempErrorSum + " / " + tempNumPredictions + " = " +
+			// tempMAE);
 		} // Of for i
 
 		tempMAE = tempErrorSum / tempNumPredictions;
@@ -343,8 +374,9 @@ public class MF2DBooleanIncrementalGLG extends MF2DBooleanIncremental {
 	 */
 	public static void main(String args[]) {
 		testIncremental("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10, 0.5,
-				false, 500, 100);
-		glTransferTest("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10, 0.5,
-				false, 500, 100);
+				false, 400, 100);
+		// glTransferTest("data/jester-data-1/jester-data-1.txt", 24983, 101,
+		// 1810455, -10, 10, 0.5,
+		// false, 500, 100);
 	}// Of main
 }// Of class MF2DBooleanIncremental
