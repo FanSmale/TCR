@@ -46,16 +46,6 @@ public class TCR {
 	double[][] costMatrix;
 
 	/**
-	 * The recommendation list for the current user.
-	 */
-	boolean[] currentUserRecommendations;
-
-	/**
-	 * The promotion list for the current user.
-	 */
-	boolean[] currentUserPromotions;
-
-	/**
 	 * The statistics information (NN, NP, BN, ...) for current user.
 	 */
 	int[][] recommendationStatistics = new int[3][2];
@@ -137,9 +127,6 @@ public class TCR {
 		costMatrix[1][1] = 10; // BP
 		costMatrix[2][0] = 50; // PN
 		costMatrix[2][1] = 6; // PP
-
-		currentUserRecommendations = new boolean[numItems];
-		currentUserPromotions = new boolean[numItems];
 	}// Of initialize
 
 	/**
@@ -212,7 +199,9 @@ public class TCR {
 	 *********************************** 
 	 */
 	public double computeTotalCostForUser(int paraUser) {
-		return computeTotalCostForUser(paraUser, currentUserRecommendations, currentUserPromotions);
+		boolean[] tempRecommendations = UserBasedThreeWayRecommender.currentUserRecommendations;
+		boolean[] tempPromotions = UserBasedThreeWayRecommender.currentUserPromotions;
+		return computeTotalCostForUser(paraUser, tempRecommendations, tempPromotions);
 	}// Of computeTotalCostForUser
 
 	/**
@@ -297,9 +286,9 @@ public class TCR {
 		int tempBehavior;
 		int tempLike;
 		for (int i = 0; i < tempUserNumRatings; i++) {
-			if (currentUserRecommendations[dataset.getTriple(paraUser, i).item]) {
+			if (UserBasedThreeWayRecommender.currentUserRecommendations[dataset.getTriple(paraUser, i).item]) {
 				tempBehavior = UserBasedThreeWayRecommender.RECOMMEND;
-			} else if (currentUserPromotions[dataset.getTriple(paraUser, i).item]) {
+			} else if (UserBasedThreeWayRecommender.currentUserPromotions[dataset.getTriple(paraUser, i).item]) {
 				tempBehavior = UserBasedThreeWayRecommender.PROMOTE;
 			} else {
 				tempBehavior = UserBasedThreeWayRecommender.NON_RECOMMEND;
@@ -352,26 +341,24 @@ public class TCR {
 		SimpleTools.processTrackingOutput("\r\nUser " + paraUser);
 		// Step 1. Initialize
 		double resultTotalCost;
-
+		
 		// Step 2. Popularity-based recommendation.
-		boolean[][] tempRecommendationMatrix = stage1Recommender.recommendForUser(paraUser);
-		currentUserRecommendations = tempRecommendationMatrix[0];
-		currentUserPromotions = tempRecommendationMatrix[1];
+		stage1Recommender.recommendForUser(paraUser);
+		//boolean[][] tempRecommendationMatrix = stage1Recommender.recommendForUser(paraUser);
+		//currentUserRecommendations = tempRecommendationMatrix[0];
+		//currentUserPromotions = tempRecommendationMatrix[1];
 
 		// stage1Recommender.threeWayRecommend(paraUser,
 		// currentUserRecommendations,
 		// currentUserPromotions);
-		resultTotalCost = computeTotalCostForUser(paraUser, currentUserRecommendations,
-				currentUserPromotions);
+		resultTotalCost = computeTotalCostForUser(paraUser);
 		SimpleTools.variableTrackingOutput("User " + paraUser
 				+ ", after popularity based recommendation, total cost = " + resultTotalCost);
 
 		// Step 3. MF based recommendation.
-		stage2Recommender.recommendForUser(paraUser, currentUserRecommendations,
-				currentUserPromotions);
+		stage2Recommender.recommendForUser(paraUser);
 
-		resultTotalCost = computeTotalCostForUser(paraUser, currentUserRecommendations,
-				currentUserPromotions);
+		resultTotalCost = computeTotalCostForUser(paraUser);
 		SimpleTools.variableTrackingOutput("User " + paraUser
 				+ ", after MF based recommendation, total cost = " + resultTotalCost);
 		// System.out.print("Finally, the cost of user " + paraUser + " is: " +
@@ -383,9 +370,9 @@ public class TCR {
 		int tempBehavior;
 		int tempLike;
 		for (int i = 0; i < tempUserNumRatings; i++) {
-			if (currentUserRecommendations[dataset.getTriple(paraUser, i).item]) {
+			if (UserBasedThreeWayRecommender.currentUserRecommendations[dataset.getTriple(paraUser, i).item]) {
 				tempBehavior = UserBasedThreeWayRecommender.RECOMMEND;
-			} else if (currentUserPromotions[dataset.getTriple(paraUser, i).item]) {
+			} else if (UserBasedThreeWayRecommender.currentUserPromotions[dataset.getTriple(paraUser, i).item]) {
 				tempBehavior = UserBasedThreeWayRecommender.PROMOTE;
 			} else {
 				tempBehavior = UserBasedThreeWayRecommender.NON_RECOMMEND;

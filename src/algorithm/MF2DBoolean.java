@@ -120,22 +120,27 @@ public class MF2DBoolean extends UserBasedThreeWayRecommender {
 
 	/**
 	 *************************
-	 * Not implemented here.
+	 * Overwrites the method of the superclass. Not implemented here.
 	 * 
 	 * @param paraUser
 	 *            The user.
-	 * @param paraRecommended
-	 *            Indicate which items have already been recommended.
-	 * @param paraPromoted
-	 *            Indicate which items have already been promoted.
-	 * @return An integer matrix, where the first row indicates recommended
-	 *         items, while the second indicates promoted ones.
+	 * @return null.
 	 *************************
 	 */
-	public int[][] threeWayRecommend(int paraUser, boolean[] paraRecommended,
-			boolean[] paraPromoted) {
+	public int[][] threeWayRecommend(int paraUser) {
 		return null;
 	}// Of threeWayRecommend
+
+	/**
+	 *************************
+	 * Overwrites the method of the superclass. Not implemented here.
+	 * 
+	 * @param paraUser
+	 *            The user.
+	 *************************
+	 */
+	public void recommendForUser(int paraUser) {
+	}//Of recommendForUser
 
 	/**
 	 ************************ 

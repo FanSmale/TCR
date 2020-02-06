@@ -1,5 +1,7 @@
 package algorithm;
 
+import java.util.Arrays;
+
 import datamodel.RatingSystem2DBoolean;
 
 /**
@@ -81,6 +83,18 @@ public abstract class UserBasedThreeWayRecommender {
 	int numPromote;
 
 	/**
+	 * The recommendations of the current user. It is shared by different
+	 * recommendation algorithms. PLEASE use with caution!
+	 */
+	public static boolean[] currentUserRecommendations = null;
+
+	/**
+	 * The promotions of the current user. It is shared by different
+	 * recommendation algorithms.
+	 */
+	public static boolean[] currentUserPromotions = null;
+
+	/**
 	 ************************ 
 	 * The first constructor.
 	 * 
@@ -126,21 +140,42 @@ public abstract class UserBasedThreeWayRecommender {
 
 	/**
 	 *************************
-	 * One round three-way recommend according to existing recommendation
-	 * information. These information will be changed in this method.
+	 * One round three-way recommend. Both currentUserRecommendations and
+	 * currentUserPromotions should be updated here.
 	 * 
 	 * @param paraUser
 	 *            The user.
-	 * @param paraRecommended
-	 *            Indicate which items have already been recommended.
-	 * @param paraPromoted
-	 *            Indicate which items have already been promoted.
-	 * @return An integer matrix, where the first row indicates recommended
-	 *         items, while the second indicates promoted ones.
+	 * @return Recommendations/promotions of the current round. It is an integer
+	 *         matrix, where the first row indicates recommended items, while
+	 *         the second indicates promoted ones.
 	 *************************
 	 */
-	public abstract int[][] threeWayRecommend(int paraUser, boolean[] paraRecommendations,
-			boolean[] paraPromotions);
+	public abstract int[][] threeWayRecommend(int paraUser);
+
+	/**
+	 *************************
+	 * Recommend for one user.
+	 * 
+	 * @param paraUser
+	 *            The user.
+	 *************************
+	 */
+	public abstract void recommendForUser(int paraUser);
+
+	/**
+	 *************************
+	 * Reset the recommendation and promotion lists.
+	 *************************
+	 */
+	public void resetRecommendationPromotion() {
+		if (currentUserRecommendations == null) {
+			currentUserRecommendations = new boolean[numItems];
+			currentUserPromotions = new boolean[numItems];
+		} else {
+			Arrays.fill(currentUserRecommendations, false);
+			Arrays.fill(currentUserPromotions, false);
+		} // Of if
+	}// Of resetRecommendationPromotion
 
 	/**
 	 *********************************** 

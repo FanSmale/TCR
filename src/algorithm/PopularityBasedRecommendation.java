@@ -178,37 +178,37 @@ public class PopularityBasedRecommendation extends UserBasedThreeWayRecommender 
 
 	/**
 	 *********************************** 
-	 * Recommend for one user.
+	 * Implement the method in class UserBasedThreeWayRecommender. The
+	 * recommendation results are stored in currentUserRecommendations and
+	 * currentUserPromotions.
 	 * 
 	 * @param paraUser
 	 *            The user index.
-	 * @return Recommendations and promotions.
 	 *********************************** 
 	 */
-	public boolean[][] recommendForUser(int paraUser) {
-		SimpleTools.processTrackingOutput("\r\nPopularity-based recommendation to user " + paraUser);
+	public void recommendForUser(int paraUser) {
+		SimpleTools
+				.processTrackingOutput("\r\nPopularity-based recommendation to user " + paraUser);
 
-		// Step 4. Initialize
-		boolean[] tempCurrentUserRecommendations = new boolean[numItems];
-		boolean[] tempCurrentUserPromotions = new boolean[numItems];
+		// Step 1. Initialize
+		resetRecommendationPromotion();
 
 		int[][] tempRecommendPromote = null;
 
 		double tempMaturity = 0;
 		while ((tempMaturity < maturityThreshold)) {
-			tempRecommendPromote = threeWayRecommend(paraUser, tempCurrentUserRecommendations,
-					tempCurrentUserPromotions);
+			// Step 2.1 Three-way recommend.
+			tempRecommendPromote = threeWayRecommend(paraUser);
 
 			if (tempRecommendPromote == null) {
 				break;
 			} else {
-				SimpleTools.processTrackingOutput("popularity recommendation/promotion for user " + paraUser + ": "
-						+ Arrays.deepToString(tempRecommendPromote));
+				SimpleTools.processTrackingOutput("popularity recommendation/promotion for user "
+						+ paraUser + ": " + Arrays.deepToString(tempRecommendPromote));
 			} // Of if
 
-			// Step 3 Update the maturity
-			tempMaturity += computeUserMaturity(paraUser, tempCurrentUserRecommendations,
-					tempCurrentUserPromotions);
+			// Step 2.2 Update the maturity
+			tempMaturity += computeUserMaturity(paraUser);
 		} // Of while
 
 		if (tempMaturity >= maturityThreshold) {
@@ -217,31 +217,26 @@ public class PopularityBasedRecommendation extends UserBasedThreeWayRecommender 
 			SimpleTools.processTrackingOutput("The maturity " + tempMaturity
 					+ " is smaller than the threshold " + maturityThreshold);
 		} // Of if
-
-		boolean[][] resultRecommendationPromotions = new boolean[2][];
-		resultRecommendationPromotions[0] = tempCurrentUserRecommendations;
-		resultRecommendationPromotions[1] = tempCurrentUserPromotions;
-		return resultRecommendationPromotions;
 	}// Of recommendForUser
 
 	/**
 	 *********************************** 
-	 * Pop-based recommendation. With member variables
-	 * currentUserRecommendations and currentUserPromotions, there is no need to
-	 * return.
+	 * Pop-based recommendation. It changes static variables
+	 * currentUserRecommendations and currentUserPromotions.
 	 * 
+	 * @see UserBasedThreeWayRecommender#currentUserRecommendations
+	 * @see UserBasedThreeWayRecommender#currentUserPromotions
 	 * @param paraUser
 	 *            The given user.
 	 *********************************** 
 	 */
-	public int[][] threeWayRecommend(int paraUser, boolean[] paraRecommendations,
-			boolean[] paraPromotions) {
+	public int[][] threeWayRecommend(int paraUser) {
 
 		// Step 1. Find popular however not recommended items.
 		int[] tempPopularUnrecommendedItems = new int[popularItems.length];
 		int tempCounter = 0;
 		for (int i = 0; i < popularItems.length; i++) {
-			if (paraRecommendations[popularItems[i]]) {
+			if (currentUserRecommendations[popularItems[i]]) {
 				continue;
 			} // Of if
 
@@ -258,14 +253,14 @@ public class PopularityBasedRecommendation extends UserBasedThreeWayRecommender 
 		int[] tempRecommendations = SimpleTools.randomSelectFromArray(tempPopularUnrecommendedItems,
 				tempCounter, numRecommend);
 		for (int i = 0; i < tempRecommendations.length; i++) {
-			paraRecommendations[tempRecommendations[i]] = true;
+			currentUserRecommendations[tempRecommendations[i]] = true;
 		} // Of for i
 
 		// Step 3. Find semi-popular however unpromoted items.
 		int[] tempSemiPopularUnpromotedItems = new int[semiPopularItems.length];
 		tempCounter = 0;
 		for (int i = 0; i < semiPopularItems.length; i++) {
-			if (paraPromotions[semiPopularItems[i]]) {
+			if (currentUserPromotions[semiPopularItems[i]]) {
 				continue;
 			} // Of if
 
@@ -282,7 +277,7 @@ public class PopularityBasedRecommendation extends UserBasedThreeWayRecommender 
 		int[] tempPromotions = SimpleTools.randomSelectFromArray(tempSemiPopularUnpromotedItems,
 				tempCounter, numPromote);
 		for (int i = 0; i < tempPromotions.length; i++) {
-			paraPromotions[tempPromotions[i]] = true;
+			currentUserPromotions[tempPromotions[i]] = true;
 		} // Of for i
 
 		// Step 5. Construct the lists.
@@ -334,14 +329,9 @@ public class PopularityBasedRecommendation extends UserBasedThreeWayRecommender 
 	 * 
 	 * @param paraUser
 	 *            The given user.
-	 * @param paraRecommendations
-	 *            The recommendation array.
-	 * @param paraPromotions
-	 *            The promotion array.
 	 *********************************** 
 	 */
-	public double computeUserMaturity(int paraUser, boolean[] paraRecommendations,
-			boolean[] paraPromotions) {
+	public double computeUserMaturity(int paraUser) {
 		double resultValue = 0;
 		// Step 1. Which items are actually rated.
 		boolean[] tempUserBehaviors = new boolean[numItems];
@@ -351,13 +341,13 @@ public class PopularityBasedRecommendation extends UserBasedThreeWayRecommender 
 
 		// 0 for no recommendation/promotion
 		for (int i = 0; i < numItems; i++) {
-			if (paraRecommendations[i]) {
+			if (currentUserRecommendations[i]) {
 				if (tempUserBehaviors[i]) {
 					resultValue += maturityValueArray[0];
 				} else {
 					resultValue += maturityValueArray[1];
 				} // Of if
-			} else if (paraPromotions[i]) {
+			} else if (currentUserPromotions[i]) {
 				if (tempUserBehaviors[i]) {
 					resultValue += maturityValueArray[2];
 				} else {

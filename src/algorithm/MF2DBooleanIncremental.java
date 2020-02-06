@@ -192,24 +192,15 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 
 	/**
 	 *************************
-	 * One round three-way recommend according to existing recommendation
-	 * information. These information will be changed in this method.
+	 * Recommend for one user.
 	 * 
 	 * @param paraUser
 	 *            The user.
-	 * @param paraRecommendations
-	 *            Indicate which items have already been recommended.
-	 * @param paraPromotions
-	 *            Indicate which items have already been promoted.
-	 * @return An integer matrix, where the first row indicates recommended
-	 *         items, while the second indicates promoted ones.
 	 *************************
 	 */
-	public boolean[][] recommendForUser(int paraUser, boolean[] paraRecommendations,
-			boolean[] paraPromotions) {
+	public void recommendForUser(int paraUser) {
 		while (true) {
-			int[][] tempRecommendationsPromotions = threeWayRecommend(paraUser, paraRecommendations,
-					paraPromotions);
+			int[][] tempRecommendationsPromotions = threeWayRecommend(paraUser);
 			if (tempRecommendationsPromotions == null) {
 				break;
 			} // Of if
@@ -241,31 +232,23 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 					+ Arrays.toString(tempRecommendationsPromotions[0]) + ", promote "
 					+ Arrays.toString(tempRecommendationsPromotions[1]) + " to next round.");
 		} // Of while
-
-		boolean[][] resultRecommendationPromotions = new boolean[2][];
-		resultRecommendationPromotions[0] = paraRecommendations;
-		resultRecommendationPromotions[1] = paraPromotions;
-		return resultRecommendationPromotions;
 	}// Of recommendForUser
 
 	/**
 	 *************************
-	 * One round three-way recommend according to existing recommendation
-	 * information. These information will be changed in this method.
+	 * Implement the abstract method defined in class
+	 * UserBasedThreeWayRecommender. It changes static variables
+	 * currentUserRecommendations and currentUserPromotions.
 	 * 
+	 * @see UserBasedThreeWayRecommender#currentUserRecommendations
+	 * @see UserBasedThreeWayRecommender#currentUserPromotions *
 	 * @param paraUser
 	 *            The user.
-	 * @param paraRecommendations
-	 *            Indicate which items have already been recommended.
-	 * @param paraPromotions
-	 *            Indicate which items have already been promoted.
 	 * @return An integer matrix, where the first row indicates recommended
 	 *         items, while the second indicates promoted ones.
 	 *************************
 	 */
-	public int[][] threeWayRecommend(int paraUser, boolean[] paraRecommendations,
-			boolean[] paraPromotions) {
-
+	public int[][] threeWayRecommend(int paraUser) {
 		int tempUserNumRates = dataset.getUserNumRatings(paraUser);
 		int[] tempAcquiredItems = new int[tempUserNumRates];
 		int tempCounter = 0;
@@ -276,7 +259,7 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 		tempCounter = 0;
 		for (int i = 0; i < tempUserNumRates; i++) {
 			int tempItem = dataset.getTriple(paraUser, i).item;
-			if (paraRecommendations[tempItem] || paraPromotions[tempItem]) {
+			if (currentUserRecommendations[tempItem] || currentUserPromotions[tempItem]) {
 				tempAcquiredItems[tempCounter] = tempItem;
 				tempCounter++;
 			} // Of if
@@ -305,7 +288,7 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 
 		for (int i = 0; i < numItems; i++) {
 			// Already recommended/promoted before
-			if (paraRecommendations[i] || paraPromotions[i]) {
+			if (currentUserRecommendations[i] || currentUserPromotions[i]) {
 				continue;
 			} // Of if
 
@@ -346,7 +329,7 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 			tempRecommendations = SimpleTools.randomSelectFromArray(tempRecommendationCandidates,
 					tempRecommendationCandidatesLength, numRecommend);
 			for (int i = 0; i < tempRecommendations.length; i++) {
-				paraRecommendations[tempRecommendations[i]] = true;
+				currentUserRecommendations[tempRecommendations[i]] = true;
 			} // Of for i
 
 			// System.out.println("Recommend " +
@@ -356,7 +339,7 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 			tempPromotions = SimpleTools.randomSelectFromArray(tempPromotionCandidates,
 					tempPromotionCandidatesLength, numPromote);
 			for (int i = 0; i < tempPromotions.length; i++) {
-				paraPromotions[tempPromotions[i]] = true;
+				currentUserPromotions[tempPromotions[i]] = true;
 			} // Of for i
 
 			// System.out.println("Promote " + Arrays.toString(tempPromotions) +
@@ -382,13 +365,15 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 	 */
 	public static void testIncremental(String paraFilename, int paraNumUsers, int paraNumItems,
 			int paraNumRatings, double paraRatingLowerBound, double paraRatingUpperBound,
-			double paraLikeTreshold, boolean paraCompress, int paraRounds, int paraIncrementalRounds) {
+			double paraLikeTreshold, boolean paraCompress, int paraRounds,
+			int paraIncrementalRounds) {
 		// Step 1. Read data and set parameters.
 
 		RatingSystem2DBoolean tempDataset = null;
 		try {
 			tempDataset = new RatingSystem2DBoolean(paraFilename, paraNumUsers, paraNumItems,
-					paraNumRatings, paraRatingLowerBound, paraRatingUpperBound, paraLikeTreshold, paraCompress);
+					paraNumRatings, paraRatingLowerBound, paraRatingUpperBound, paraLikeTreshold,
+					paraCompress);
 		} catch (Exception e) {
 			e.printStackTrace();
 		} // Of try
@@ -429,7 +414,8 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 				tempItem = tempDataset.getTriple(i, j).item;
 				tempPrediction = tempLearner.predict(i, tempItem);
 				tempErrorSum += Math.abs(tempPrediction - tempDataset.getTriple(i, j).rating);
-				//System.out.println("prediction " + tempPrediction + " vs. " + tempDataset.getTriple(i, j).rating);
+				// System.out.println("prediction " + tempPrediction + " vs. " +
+				// tempDataset.getTriple(i, j).rating);
 				tempNumPredictions++;
 			} // Of for j
 
@@ -452,7 +438,7 @@ public class MF2DBooleanIncremental extends MF2DBoolean {
 	 ************************ 
 	 */
 	public static void main(String args[]) {
-		testIncremental("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10, 0.5, false,
-				200, 100);
+		testIncremental("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10, 0.5,
+				false, 200, 100);
 	}// Of main
 }// Of class MF2DBooleanIncremental
