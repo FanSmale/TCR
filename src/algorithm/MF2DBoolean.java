@@ -80,7 +80,7 @@ public class MF2DBoolean extends UserBasedThreeWayRecommender {
 	 */
 	public MF2DBoolean(RatingSystem2DBoolean paraDataset) {
 		super(paraDataset);
-		dataset = paraDataset;
+		//dataset = paraDataset;
 
 		// Initialize some parameters.
 		rank = 5;

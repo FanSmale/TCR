@@ -705,6 +705,6 @@ public class RatingSystem2DBoolean {
 	public static void main(String args[]) {
 		testReadingData("data/jester-data-1/jester-data-1.txt", 24983, 101, 1810455, -10, 10, 3.5,
 				false);
-		testReadingData("data/movielens943u1682m.txt", 943, 1682, 100000, 1, 5, 3.5, true);
+		//testReadingData("data/movielens943u1682m.txt", 943, 1682, 100000, 1, 5, 3.5, true);
 	}// Of main
 }// Of class RatingSystem2DBoolean

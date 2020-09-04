@@ -191,8 +191,8 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 	public TcrGUI() {
 		// A simple frame to contain dialogs.
 		Frame mainFrame = new Frame();
-		mainFrame.setTitle(
-				"Three-way conversational recommendation. minfan@swpu.edu.cn, minfanphd@163.com");
+		mainFrame
+				.setTitle("Three-way conversational recommendation. minfan@swpu.edu.cn, minfanphd@163.com");
 
 		// The top part: select data file.
 		Panel sourceFilePanel = new Panel();
@@ -211,7 +211,8 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 		browseButton.addActionListener(filenameField);
 		sourceFilePanel.add(browsePanel);
 
-		compressedFormatCheckbox = new Checkbox(" Data in compressed format", false);
+		compressedFormatCheckbox = new Checkbox(" Data in compressed format",
+				false);
 		sourceFilePanel.add(compressedFormatCheckbox);
 
 		sourceFilePanel.add(new Label(""));
@@ -232,7 +233,8 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 		Panel costMatrixPanel = new Panel();
 		costMatrixPanel.setLayout(new GridLayout(2, 6));
 		costMatrixFields = new DoubleField[3][2];
-		String[][] tempCostLabels = { { "NN:", "NP:" }, { "BN:", "BP:" }, { "PN:", "PP:" } };
+		String[][] tempCostLabels = { { "NN:", "NP:" }, { "BN:", "BP:" },
+				{ "PN:", "PP:" } };
 		for (int i = 0; i < costMatrixFields.length; i++) {
 			for (int j = 0; j < costMatrixFields[0].length; j++) {
 				costMatrixFields[i][j] = new DoubleField("" + costMatrix[i][j]);
@@ -262,10 +264,12 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 		Panel thresholdsPanel = new Panel();
 		thresholdsPanel.setLayout(new GridLayout(2, 4));
 		popularityThresholdFields = new DoubleField[2];
-		String[] popularityThresholdLabels = { "Semi-popular threshold: ", "Popular threshold: " };
+		String[] popularityThresholdLabels = { "Semi-popular threshold: ",
+				"Popular threshold: " };
 		for (int i = 0; i < 2; i++) {
 			thresholdsPanel.add(new Label(popularityThresholdLabels[i]));
-			popularityThresholdFields[i] = new DoubleField("" + popularityThresholds[i]);
+			popularityThresholdFields[i] = new DoubleField(""
+					+ popularityThresholds[i]);
 			thresholdsPanel.add(popularityThresholdFields[i]);
 		} // Of for i
 
@@ -274,7 +278,8 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 				" Favorite threshold: " };
 		for (int i = 0; i < 2; i++) {
 			thresholdsPanel.add(new Label(favoriteThresholdLabels[i]));
-			favoriteThresholdFields[i] = new DoubleField("" + favoriteThresholds[i]);
+			favoriteThresholdFields[i] = new DoubleField(""
+					+ favoriteThresholds[i]);
 			thresholdsPanel.add(favoriteThresholdFields[i]);
 		} // Of for i
 
@@ -309,7 +314,8 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 
 		mfParametersPanel.add(new Label("Data transform: "));
 		String[] tempDataTransformAlgorithms = { "No", "Journal", "Conference" };
-		dataTransformJComboBox = new JComboBox<String>(tempDataTransformAlgorithms);
+		dataTransformJComboBox = new JComboBox<String>(
+				tempDataTransformAlgorithms);
 		dataTransformJComboBox.setSelectedIndex(1);
 		mfParametersPanel.add(dataTransformJComboBox);
 
@@ -355,8 +361,9 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 		exitButton.addActionListener(ApplicationShutdown.applicationShutdown);
 		Button helpButton = new Button(" Help ");
 		helpButton.setSize(20, 10);
-		helpButton.addActionListener(
-				new HelpDialog("Three-way conversational recommendation", "src/gui/TcrHelp.txt"));
+		helpButton.addActionListener(new HelpDialog(
+				"Three-way conversational recommendation",
+				"src/gui/TcrHelp.txt"));
 		Panel okPanel = new Panel();
 		okPanel.add(okButton);
 		okPanel.add(exitButton);
@@ -410,7 +417,8 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 		int tempPretrainRounds = pretrainRoundsField.getValue();
 		int tempIncrementalTrainRounds = incrementalTrainRoundsField.getValue();
 		int tempMfAlgorithm = mfAlgorithmJComboBox.getSelectedIndex();
-		int tempDataTransformAlgorithm = dataTransformJComboBox.getSelectedIndex();
+		int tempDataTransformAlgorithm = dataTransformJComboBox
+				.getSelectedIndex();
 		double tempGLTranformV = glTransformVField.getValue();
 
 		int tempRepeatTimes = repeatTimesField.getValue();
@@ -422,31 +430,36 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 		// String resultMessage = "";
 		double[] tempCostArray = new double[tempRepeatTimes];
 
-		String tempParametersInformation = "Dataset information: filename: " + tempFilename
-				+ "\r\n  " + tempNumUsers + " users, " + tempNumItems + " items, " + tempNumRatings
-				+ " ratings\r\n  " + "ratings bounds = " + Arrays.toString(ratingBounds) + ", "
-				+ "rank = " + tempRank + ", alpha = " + tempAlpha + ", lambda = " + tempLambda
-				+ "\r\n  MF algorithm = " + tempMfAlgorithm + ", data transform algorithm = "
-				+ tempDataTransformAlgorithm + ", pretrain rounds = " + tempPretrainRounds;
+		String tempParametersInformation = "Dataset information: filename: "
+				+ tempFilename + "\r\n  " + tempNumUsers + " users, "
+				+ tempNumItems + " items, " + tempNumRatings + " ratings\r\n  "
+				+ "ratings bounds = " + Arrays.toString(ratingBounds) + ", "
+				+ "rank = " + tempRank + ", alpha = " + tempAlpha
+				+ ", lambda = " + tempLambda + "\r\n  MF algorithm = "
+				+ tempMfAlgorithm + ", data transform algorithm = "
+				+ tempDataTransformAlgorithm + ", pretrain rounds = "
+				+ tempPretrainRounds;
 		messageTextArea.append(tempParametersInformation);
 
 		// Read the data here.
-		TCR tempTcr = new TCR(tempFilename, tempNumUsers, tempNumItems, tempNumRatings,
-				ratingBounds[0], ratingBounds[1], tempLikeThreshold, tempCompressed,
-				tempDataTransformAlgorithm, tempGLTranformV);
+		TCR tempTcr = new TCR(tempFilename, tempNumUsers, tempNumItems,
+				tempNumRatings, ratingBounds[0], ratingBounds[1],
+				tempLikeThreshold, tempCompressed, tempDataTransformAlgorithm,
+				tempGLTranformV);
 		tempTcr.setCostMatrix(getCostMatrix());
 
 		tempTcr.stage1Recommender.setMaturityThreshold(tempMaturityThreshold);
-		tempTcr.stage1Recommender.setRecommendationLengthRatio(tempRecommendationLength,
-				tempRecommendationRatio);
+		tempTcr.stage1Recommender.setRecommendationLengthRatio(
+				tempRecommendationLength, tempRecommendationRatio);
 		tempTcr.stage1Recommender.setPopularityThresholds(popularityThresholds);
 
-		tempTcr.stage2Recommender.setParameters(tempRank, tempAlpha, tempLambda, tempMfAlgorithm,
-				tempPretrainRounds);
+		tempTcr.stage2Recommender.setParameters(tempRank, tempAlpha,
+				tempLambda, tempMfAlgorithm, tempPretrainRounds);
 		tempTcr.stage2Recommender.setFavoriteThresholds(favoriteThresholds);
-		tempTcr.stage2Recommender.setRecommendationLengthRatio(tempRecommendationLength,
-				tempRecommendationRatio);
-		tempTcr.stage2Recommender.setIncrementalTrainRounds(tempIncrementalTrainRounds);
+		tempTcr.stage2Recommender.setRecommendationLengthRatio(
+				tempRecommendationLength, tempRecommendationRatio);
+		tempTcr.stage2Recommender
+				.setIncrementalTrainRounds(tempIncrementalTrainRounds);
 
 		System.out.println("Before pretrain");
 		tempTcr.stage2Recommender.pretrain();
@@ -465,8 +478,14 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 			tempCostArray[i] = tempTcr.computeTotalCost();
 			tempCostSum += tempCostArray[i];
 
-			messageTextArea.append("\r\n" + i + ": cost = " + tempCostArray[i] + "\r\n"
-					+ Arrays.deepToString(tempTcr.getRecommendationStatistics()));
+			messageTextArea
+					.append("\r\n"
+							+ i
+							+ ": cost = "
+							+ tempCostArray[i]
+							+ "\r\n"
+							+ Arrays.deepToString(tempTcr
+									.getRecommendationStatistics()));
 
 			if (tempMinCost > tempCostArray[i]) {
 				tempMinCost = tempCostArray[i];
@@ -490,7 +509,8 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 		messageTextArea.append("\r\nSummary:\r\n");
 		messageTextArea.append("; Min: " + tempMinCost);
 		messageTextArea.append("; Max: " + tempMaxCost + "\r\n");
-		messageTextArea.append("; " + tempAverageCost + " +- " + tempStandardDeviation + "\r\n");
+		messageTextArea.append("; " + tempAverageCost + " +- "
+				+ tempStandardDeviation + "\r\n");
 
 		Common.endTime = new Date().getTime();
 		long tempTimeUsed = Common.endTime - Common.startTime;
@@ -529,7 +549,8 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 	public double[][] getCostMatrix() {
 		for (int i = 0; i < costMatrixFields.length; i++) {
 			for (int j = 0; j < costMatrixFields[0].length; j++) {
-				costMatrix[i][j] = Double.parseDouble(costMatrixFields[i][j].getText());
+				costMatrix[i][j] = Double.parseDouble(costMatrixFields[i][j]
+						.getText());
 			} // Of for j
 		} // Of for i
 
@@ -560,8 +581,8 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 					new FileInputStream(tempPropertyFilename));
 			settings.load(tempInputStream);
 
-			compressedFormatCheckbox
-					.setState(Boolean.parseBoolean(settings.getProperty("compressed")));
+			compressedFormatCheckbox.setState(Boolean.parseBoolean(settings
+					.getProperty("compressed")));
 
 			numUsersField.setText(settings.getProperty("numUsers"));
 			numItemsField.setText(settings.getProperty("numItems"));
@@ -574,38 +595,49 @@ public class TcrGUI implements ActionListener, ItemListener, TextListener {
 			costMatrixFields[2][0].setText(settings.getProperty("PN"));
 			costMatrixFields[2][1].setText(settings.getProperty("PP"));
 
-			ratingBoundFields[0].setText(settings.getProperty("ratingLowerBound"));
-			ratingBoundFields[1].setText(settings.getProperty("ratingUpperBound"));
+			ratingBoundFields[0].setText(settings
+					.getProperty("ratingLowerBound"));
+			ratingBoundFields[1].setText(settings
+					.getProperty("ratingUpperBound"));
 
-			recommendationLengthField.setText(settings.getProperty("recommendationLength"));
-			recommendationRatioField.setText(settings.getProperty("recommendationRatio"));
+			recommendationLengthField.setText(settings
+					.getProperty("recommendationLength"));
+			recommendationRatioField.setText(settings
+					.getProperty("recommendationRatio"));
 
 			likeThresholdField.setText(settings.getProperty("likeThreshold"));
 
-			maturityThresholdField.setText(settings.getProperty("maturityThreshold"));
+			maturityThresholdField.setText(settings
+					.getProperty("maturityThreshold"));
 
-			popularityThresholdFields[0].setText(settings.getProperty("semiPopularThreshold"));
-			popularityThresholdFields[1].setText(settings.getProperty("popularThreshold"));
+			popularityThresholdFields[0].setText(settings
+					.getProperty("semiPopularThreshold"));
+			popularityThresholdFields[1].setText(settings
+					.getProperty("popularThreshold"));
 
-			favoriteThresholdFields[0].setText(settings.getProperty("semiFavoriteThreshold"));
-			favoriteThresholdFields[1].setText(settings.getProperty("favoriteThreshold"));
+			favoriteThresholdFields[0].setText(settings
+					.getProperty("semiFavoriteThreshold"));
+			favoriteThresholdFields[1].setText(settings
+					.getProperty("favoriteThreshold"));
 
-			mfAlgorithmJComboBox
-					.setSelectedIndex(Integer.parseInt(settings.getProperty("mfAlgorithm")));
+			mfAlgorithmJComboBox.setSelectedIndex(Integer.parseInt(settings
+					.getProperty("mfAlgorithm")));
 
 			pretrainRoundsField.setText(settings.getProperty("pretrainRounds"));
-			incrementalTrainRoundsField.setText(settings.getProperty("incrementalTrainRounds"));
+			incrementalTrainRoundsField.setText(settings
+					.getProperty("incrementalTrainRounds"));
 
 			rankField.setText(settings.getProperty("rank"));
 
 			alphaField.setText(settings.getProperty("alpha"));
 			lambdaField.setText(settings.getProperty("lambda"));
 
-			dataTransformJComboBox
-					.setSelectedIndex(Integer.parseInt(settings.getProperty("dataTransform")));
+			dataTransformJComboBox.setSelectedIndex(Integer.parseInt(settings
+					.getProperty("dataTransform")));
 			glTransformVField.setText(settings.getProperty("glv"));
 		} catch (Exception ee) {
-			System.out.println("Error occurred while reading properties: " + ee);
+			System.out
+					.println("Error occurred while reading properties: " + ee);
 		} // Of try
 	}// Of textValueChanged
 
